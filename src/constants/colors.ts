@@ -1,0 +1,31 @@
+export const COLORS = {
+  primary: '#6664A8',
+  primary100: '#F6F6FA',
+  primary200: '#E8E7F2',
+  primary700: '#454379',
+  navActive: '#6664A8',
+  navInactive: '#B0B0C0',
+  background: {
+    main: '#F2F3F8',
+    grey: '#F2F3F8',
+  },
+  white: '#FFFFFF',
+  black: '#000000',
+  black700: '#212121',
+  black500: '#5F5F5F',
+  black400: '#8A8A8A',
+  black200: '#E5E5E5',
+  statusCheck: '#E8A169',
+  statusCheckBackground: '#FFF0E6',
+  statusPost: '#2F7D62',
+  statusPostBackground: '#E5F3EC',
+  statusWarning: '#B94A3C',
+  brand: {
+    primary: '#6664A8',
+    secondary: '#454379',
+  },
+  text: {
+    main: '#212121',
+    grey: '#5F5F5F',
+  },
+} as const;
