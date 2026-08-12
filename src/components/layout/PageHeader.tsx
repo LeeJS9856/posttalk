@@ -28,8 +28,8 @@ const Header = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 86px;
-  padding: 42px 24px 18px;
+  height: 74px;
+  padding: 30px 24px 18px;
 `;
 
 const BackButton = styled.button`
