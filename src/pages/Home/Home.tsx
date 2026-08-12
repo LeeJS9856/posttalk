@@ -7,6 +7,7 @@ import PromotionCard from '@/components/home/PromotionCard';
 import ReviewAdCard from '@/components/home/ReviewAdCard';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import DraggableBottomSheet from '@/components/layout/DraggableBottomSheet';
+import PageFrame from '@/components/layout/PageFrame';
 import { COLORS } from '@/constants/colors';
 import { DEMO_REVIEW_ADS } from '@/constants/home';
 import heroImage from '@/assets/temporary-market-hero.jpg';
@@ -72,11 +73,8 @@ const Home = (): React.JSX.Element => {
   );
 };
 
-const AppFrame = styled.div`
+const AppFrame = styled(PageFrame)`
   position: relative;
-  width: min(100%, 480px);
-  min-height: 100svh;
-  margin: 0 auto;
   overflow: hidden;
   background: ${COLORS.background.main};
 `;
