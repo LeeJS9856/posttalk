@@ -3,20 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import FloatingCreateButton from '@/components/common/FloatingCreateButton';
-import type { AdStatus } from '@/components/common/StatusBadge';
 import PromotionCard from '@/components/home/PromotionCard';
 import ReviewAdCard from '@/components/home/ReviewAdCard';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import DraggableBottomSheet from '@/components/layout/DraggableBottomSheet';
 import { COLORS } from '@/constants/colors';
+import { DEMO_REVIEW_ADS } from '@/constants/home';
 import heroImage from '@/assets/temporary-market-hero.jpg';
-
-type ReviewAd = { id: number; status: AdStatus };
-
-const DEMO_REVIEW_ADS: ReviewAd[] = [
-  { id: 1, status: 'pending' },
-  { id: 2, status: 'supplement' },
-];
 
 const Home = (): React.JSX.Element => {
   const navigate = useNavigate();

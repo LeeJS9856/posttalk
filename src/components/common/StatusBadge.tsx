@@ -1,15 +1,9 @@
 import styled from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
-
-export type AdStatus = 'pending' | 'supplement';
+import { STATUS_COPY, type AdStatus } from '@/constants/status';
 
 type StatusBadgeProps = { status: AdStatus };
-
-const STATUS_COPY = {
-  pending: '승인 대기중',
-  supplement: '보충 필요',
-} as const;
 
 const StatusBadge = ({ status }: StatusBadgeProps): React.JSX.Element => (
   <Badge $status={status}>{STATUS_COPY[status]}</Badge>
@@ -21,8 +15,14 @@ const Badge = styled.span<{ $status: AdStatus }>`
   width: fit-content;
   border-radius: 999px;
   padding: 2px 14px;
-  color: ${({ $status }) => ($status === 'pending' ? COLORS.primary : COLORS.statusCheck)};
-  background: ${({ $status }) => ($status === 'pending' ? COLORS.primary200 : COLORS.statusCheckBackground)};
+  color: ${({ $status }) => {
+    if ($status === 'posted') return COLORS.statusPost;
+    return $status === 'pending' ? COLORS.primary : COLORS.statusCheck;
+  }};
+  background: ${({ $status }) => {
+    if ($status === 'posted') return COLORS.statusPostBackground;
+    return $status === 'pending' ? COLORS.primary200 : COLORS.statusCheckBackground;
+  }};
   font-size: 13px;
   font-weight: 700;
 `;
