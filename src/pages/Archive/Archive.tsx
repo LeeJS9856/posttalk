@@ -24,6 +24,7 @@ const Archive = (): React.JSX.Element => {
       </Header>
 
       <FormatTabs aria-label="광고 형식">
+        <FormatIndicator $format={format} aria-hidden="true" />
         <FormatTab type="button" $active={format === 'photo'} onClick={() => setFormat('photo')}>
           사진 광고
         </FormatTab>
@@ -113,10 +114,23 @@ const SearchIcon = styled.span`
 `;
 
 const FormatTabs = styled.div`
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   border-bottom: 1px solid ${COLORS.black200};
-  background: ${COLORS.white};
+  background: ${COLORS.background.main};
+`;
+
+const FormatIndicator = styled.span<{ $format: ArchiveFormat }>`
+  position: absolute;
+  right: auto;
+  bottom: -1px;
+  left: 24px;
+  width: calc(50% - 48px);
+  height: 2px;
+  background: ${COLORS.black700};
+  transform: ${({ $format }) => ($format === 'photo' ? 'translateX(0)' : 'translateX(calc(100% + 48px))')};
+  transition: transform 220ms ease-out;
 `;
 
 const FormatTab = styled.button<{ $active: boolean }>`
@@ -125,26 +139,17 @@ const FormatTab = styled.button<{ $active: boolean }>`
   border: 0;
   color: ${({ $active }) => ($active ? COLORS.black700 : COLORS.black400)};
   background: transparent;
-  font-size: 14px;
-  font-weight: ${({ $active }) => ($active ? 700 : 400)};
+  font-size: 16px;
+  font-weight: ${({ $active }) => ($active ? 700 : 500)};
 
-  &::after {
-    position: absolute;
-    right: 0;
-    bottom: -1px;
-    left: 0;
-    height: 2px;
-    background: ${({ $active }) => ($active ? COLORS.black700 : 'transparent')};
-    content: '';
-  }
 `;
 
 const FilterList = styled.div`
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 14px 24px;
-  background: ${COLORS.white};
+  padding: 20px 24px 14px;
+  background: ${COLORS.background.main};
   scrollbar-width: none;
 
   &::-webkit-scrollbar {
@@ -156,21 +161,22 @@ const FilterButton = styled.button<{ $active: boolean }>`
   flex: 0 0 auto;
   border: 0;
   border-radius: 999px;
-  padding: 7px 12px;
-  color: ${({ $active }) => ($active ? COLORS.white : COLORS.black500)};
+  padding: 9px 12px;
+  color: ${({ $active }) => ($active ? COLORS.white : COLORS.black400)};
   background: ${({ $active }) => ($active ? COLORS.primary : COLORS.primary100)};
-  font-size: 12px;
-  font-weight: ${({ $active }) => ($active ? 700 : 400)};
+  box-shadow: 0 2px 5px rgba(33, 33, 33, 0.12);
+  font-size: 14px;
+  font-weight: 400;
 `;
 
 const Content = styled.section`
-  padding-top: 6px;
+  padding-top: 20px;
 `;
 
 const AdList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 20px;
 `;
 
 const EmptyMessage = styled.p`
