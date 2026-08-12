@@ -54,7 +54,7 @@ const Toggle = styled.div<{ $optionCount: number }>`
   gap: 4px;
   width: 100%;
   max-width: 256px;
-  margin: 20px auto 0;
+  margin: 12px auto 0;
   padding: 4px;
   border-radius: 28px;
   background: ${COLORS.primary200};
