@@ -25,6 +25,14 @@ const GlobalStyle = createGlobalStyle`
 
   button, input, textarea { font: inherit; }
   button { cursor: pointer; }
+
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 export default GlobalStyle;
