@@ -58,6 +58,7 @@ const Toggle = styled.div<{ $optionCount: number }>`
   padding: 4px;
   border-radius: 28px;
   background: ${COLORS.primary200};
+  box-shadow: 0 3px 8px rgba(33, 33, 33, 0.12);
 `;
 
 const ToggleIndicator = styled.span<{ $selectedIndex: number; $optionCount: number }>`

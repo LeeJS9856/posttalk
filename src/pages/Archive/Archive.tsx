@@ -3,6 +3,8 @@ import styled from 'styled-components';
 
 import ArchivedAdCard from '@/components/archive/ArchivedAdCard';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import PageHeader from '@/components/layout/PageHeader';
+import PageFrame from '@/components/layout/PageFrame';
 import { ARCHIVED_ADS, ARCHIVE_FILTERS, type ArchiveFormat, type StatusFilter } from '@/constants/archive';
 import { COLORS } from '@/constants/colors';
 
@@ -16,12 +18,14 @@ const Archive = (): React.JSX.Element => {
 
   return (
     <Page aria-label="보관함 페이지">
-      <Header>
-        <Title>보관함</Title>
-        <SearchButton type="button" aria-label="광고 검색">
+      <PageHeader
+        title="보관함"
+        rightAction={
+          <SearchButton type="button" aria-label="광고 검색">
           <SearchIcon aria-hidden="true" />
-        </SearchButton>
-      </Header>
+          </SearchButton>
+        }
+      />
 
       <FormatTabs aria-label="광고 형식">
         <FormatIndicator $format={format} aria-hidden="true" />
@@ -63,25 +67,9 @@ const Archive = (): React.JSX.Element => {
   );
 };
 
-const Page = styled.main`
-  width: min(100%, 480px);
-  min-height: 100svh;
-  margin: 0 auto;
+const Page = styled(PageFrame)`
   padding-bottom: 96px;
   background: ${COLORS.background.main};
-`;
-
-const Header = styled.header`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 42px 24px 18px;
-`;
-
-const Title = styled.h1`
-  color: ${COLORS.black700};
-  font-size: 20px;
-  font-weight: 700;
 `;
 
 const SearchButton = styled.button`

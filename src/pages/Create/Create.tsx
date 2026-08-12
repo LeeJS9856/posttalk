@@ -1,16 +1,19 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
-import Button from '@/components/common/Button';
+import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import SegmentedToggle from '@/components/common/SegmentedToggle';
 import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
 import VideoPreview from '@/components/create/VideoPreview';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import PageFrame from '@/components/layout/PageFrame';
 import { COLORS } from '@/constants/colors';
 import { AD_FORMAT_OPTIONS, PHOTO_PREVIEW_IMAGES, VIDEO_PREVIEW_SOURCE, type AdFormat } from '@/constants/create';
 
 const Create = (): React.JSX.Element => {
   const [selectedFormat, setSelectedFormat] = useState<AdFormat>('photo');
+  const navigate = useNavigate();
 
   return (
     <Page aria-label="광고 제작 페이지">
@@ -39,7 +42,11 @@ const Create = (): React.JSX.Element => {
         <GuideDescription>
           {selectedFormat === 'photo' ? '여러 장으로 보기 쉽게 정리해드려요.' : '짧은 영상으로 가게의 매력을 알려드려요.'}
         </GuideDescription>
-        <SelectButton type="button">선택하기</SelectButton>
+        <ActionArea>
+          <PrimaryActionButton type="button" onClick={() => navigate('/create/capture')}>
+            선택하기
+          </PrimaryActionButton>
+        </ActionArea>
       </Guide>
 
       <BottomNavigation />
@@ -47,17 +54,14 @@ const Create = (): React.JSX.Element => {
   );
 };
 
-const Page = styled.main`
+const Page = styled(PageFrame)`
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(100%, 480px);
   height: 100svh;
-  min-height: 100svh;
-  margin: 0 auto;
   padding-bottom: 96px;
   overflow: hidden;
-  background: ${COLORS.white};
+  background: ${COLORS.background.main};
 `;
 
 const TopContent = styled.header`
@@ -96,18 +100,8 @@ const GuideDescription = styled.p`
   line-height: 1.45;
 `;
 
-const SelectButton = styled(Button)`
-  width: 100%;
+const ActionArea = styled.div`
   margin-top: auto;
-  border: 0;
-  border-radius: 10px;
-  padding: 16px 20px;
-  color: ${COLORS.white};
-  background: ${COLORS.primary};
-  box-shadow: 0 3px 8px rgba(33, 33, 33, 0.18);
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.2;
 `;
 
 export default Create;
