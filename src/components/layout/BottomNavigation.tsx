@@ -45,7 +45,7 @@ const Navigation = styled.nav<{ $fixed: boolean }>`
   min-height: 96px;
   padding: 6px 0;
   border-top: 1px solid ${COLORS.black200};
-  background: rgba(255, 255, 255, 0.93);
+  background: ${COLORS.white};
   backdrop-filter: blur(12px);
 
   ${({ $fixed }) =>
