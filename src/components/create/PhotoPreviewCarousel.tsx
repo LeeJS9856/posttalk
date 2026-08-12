@@ -2,12 +2,11 @@ import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import styled from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
+import { SWIPE_THRESHOLD } from '@/constants/ui';
 
 type PhotoPreviewCarouselProps = {
   images: readonly string[];
 };
-
-const SWIPE_THRESHOLD = 48;
 
 const PhotoPreviewCarousel = ({ images }: PhotoPreviewCarouselProps): React.JSX.Element => {
   const [currentIndex, setCurrentIndex] = useState(0);

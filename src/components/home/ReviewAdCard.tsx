@@ -2,16 +2,11 @@ import styled from 'styled-components';
 
 import chevronRightIcon from '@/assets/icons/chevron right.svg?raw';
 import StatusBadge from '@/components/common/StatusBadge';
-import type { AdStatus } from '@/components/common/StatusBadge';
 import SurfaceCard from '@/components/common/SurfaceCard';
 import { COLORS } from '@/constants/colors';
+import { REVIEW_DESCRIPTION, type ReviewStatus } from '@/constants/home';
 
-type ReviewAdCardProps = { status: AdStatus; storeName: string; image: string; onClick: () => void };
-
-const DESCRIPTION = {
-  pending: '운영팀에서 내용을 확인하고 있어요',
-  supplement: '사진을 한 장 더 올려주세요',
-} as const;
+type ReviewAdCardProps = { status: ReviewStatus; storeName: string; image: string; onClick: () => void };
 
 const ReviewAdCard = ({ status, storeName, image, onClick }: ReviewAdCardProps): React.JSX.Element => (
   <CardButton type="button" onClick={onClick} $status={status}>
@@ -19,13 +14,13 @@ const ReviewAdCard = ({ status, storeName, image, onClick }: ReviewAdCardProps):
     <CardText>
       <StatusWrapper><StatusBadge status={status} /></StatusWrapper>
       <StoreName>{storeName}</StoreName>
-      <Description>{DESCRIPTION[status]}</Description>
+      <Description>{REVIEW_DESCRIPTION[status]}</Description>
     </CardText>
     <Chevron $status={status} aria-hidden="true" dangerouslySetInnerHTML={{ __html: chevronRightIcon }} />
   </CardButton>
 );
 
-const CardButton = styled(SurfaceCard).attrs({ as: 'button' })<{ $status: AdStatus }>`
+const CardButton = styled(SurfaceCard).attrs({ as: 'button' })<{ $status: ReviewStatus }>`
   position: relative;
   display: flex;
   align-items: center;
@@ -82,7 +77,7 @@ const Description = styled.span`
   font-weight: 400;
 `;
 
-const Chevron = styled.span<{ $status: AdStatus }>`
+const Chevron = styled.span<{ $status: ReviewStatus }>`
   display: flex;
   align-items: center;
   justify-content: center;
