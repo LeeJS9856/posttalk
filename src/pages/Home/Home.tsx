@@ -101,7 +101,7 @@ const Hero = styled.header`
 const HeroMessage = styled.h1`
   position: relative;
   z-index: 1;
-  margin: 64px 24px 0;
+  margin: 52px 24px 0;
   color: ${COLORS.white};
   font-size: clamp(25px, 6vw, 30px);
   font-weight: 400;

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -12,6 +13,12 @@ const MENU_EXAMPLE_IMAGE =
 
 const Capture = (): React.JSX.Element => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const [photo] = Array.from(event.target.files ?? []);
+    if (photo) navigate('/create/capture/result', { state: { photoUrl: URL.createObjectURL(photo) } });
+  };
 
   return (
     <Page aria-label="광고 사진 촬영 안내">
@@ -28,8 +35,11 @@ const Capture = (): React.JSX.Element => {
       </Guide>
 
       <ActionArea>
-        <PrimaryActionButton type="button">촬영하기</PrimaryActionButton>
+        <PrimaryActionButton type="button" onClick={() => fileInputRef.current?.click()}>
+          촬영하기
+        </PrimaryActionButton>
       </ActionArea>
+      <CameraInput ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} />
     </Page>
   );
 };
@@ -79,6 +89,10 @@ const ExampleImage = styled.img`
 
 const ActionArea = styled.div`
   margin: auto 24px 0;
+`;
+
+const CameraInput = styled.input`
+  display: none;
 `;
 
 export default Capture;

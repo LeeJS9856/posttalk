@@ -66,7 +66,7 @@ const Page = styled(PageFrame)`
 
 const TopContent = styled.header`
   flex: 0 0 auto;
-  padding: 66px 24px 32px;
+  padding: 30px 24px 20px;
 `;
 
 const Title = styled.h1`
@@ -81,7 +81,7 @@ const Guide = styled.section`
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 24px 24px 16px;
+  padding: 16px 24px 16px;
   text-align: center;
 `;
 
