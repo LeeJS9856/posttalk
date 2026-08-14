@@ -10,6 +10,7 @@ import BottomNavigation from '@/components/layout/BottomNavigation';
 import PageFrame from '@/components/layout/PageFrame';
 import { COLORS } from '@/constants/colors';
 import { AD_FORMAT_OPTIONS, PHOTO_PREVIEW_IMAGES, VIDEO_PREVIEW_SOURCE, type AdFormat } from '@/constants/create';
+import { FONT_SIZE } from '@/constants/typography';
 
 const Create = (): React.JSX.Element => {
   const [selectedFormat, setSelectedFormat] = useState<AdFormat>('photo');
@@ -71,7 +72,7 @@ const TopContent = styled.header`
 
 const Title = styled.h1`
   color: ${COLORS.black700};
-  font-size: 23px;
+  font-size: ${FONT_SIZE.titleLarge};
   font-weight: 700;
   line-height: 1.42;
   letter-spacing: -0.55px;
@@ -87,7 +88,7 @@ const Guide = styled.section`
 
 const GuideTitle = styled.h2`
   color: ${COLORS.black700};
-  font-size: 19px;
+  font-size: ${FONT_SIZE.bodyLarge};
   font-weight: 700;
   line-height: 1.45;
 `;
@@ -95,7 +96,7 @@ const GuideTitle = styled.h2`
 const GuideDescription = styled.p`
   margin-top: 2px;
   color: ${COLORS.black500};
-  font-size: 18px;
+  font-size: ${FONT_SIZE.body};
   font-weight: 400;
   line-height: 1.45;
 `;

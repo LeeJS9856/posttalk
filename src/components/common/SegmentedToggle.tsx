@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
+import { FONT_SIZE } from '@/constants/typography';
 
 export type SegmentedToggleOption<T extends string> = {
   label: string;
@@ -81,7 +82,7 @@ const ToggleButton = styled.button<{ $selected: boolean }>`
   border-radius: 22px;
   color: ${({ $selected }) => ($selected ? COLORS.white : COLORS.black400)};
   background: transparent;
-  font-size: 16px;
+  font-size: ${FONT_SIZE.body};
   font-weight: ${({ $selected }) => ($selected ? 700 : 400)};
   transition: color 180ms ease-out;
 `;

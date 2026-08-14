@@ -7,6 +7,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import PageFrame from '@/components/layout/PageFrame';
 import { ARCHIVED_ADS, ARCHIVE_FILTERS, type ArchiveFormat, type StatusFilter } from '@/constants/archive';
 import { COLORS } from '@/constants/colors';
+import { FONT_SIZE } from '@/constants/typography';
 
 const Archive = (): React.JSX.Element => {
   const [format, setFormat] = useState<ArchiveFormat>('photo');
@@ -127,7 +128,7 @@ const FormatTab = styled.button<{ $active: boolean }>`
   border: 0;
   color: ${({ $active }) => ($active ? COLORS.black700 : COLORS.black400)};
   background: transparent;
-  font-size: 16px;
+  font-size: ${FONT_SIZE.body};
   font-weight: ${({ $active }) => ($active ? 700 : 500)};
 
 `;
@@ -153,7 +154,7 @@ const FilterButton = styled.button<{ $active: boolean }>`
   color: ${({ $active }) => ($active ? COLORS.white : COLORS.black400)};
   background: ${({ $active }) => ($active ? COLORS.primary : COLORS.primary100)};
   box-shadow: 0 2px 5px rgba(33, 33, 33, 0.12);
-  font-size: 14px;
+  font-size: ${FONT_SIZE.label};
   font-weight: 400;
 `;
 
@@ -170,7 +171,7 @@ const AdList = styled.div`
 const EmptyMessage = styled.p`
   padding: 72px 24px;
   color: ${COLORS.black500};
-  font-size: 16px;
+  font-size: ${FONT_SIZE.body};
   text-align: center;
 `;
 

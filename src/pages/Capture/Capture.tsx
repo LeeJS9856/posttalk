@@ -7,6 +7,7 @@ import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import PageHeader from '@/components/layout/PageHeader';
 import PageFrame from '@/components/layout/PageFrame';
 import { COLORS } from '@/constants/colors';
+import { FONT_SIZE } from '@/constants/typography';
 
 const MENU_EXAMPLE_IMAGE =
   'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=960&q=85';
@@ -69,14 +70,14 @@ const Popo = styled.img`
 const GuideCopy = styled.p`
   margin-top: 20px;
   color: ${COLORS.black700};
-  font-size: 29px;
+  font-size: ${FONT_SIZE.title};
   font-weight: 400;
   line-height: 1.55;
 `;
 
 const GuideStrong = styled.strong`
   color: ${COLORS.primary700};
-  font-size: 33px;
+  font-size: ${FONT_SIZE.titleLarge};
   font-weight: 700;
 `;
 

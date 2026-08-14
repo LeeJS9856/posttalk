@@ -8,6 +8,7 @@ import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import PageFrame from '@/components/layout/PageFrame';
 import PageHeader from '@/components/layout/PageHeader';
 import { COLORS } from '@/constants/colors';
+import { FONT_SIZE } from '@/constants/typography';
 
 type CaptureResultLocationState = {
   photoUrl?: string;
@@ -74,14 +75,14 @@ const Popo = styled.img`
 const GuideCopy = styled.p`
   margin-top: 20px;
   color: ${COLORS.black700};
-  font-size: 23px;
+  font-size: ${FONT_SIZE.title};
   font-weight: 400;
   line-height: 1.55;
 `;
 
 const GuideStrong = styled.strong`
   color: ${COLORS.primary700};
-  font-size: 27px;
+  font-size: ${FONT_SIZE.titleLarge};
   font-weight: 700;
 `;
 
@@ -100,7 +101,7 @@ const EmptyPhoto = styled.p`
   place-items: center;
   color: ${COLORS.black500};
   background: ${COLORS.primary100};
-  font-size: 16px;
+  font-size: ${FONT_SIZE.bodyLarge};
 `;
 
 const ActionArea = styled.div`
@@ -117,7 +118,7 @@ const RetakeButton = styled(Button)`
   color: ${COLORS.black500};
   background: ${COLORS.white};
   box-shadow: 0 2px 5px rgba(33, 33, 33, 0.12);
-  font-size: 16px;
+  font-size: ${FONT_SIZE.bodyLarge};
   font-weight: 700;
 
   &:hover {

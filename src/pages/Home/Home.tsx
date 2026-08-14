@@ -10,6 +10,7 @@ import DraggableBottomSheet from '@/components/layout/DraggableBottomSheet';
 import PageFrame from '@/components/layout/PageFrame';
 import { COLORS } from '@/constants/colors';
 import { DEMO_REVIEW_ADS } from '@/constants/home';
+import { FONT_SIZE } from '@/constants/typography';
 import heroImage from '@/assets/temporary-market-hero.jpg';
 
 const Home = (): React.JSX.Element => {
@@ -103,7 +104,7 @@ const HeroMessage = styled.h1`
   z-index: 1;
   margin: 52px 24px 0;
   color: ${COLORS.white};
-  font-size: clamp(25px, 6vw, 30px);
+  font-size: clamp(22px, 5.6vw, 26px);
   font-weight: 400;
   line-height: 1.42;
   letter-spacing: -0.7px;
@@ -126,7 +127,7 @@ const SectionHeader = styled.div`
 const SectionTitle = styled.h2`
   margin-bottom: 18px;
   color: ${COLORS.black700};
-  font-size: 20px;
+  font-size: ${FONT_SIZE.title};
   font-weight: 700;
 `;
 
@@ -135,7 +136,7 @@ const AllButton = styled.button`
   border: 0;
   color: ${COLORS.black700};
   background: transparent;
-  font-size: 13px;
+  font-size: ${FONT_SIZE.label};
   font-weight: 400;
 `;
 
