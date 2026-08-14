@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
+import { FONT_SIZE } from '@/constants/typography';
 
 type FloatingCreateButtonProps = { onClick: () => void };
 
@@ -23,12 +24,12 @@ const CreateButton = styled.button`
   color: ${COLORS.white};
   background: ${COLORS.primary700};
   box-shadow: 0 8px 18px rgba(33, 33, 33, 0.22);
-  font-size: 18px;
+  font-size: ${FONT_SIZE.bodyLarge};
   font-weight: 700;
 `;
 
 const Plus = styled.span`
-  font-size: 38px;
+  font-size: 32px;
   font-weight: 400;
   line-height: 1;
 `;

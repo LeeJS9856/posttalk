@@ -2,6 +2,7 @@ import styled from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
 import { STATUS_COPY, type AdStatus } from '@/constants/status';
+import { FONT_SIZE } from '@/constants/typography';
 
 type StatusBadgeProps = { status: AdStatus };
 
@@ -23,7 +24,7 @@ const Badge = styled.span<{ $status: AdStatus }>`
     if ($status === 'posted') return COLORS.statusPostBackground;
     return $status === 'pending' ? COLORS.primary200 : COLORS.statusCheckBackground;
   }};
-  font-size: 13px;
+  font-size: ${FONT_SIZE.caption};
   font-weight: 700;
 `;
 

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
 import { NAV_ITEMS } from '@/constants/navigation';
+import { FONT_SIZE } from '@/constants/typography';
 
 type BottomNavigationProps = {
   fixed?: boolean;
@@ -66,7 +67,7 @@ const NavigationItem = styled.button<{ $active: boolean }>`
   border: 0;
   color: ${({ $active }) => ($active ? COLORS.navActive : COLORS.navInactive)};
   background: transparent;
-  font-size: 14px;
+  font-size: ${FONT_SIZE.caption};
   font-weight: ${({ $active }) => ($active ? 700 : 400)};
 `;
 

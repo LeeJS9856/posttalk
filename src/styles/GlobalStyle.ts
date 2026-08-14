@@ -1,6 +1,7 @@
 import { createGlobalStyle } from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
+import { FONT_SIZE } from '@/constants/typography';
 
 const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
@@ -20,6 +21,8 @@ const GlobalStyle = createGlobalStyle`
   body {
     color: ${COLORS.black700};
     background: ${COLORS.background.main};
+    font-size: ${FONT_SIZE.bodyLarge};
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
 

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 import chevronRightIcon from '@/assets/icons/chevron right.svg?raw';
 import { COLORS } from '@/constants/colors';
+import { FONT_SIZE } from '@/constants/typography';
 
 type PageHeaderProps = {
   onBack?: () => void;
@@ -28,8 +29,8 @@ const Header = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 74px;
-  padding: 30px 24px 18px;
+  height: 64px;
+  padding: 20px 24px 18px;
 `;
 
 const BackButton = styled.button`
@@ -58,7 +59,7 @@ const BackIcon = styled.span`
 
 const Title = styled.h1`
   color: ${COLORS.black700};
-  font-size: 20px;
+  font-size: ${FONT_SIZE.title};
   font-weight: 700;
   line-height: 1.3;
 `;

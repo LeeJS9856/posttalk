@@ -5,6 +5,7 @@ import StatusBadge from '@/components/common/StatusBadge';
 import SurfaceCard from '@/components/common/SurfaceCard';
 import { COLORS } from '@/constants/colors';
 import { REVIEW_DESCRIPTION, type ReviewStatus } from '@/constants/home';
+import { FONT_SIZE } from '@/constants/typography';
 
 type ReviewAdCardProps = { status: ReviewStatus; storeName: string; image: string; onClick: () => void };
 
@@ -67,13 +68,13 @@ const StatusWrapper = styled.div`
 const StoreName = styled.strong`
   color: ${COLORS.black700};
   margin-bottom: 3px;
-  font-size: 20px;
+  font-size: ${FONT_SIZE.titleSmall};
   line-height: 1.2;
 `;
 
 const Description = styled.span`
   color: ${COLORS.black500};
-  font-size: 12px;
+  font-size: ${FONT_SIZE.caption};
   font-weight: 400;
 `;
 

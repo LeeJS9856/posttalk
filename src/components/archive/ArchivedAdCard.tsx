@@ -6,6 +6,7 @@ import StatusBadge from '@/components/common/StatusBadge';
 import { COLORS } from '@/constants/colors';
 import type { ArchiveFormat } from '@/constants/archive';
 import type { AdStatus } from '@/constants/status';
+import { FONT_SIZE } from '@/constants/typography';
 
 type ArchivedAdCardProps = {
   date: string;
@@ -44,13 +45,13 @@ const CardInfo = styled.div`
   padding: 20px 24px 22px;
 
   > span {
-    font-size: 14px;
+    font-size: ${FONT_SIZE.label};
   }
 `;
 
 const Title = styled.h2`
   color: ${COLORS.black700};
-  font-size: 19px;
+  font-size: ${FONT_SIZE.titleSmall};
   font-weight: 700;
   line-height: 1.3;
 `;
@@ -58,7 +59,7 @@ const Title = styled.h2`
 const Date = styled.time`
   grid-column: 1 / -1;
   color: ${COLORS.black500};
-  font-size: 14px;
+  font-size: ${FONT_SIZE.label};
   font-weight: 400;
 `;
 
