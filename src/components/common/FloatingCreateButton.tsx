@@ -17,10 +17,10 @@ const CreateButton = styled.button`
   align-items: center;
   justify-content: center;
   gap: 10px;
-  width: min(260px, calc(100% - 48px));
-  height: 64px;
+  width: min(230px, calc(100% - 48px));
+  height: 56px;
   border: 0;
-  border-radius: 32px;
+  border-radius: 28px;
   color: ${COLORS.white};
   background: ${COLORS.primary700};
   box-shadow: 0 8px 18px rgba(33, 33, 33, 0.22);
@@ -29,7 +29,7 @@ const CreateButton = styled.button`
 `;
 
 const Plus = styled.span`
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 400;
   line-height: 1;
 `;

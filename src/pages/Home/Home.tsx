@@ -162,7 +162,7 @@ const PromotionList = styled.div`
 const FloatingButtonArea = styled.div`
   position: absolute;
   right: 0;
-  bottom: 110px;
+  bottom: 96px;
   left: 0;
   z-index: 30;
   display: flex;
