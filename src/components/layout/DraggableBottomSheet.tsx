@@ -53,7 +53,7 @@ const DraggableBottomSheet = ({ children }: DraggableBottomSheetProps): React.JS
 const Sheet = styled.section<{ $expanded: boolean }>`
   position: absolute;
   right: 0;
-  bottom: 88px;
+  bottom: 80px;
   left: 0;
   z-index: 10;
   top: ${({ $expanded }) => ($expanded ? '88px' : 'min(clamp(248px, 45svh, 430px), calc(100svh - 320px))')};

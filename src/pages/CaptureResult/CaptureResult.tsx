@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import popo from '@/assets/popo.svg';
 import Button from '@/components/common/Button';
+import { FlowTitle, FlowTitleStrong } from '@/components/common/FlowTitle';
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import PageFrame from '@/components/layout/PageFrame';
 import PageHeader from '@/components/layout/PageHeader';
@@ -32,7 +33,7 @@ const CaptureResult = (): React.JSX.Element => {
       <Content>
         <Popo src={popo} alt="" />
         <GuideCopy>
-          <GuideStrong>주력 메뉴</GuideStrong>의 사진을
+          <FlowTitleStrong>주력 메뉴</FlowTitleStrong>의 사진을
           <br />
           이걸로 하실래요?
         </GuideCopy>
@@ -42,7 +43,7 @@ const CaptureResult = (): React.JSX.Element => {
         <RetakeButton type="button" onClick={() => fileInputRef.current?.click()}>
           다시 촬영
         </RetakeButton>
-        <PrimaryActionButton type="button" onClick={() => navigate('/create')}>
+        <PrimaryActionButton type="button" onClick={() => navigate('/create/generating', { state: { photoUrl } })}>
           확인
         </PrimaryActionButton>
       </ActionArea>
@@ -72,18 +73,8 @@ const Popo = styled.img`
   height: 54px;
 `;
 
-const GuideCopy = styled.p`
+const GuideCopy = styled(FlowTitle)`
   margin-top: 20px;
-  color: ${COLORS.black700};
-  font-size: ${FONT_SIZE.title};
-  font-weight: 400;
-  line-height: 1.55;
-`;
-
-const GuideStrong = styled.strong`
-  color: ${COLORS.primary700};
-  font-size: ${FONT_SIZE.titleLarge};
-  font-weight: 700;
 `;
 
 const PhotoPreview = styled.img`

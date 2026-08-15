@@ -60,7 +60,7 @@ const Page = styled(PageFrame)`
   display: flex;
   flex-direction: column;
   height: 100svh;
-  padding-bottom: 96px;
+  padding-bottom: 80px;
   overflow: hidden;
   background: ${COLORS.background.main};
 `;

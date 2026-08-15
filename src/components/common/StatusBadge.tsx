@@ -15,7 +15,7 @@ const Badge = styled.span<{ $status: AdStatus }>`
   align-items: center;
   width: fit-content;
   border-radius: 999px;
-  padding: 4px 14px;
+  padding: 3px 10px;
   color: ${({ $status }) => {
     if ($status === 'posted') return COLORS.statusPost;
     return $status === 'pending' ? COLORS.primary : COLORS.statusCheck;
@@ -26,6 +26,7 @@ const Badge = styled.span<{ $status: AdStatus }>`
   }};
   font-size: ${FONT_SIZE.caption};
   font-weight: 700;
+  line-height: 1.4;
 `;
 
 export default StatusBadge;

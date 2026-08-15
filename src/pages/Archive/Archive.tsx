@@ -69,7 +69,7 @@ const Archive = (): React.JSX.Element => {
 };
 
 const Page = styled(PageFrame)`
-  padding-bottom: 96px;
+  padding-bottom: 80px;
   background: ${COLORS.background.main};
 `;
 

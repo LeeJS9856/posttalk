@@ -43,8 +43,8 @@ const Navigation = styled.nav<{ $fixed: boolean }>`
   z-index: 20;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  min-height: 96px;
-  padding: 6px 0;
+  min-height: 80px;
+  padding: 4px 0;
   border-top: 1px solid ${COLORS.black200};
   background: ${COLORS.white};
   backdrop-filter: blur(12px);
@@ -63,7 +63,7 @@ const NavigationItem = styled.button<{ $active: boolean }>`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 4px;
   border: 0;
   color: ${({ $active }) => ($active ? COLORS.navActive : COLORS.navInactive)};
   background: transparent;
@@ -73,8 +73,8 @@ const NavigationItem = styled.button<{ $active: boolean }>`
 
 const NavIcon = styled.span`
   display: block;
-  width: 27px;
-  height: 27px;
+  width: 24px;
+  height: 24px;
 
   svg {
     display: block;

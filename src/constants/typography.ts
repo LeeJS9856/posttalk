@@ -6,5 +6,6 @@ export const FONT_SIZE = {
   titleSmall: '17px',
   title: '18px',
   titleLarge: '20px',
+  titleEmphasis: '22px',
   display: '24px',
 } as const;
