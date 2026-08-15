@@ -4,7 +4,10 @@ import Archive from '@/pages/Archive/Archive';
 import Capture from '@/pages/Capture/Capture';
 import CaptureResult from '@/pages/CaptureResult/CaptureResult';
 import Create from '@/pages/Create/Create';
+import GenerationComplete from '@/pages/GenerationComplete/GenerationComplete';
+import Generating from '@/pages/Generating/Generating';
 import Home from '@/pages/Home/Home';
+import PublishRequested from '@/pages/PublishRequested/PublishRequested';
 
 const App = (): React.JSX.Element => (
   <BrowserRouter>
@@ -13,6 +16,9 @@ const App = (): React.JSX.Element => (
       <Route path="/create" element={<Create />} />
       <Route path="/create/capture" element={<Capture />} />
       <Route path="/create/capture/result" element={<CaptureResult />} />
+      <Route path="/create/generating" element={<Generating />} />
+      <Route path="/create/complete" element={<GenerationComplete />} />
+      <Route path="/create/requested" element={<PublishRequested />} />
       <Route path="/archive" element={<Archive />} />
     </Routes>
   </BrowserRouter>
