@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
 
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import SegmentedToggle from '@/components/common/SegmentedToggle';
 import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
 import VideoPreview from '@/components/create/VideoPreview';
 import BottomNavigation from '@/components/layout/BottomNavigation';
-import PageFrame from '@/components/layout/PageFrame';
-import { COLORS } from '@/constants/colors';
 import { AD_FORMAT_OPTIONS, PHOTO_PREVIEW_IMAGES, VIDEO_PREVIEW_SOURCE, type AdFormat } from '@/constants/create';
-import { FONT_SIZE } from '@/constants/typography';
+import { ActionArea, Guide, GuideDescription, GuideTitle, Page, Title, TopContent } from '@/pages/Create/Create.styles';
 
 const Create = (): React.JSX.Element => {
   const [selectedFormat, setSelectedFormat] = useState<AdFormat>('photo');
@@ -54,55 +51,5 @@ const Create = (): React.JSX.Element => {
     </Page>
   );
 };
-
-const Page = styled(PageFrame)`
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100svh;
-  padding-bottom: 80px;
-  overflow: hidden;
-  background: ${COLORS.background.main};
-`;
-
-const TopContent = styled.header`
-  flex: 0 0 auto;
-  padding: 30px 24px 20px;
-`;
-
-const Title = styled.h1`
-  color: ${COLORS.black700};
-  font-size: ${FONT_SIZE.titleLarge};
-  font-weight: 700;
-  line-height: 1.42;
-  letter-spacing: -0.55px;
-`;
-
-const Guide = styled.section`
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  padding: 16px 24px 16px;
-  text-align: center;
-`;
-
-const GuideTitle = styled.h2`
-  color: ${COLORS.black700};
-  font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: 700;
-  line-height: 1.45;
-`;
-
-const GuideDescription = styled.p`
-  margin-top: 2px;
-  color: ${COLORS.black500};
-  font-size: ${FONT_SIZE.body};
-  font-weight: 400;
-  line-height: 1.45;
-`;
-
-const ActionArea = styled.div`
-  margin-top: auto;
-`;
 
 export default Create;
