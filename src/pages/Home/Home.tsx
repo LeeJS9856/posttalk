@@ -1,24 +1,51 @@
-import { useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { getMerchantHome, type MerchantHomeData } from '@/apis/home';
 import FloatingCreateButton from '@/components/common/FloatingCreateButton';
 import PromotionCard from '@/components/home/PromotionCard';
-import ReviewAdCard from '@/components/home/ReviewAdCard';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import DraggableBottomSheet from '@/components/layout/DraggableBottomSheet';
 import PageFrame from '@/components/layout/PageFrame';
 import { COLORS } from '@/constants/colors';
-import { DEMO_REVIEW_ADS } from '@/constants/home';
 import { FONT_SIZE } from '@/constants/typography';
+import { TEMP_QR_USER_SESSION } from '@/constants/user';
 import heroImage from '@/assets/temporary-market-hero.jpg';
 
 const Home = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const storeName = searchParams.get('store') ?? searchParams.get('organization') ?? '득량만';
-  const reviewAds = useMemo(() => (searchParams.get('pending') === '0' ? [] : DEMO_REVIEW_ADS), [searchParams]);
-  const pendingCount = reviewAds.length;
+  const [homeData, setHomeData] = useState<MerchantHomeData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadHome = async () => {
+      try {
+        const response = await getMerchantHome({
+          storeId: TEMP_QR_USER_SESSION.storeId,
+          signal: controller.signal,
+        });
+
+        setHomeData(response.data);
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          setHasError(true);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadHome();
+
+    return () => controller.abort();
+  }, []);
+
+  const storeName = homeData?.summary.storeName ?? TEMP_QR_USER_SESSION.storeName;
+  const pendingCount = homeData?.summary.totalAttentionCount ?? 0;
 
   return (
     <AppFrame>
@@ -26,7 +53,11 @@ const Home = (): React.JSX.Element => {
         <HeroMessage>
           <HeroStrong>{storeName}</HeroStrong> 사장님,
           <br />
-          {pendingCount > 0 ? (
+          {isLoading ? (
+            '홈 정보를 불러오고 있어요.'
+          ) : hasError ? (
+            '홈 정보를 불러오지 못했어요.'
+          ) : pendingCount > 0 ? (
             <>
               확인이 필요한 광고가
               <br />
@@ -38,31 +69,13 @@ const Home = (): React.JSX.Element => {
         </HeroMessage>
       </Hero>
       <DraggableBottomSheet>
-        {pendingCount > 0 && (
-          <Section>
-            <SectionTitle>확인이 필요한 광고</SectionTitle>
-            <ReviewList>
-              {reviewAds.map((ad) => (
-                <ReviewAdCard
-                  key={ad.id}
-                  status={ad.status}
-                  storeName={storeName}
-                  image={heroImage}
-                  onClick={() => undefined}
-                />
-              ))}
-            </ReviewList>
-          </Section>
-        )}
         <Section $withTopBorder={pendingCount === 0}>
           <SectionHeader>
             <SectionTitle>내가 만든 광고</SectionTitle>
-            <AllButton type="button">전체 보기</AllButton>
+            <AllButton type="button" onClick={() => navigate('/archive')}>전체 보기</AllButton>
           </SectionHeader>
           <PromotionList>
             <PromotionCard onClick={() => navigate('/create')} />
-            <PromotionCard image={heroImage} title={`${storeName} 홍보물`} onClick={() => undefined} />
-            <PromotionCard image={heroImage} title={`${storeName} 두 번째 홍보물`} onClick={() => undefined} />
           </PromotionList>
         </Section>
       </DraggableBottomSheet>
@@ -138,13 +151,6 @@ const AllButton = styled.button`
   background: transparent;
   font-size: ${FONT_SIZE.label};
   font-weight: 400;
-`;
-
-const ReviewList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 30px;
 `;
 
 const PromotionList = styled.div`
