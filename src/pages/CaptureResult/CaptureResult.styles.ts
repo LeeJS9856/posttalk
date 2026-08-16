@@ -49,6 +49,12 @@ export const EmptyPhoto = styled.p`
   font-size: ${FONT_SIZE.bodyLarge};
 `;
 
+export const UploadMessage = styled.p`
+  margin: 12px 0 0;
+  color: #d92d20;
+  font-size: ${FONT_SIZE.body};
+`;
+
 export const ActionArea = styled.div`
   display: grid;
   grid-template-columns: 1fr 2fr;

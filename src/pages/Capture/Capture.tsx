@@ -16,7 +16,7 @@ const Capture = (): React.JSX.Element => {
 
   const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const [photo] = Array.from(event.target.files ?? []);
-    if (photo) navigate('/create/capture/result', { state: { photoUrl: URL.createObjectURL(photo) } });
+    if (photo) navigate('/create/capture/result', { state: { photo, photoUrl: URL.createObjectURL(photo) } });
   };
 
   return (
