@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
 import { ClipLoader } from 'react-spinners';
 import { useLocation, useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
 
 import popo from '@/assets/popo.svg';
-import { FlowSubtitle, FlowTitle, FlowTitleStrong } from '@/components/common/FlowTitle';
-import PageFrame from '@/components/layout/PageFrame';
+import { FlowTitleStrong } from '@/components/common/FlowTitle';
 import { COLORS } from '@/constants/colors';
+import { Content, Description, LoaderArea, Page, Popo, Title } from '@/pages/Generating/Generating.styles';
 
 const Generating = (): React.JSX.Element => (
   <GeneratingContent />
@@ -42,40 +41,5 @@ const GeneratingContent = (): React.JSX.Element => {
     </Page>
   );
 };
-
-const Page = styled(PageFrame)`
-  display: flex;
-  min-height: 100svh;
-  flex-direction: column;
-  background: ${COLORS.background.main};
-`;
-
-const Content = styled.main`
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  padding: clamp(92px, 19svh, 154px) 24px 0;
-  text-align: center;
-`;
-
-const Popo = styled.img`
-  width: 57px;
-  height: 54px;
-`;
-
-const Title = styled(FlowTitle)`
-  margin-top: 18px;
-`;
-
-const Description = styled(FlowSubtitle)`
-  margin-top: 2px;
-`;
-
-const LoaderArea = styled.div`
-  display: grid;
-  margin-top: 46px;
-  place-items: center;
-`;
 
 export default Generating;

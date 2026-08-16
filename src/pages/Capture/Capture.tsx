@@ -1,13 +1,11 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
 
 import popo from '@/assets/popo.svg';
-import { FlowTitle, FlowTitleStrong } from '@/components/common/FlowTitle';
+import { FlowTitleStrong } from '@/components/common/FlowTitle';
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import PageHeader from '@/components/layout/PageHeader';
-import PageFrame from '@/components/layout/PageFrame';
-import { COLORS } from '@/constants/colors';
+import { ActionArea, CameraInput, ExampleImage, Guide, GuideCopy, Page, Popo } from '@/pages/Capture/Capture.styles';
 
 const MENU_EXAMPLE_IMAGE =
   'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=960&q=85';
@@ -44,46 +42,5 @@ const Capture = (): React.JSX.Element => {
     </Page>
   );
 };
-
-const Page = styled(PageFrame)`
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 24px;
-  background: ${COLORS.background.main};
-`;
-
-const Guide = styled.section`
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  padding: clamp(56px, 12svh, 104px) 24px 0;
-  text-align: center;
-`;
-
-const Popo = styled.img`
-  width: 57px;
-  height: 54px;
-`;
-
-const GuideCopy = styled(FlowTitle)`
-  margin-top: 20px;
-`;
-
-const ExampleImage = styled.img`
-  width: 100%;
-  aspect-ratio: 1.2;
-  margin-top: 16px;
-  object-fit: cover;
-`;
-
-const ActionArea = styled.div`
-  margin: auto 24px 0;
-`;
-
-const CameraInput = styled.input`
-  display: none;
-`;
 
 export default Capture;
