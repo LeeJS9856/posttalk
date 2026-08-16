@@ -1,21 +1,79 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 
+import {
+  getMerchantArchive,
+  type MerchantArchiveItem,
+  type MerchantArchiveStatus,
+} from '@/apis/archive';
 import ArchivedAdCard from '@/components/archive/ArchivedAdCard';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import PageHeader from '@/components/layout/PageHeader';
 import PageFrame from '@/components/layout/PageFrame';
-import { ARCHIVED_ADS, ARCHIVE_FILTERS, type ArchiveFormat, type StatusFilter } from '@/constants/archive';
+import { ARCHIVE_FILTERS, type ArchivedAd, type ArchiveFormat, type StatusFilter } from '@/constants/archive';
 import { COLORS } from '@/constants/colors';
 import { FONT_SIZE } from '@/constants/typography';
+import { TEMP_QR_USER_SESSION } from '@/constants/user';
+
+const API_STATUS_BY_FILTER: Record<StatusFilter, MerchantArchiveStatus> = {
+  all: 'all',
+  pending: 'pending_review',
+  supplement: 'rejected',
+  posted: 'approved',
+};
+
+const UI_STATUS_BY_API_STATUS: Record<MerchantArchiveItem['status'], ArchivedAd['status']> = {
+  pending_review: 'pending',
+  rejected: 'supplement',
+  approved: 'posted',
+};
+
+const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => ({
+  id: item.submissionId,
+  format: item.mediaType,
+  title: item.title,
+  date: item.createdAt.slice(0, 10).replaceAll('-', '.'),
+  status: UI_STATUS_BY_API_STATUS[item.status],
+  images: item.mediaType === 'photo' && item.thumbnailUrl ? [item.thumbnailUrl] : [],
+  thumbnailUrl: item.thumbnailUrl ?? undefined,
+});
 
 const Archive = (): React.JSX.Element => {
   const [format, setFormat] = useState<ArchiveFormat>('photo');
   const [filter, setFilter] = useState<StatusFilter>('all');
-  const ads = useMemo(
-    () => ARCHIVED_ADS.filter((ad) => ad.format === format && (filter === 'all' || ad.status === filter)),
-    [filter, format],
-  );
+  const [ads, setAds] = useState<ArchivedAd[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadArchive = async () => {
+      setIsLoading(true);
+      setHasError(false);
+
+      try {
+        const response = await getMerchantArchive({
+          storeId: TEMP_QR_USER_SESSION.storeId,
+          mediaType: format,
+          status: API_STATUS_BY_FILTER[filter],
+          signal: controller.signal,
+        });
+
+        setAds(response.data.items.map(toArchivedAd));
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          setHasError(true);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
+    };
+
+    void loadArchive();
+
+    return () => controller.abort();
+  }, [filter, format]);
 
   return (
     <Page aria-label="보관함 페이지">
@@ -53,7 +111,11 @@ const Archive = (): React.JSX.Element => {
       </FilterList>
 
       <Content>
-        {ads.length > 0 ? (
+        {isLoading ? (
+          <EmptyMessage>보관함을 불러오는 중이에요.</EmptyMessage>
+        ) : hasError ? (
+          <EmptyMessage>보관함을 불러오지 못했어요.</EmptyMessage>
+        ) : ads.length > 0 ? (
           <AdList>
             {ads.map((ad) => (
               <ArchivedAdCard key={ad.id} {...ad} />

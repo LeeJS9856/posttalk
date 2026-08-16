@@ -1,7 +1,6 @@
 import styled from 'styled-components';
 
 import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
-import VideoPreview from '@/components/create/VideoPreview';
 import StatusBadge from '@/components/common/StatusBadge';
 import { COLORS } from '@/constants/colors';
 import type { ArchiveFormat } from '@/constants/archive';
@@ -14,15 +13,17 @@ type ArchivedAdCardProps = {
   images: readonly string[];
   status: AdStatus;
   title: string;
-  videoSrc?: string;
+  thumbnailUrl?: string;
 };
 
-const ArchivedAdCard = ({ date, format, images, status, title, videoSrc }: ArchivedAdCardProps): React.JSX.Element => (
+const ArchivedAdCard = ({ date, format, images, status, title, thumbnailUrl }: ArchivedAdCardProps): React.JSX.Element => (
   <Card>
-    {format === 'photo' ? (
+    {format === 'photo' && images.length > 0 ? (
       <PhotoPreviewCarousel images={images} />
+    ) : thumbnailUrl ? (
+      <Thumbnail src={thumbnailUrl} alt={`${title} 미리보기`} />
     ) : (
-      <VideoPreview videoSrc={videoSrc ?? ''} />
+      <MissingPreview>미리보기를 준비 중이에요.</MissingPreview>
     )}
     <CardInfo>
       <Title>{title}</Title>
@@ -35,6 +36,23 @@ const ArchivedAdCard = ({ date, format, images, status, title, videoSrc }: Archi
 const Card = styled.article`
   overflow: hidden;
   background: ${COLORS.white};
+`;
+
+const Thumbnail = styled.img`
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+`;
+
+const MissingPreview = styled.div`
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1;
+  place-items: center;
+  color: ${COLORS.black500};
+  background: ${COLORS.black200};
+  font-size: ${FONT_SIZE.body};
 `;
 
 const CardInfo = styled.div`
