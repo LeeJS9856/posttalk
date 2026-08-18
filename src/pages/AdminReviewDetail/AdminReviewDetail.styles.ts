@@ -49,6 +49,13 @@ export const AdContent = styled.p`
   white-space: pre-line;
 `;
 
+export const EmptyMessage = styled.p`
+  padding: 72px 0;
+  color: ${COLORS.black500};
+  font-size: ${FONT_SIZE.body};
+  text-align: center;
+`;
+
 export const ActionArea = styled.footer`
   display: grid;
   grid-template-columns: 1fr 2fr;
