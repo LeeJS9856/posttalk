@@ -41,13 +41,6 @@ export const Format = styled.p`
   font-size: ${FONT_SIZE.label};
 `;
 
-export const Preview = styled.img`
-  display: block;
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-`;
-
 export const AdContent = styled.p`
   margin-top: 26px;
   color: ${COLORS.black700};

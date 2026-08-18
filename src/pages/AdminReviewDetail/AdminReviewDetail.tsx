@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { getAdminReviewDetail, type AdminReviewDetail, type AdminReviewItem } from '@/apis/adminReviews';
+import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
+import VideoPreview from '@/components/create/VideoPreview';
 import PageHeader from '@/components/layout/PageHeader';
-import { ActionArea, AdContent, ApproveButton, Content, Date, Format, Meta, Page, Preview, RejectButton, Title } from '@/pages/AdminReviewDetail/AdminReviewDetail.styles';
+import { VIDEO_PREVIEW_SOURCE } from '@/constants/create';
+import { ActionArea, AdContent, ApproveButton, Content, Date, Format, Meta, Page, RejectButton, Title } from '@/pages/AdminReviewDetail/AdminReviewDetail.styles';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1610057099431-d73a1c9d2f2f?auto=format&fit=crop&w=900&q=90';
 const FALLBACK_CONTENT = '주당들을 일단 저장해야하는 가성비 갑 👍\n말바우시장 특랑만 횟집🐟\n\n양도 혜자인데 신선한 회까지 가성비는 제대로 챙겼다!!\n싱싱에 매주 3천원, 소주 2천원으로\n술까지 가성비 챙긴 특랑만 횟집 😁\n1년 365일 회를 부축이는 이유가 있다구~~~~\n\n@@푸~찐한 시장 정 느끼러 가자!!\n\n📍광주 북구 동문대로 97번길 81\n📍매일 11:00 ~ 23:00 (한달에 두번 휴일)\n\n#광주맛집 #광주맛집추천 #광주횟집 #광주가볼만한곳\n#광주동어시장횟집 #광주횟집추천 #말바우시장맛집';
@@ -46,6 +49,9 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
   const formatLabel = detail.mediaType === 'video' ? '영상 광고' : '사진 광고';
   const date = detail.createdAt.slice(0, 10).replaceAll('-', '.');
   const content = [detail.content.caption, detail.content.hashtags?.join(' ')].filter(Boolean).join('\n\n');
+  const assetUrls = detail.assets?.flatMap((asset) => [asset.url, asset.publicUrl, asset.fileUrl].filter((url): url is string => Boolean(url))) ?? [];
+  const photoImages = assetUrls.length > 0 ? assetUrls : [detail.primaryAssetUrl ?? detail.thumbnailUrl ?? FALLBACK_IMAGE];
+  const videoSrc = detail.submissionId.startsWith('demo-') ? VIDEO_PREVIEW_SOURCE : detail.primaryAssetUrl ?? VIDEO_PREVIEW_SOURCE;
 
   return (
     <Page aria-label="광고 검토 상세">
@@ -56,7 +62,7 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
           <Date>{date}</Date>
         </Meta>
         <Format>{formatLabel}</Format>
-        <Preview src={detail.primaryAssetUrl ?? detail.thumbnailUrl ?? FALLBACK_IMAGE} alt={`${detail.title} 광고 미리보기`} />
+        {detail.mediaType === 'video' ? <VideoPreview videoSrc={videoSrc} /> : <PhotoPreviewCarousel images={photoImages} />}
         <AdContent>{content || FALLBACK_CONTENT}</AdContent>
       </Content>
       <ActionArea>

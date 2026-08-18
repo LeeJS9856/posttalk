@@ -14,6 +14,12 @@ export interface AdminReviewsData {
 
 export interface AdminReviewDetail extends AdminReviewItem {
   primaryAssetUrl: string | null;
+  assets?: Array<{
+    assetType?: string;
+    fileUrl?: string | null;
+    publicUrl?: string | null;
+    url?: string | null;
+  }>;
   content: {
     caption?: string | null;
     hashtags?: string[] | null;
