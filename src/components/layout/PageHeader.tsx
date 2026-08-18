@@ -8,18 +8,19 @@ import { FONT_SIZE } from '@/constants/typography';
 type PageHeaderProps = {
   onBack?: () => void;
   rightAction?: ReactNode;
+  showTitle?: boolean;
   title: string;
 };
 
-const PageHeader = ({ onBack, rightAction, title }: PageHeaderProps): React.JSX.Element => (
+const PageHeader = ({ onBack, rightAction, showTitle = true, title }: PageHeaderProps): React.JSX.Element => (
   <Header>
     {onBack ? (
       <BackButton type="button" aria-label={`${title}으로 돌아가기`} onClick={onBack}>
         <BackIcon aria-hidden="true" dangerouslySetInnerHTML={{ __html: chevronRightIcon }} />
-        <Title>{title}</Title>
+        {showTitle && <Title>{title}</Title>}
       </BackButton>
     ) : (
-      <Title>{title}</Title>
+      showTitle && <Title>{title}</Title>
     )}
     {rightAction && <RightAction>{rightAction}</RightAction>}
   </Header>

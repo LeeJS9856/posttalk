@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { getAdminReviews, type AdminReviewItem } from '@/apis/adminReviews';
 import chevronRightIcon from '@/assets/icons/chevron right.svg?raw';
@@ -33,6 +34,7 @@ const getDescription = (item: AdminReviewItem): string => {
 };
 
 const AdminReviews = (): React.JSX.Element => {
+  const navigate = useNavigate();
   const [items, setItems] = useState<AdminReviewItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -70,7 +72,7 @@ const AdminReviews = (): React.JSX.Element => {
         {isLoading ? <EmptyMessage>검토 목록을 불러오는 중이에요.</EmptyMessage> : (
           <ReviewList>
             {displayItems.map((item) => (
-              <ReviewCard key={item.submissionId} type="button">
+              <ReviewCard key={item.submissionId} type="button" onClick={() => navigate(`/admin/reviews/${item.submissionId}`, { state: { review: item } })}>
                 <Thumbnail src={item.thumbnailUrl ?? FALLBACK_THUMBNAIL} alt="" />
                 <CardText>
                   <Title>{item.title}</Title>

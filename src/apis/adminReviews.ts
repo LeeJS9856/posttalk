@@ -12,6 +12,14 @@ export interface AdminReviewsData {
   items: AdminReviewItem[];
 }
 
+export interface AdminReviewDetail extends AdminReviewItem {
+  primaryAssetUrl: string | null;
+  content: {
+    caption?: string | null;
+    hashtags?: string[] | null;
+  };
+}
+
 export const getAdminReviews = ({ marketName, signal }: { marketName: string; signal?: AbortSignal }) => {
   const searchParams = new URLSearchParams({ marketName, status: 'pending_review', limit: '30' });
 
@@ -21,3 +29,10 @@ export const getAdminReviews = ({ marketName, signal }: { marketName: string; si
     signal,
   });
 };
+
+export const getAdminReviewDetail = ({ submissionId, signal }: { submissionId: string; signal?: AbortSignal }) =>
+  api<ApiSuccessResponse<AdminReviewDetail>>({
+    baseUrl: '',
+    path: `/api/admin/reviews/${encodeURIComponent(submissionId)}`,
+    signal,
+  });

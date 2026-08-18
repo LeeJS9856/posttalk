@@ -4,6 +4,7 @@ import Archive from '@/pages/Archive/Archive';
 import AdminHome from '@/pages/AdminHome/AdminHome';
 import AdminArchive from '@/pages/AdminArchive/AdminArchive';
 import AdminReviews from '@/pages/AdminReviews/AdminReviews';
+import AdminReviewDetailPage from '@/pages/AdminReviewDetail/AdminReviewDetail';
 import Capture from '@/pages/Capture/Capture';
 import CaptureResult from '@/pages/CaptureResult/CaptureResult';
 import Create from '@/pages/Create/Create';
@@ -20,6 +21,7 @@ const App = (): React.JSX.Element => (
       <Route path="/admin" element={<AdminHome />} />
       <Route path="/admin/archive" element={<AdminArchive />} />
       <Route path="/admin/reviews" element={<AdminReviews />} />
+      <Route path="/admin/reviews/:submissionId" element={<AdminReviewDetailPage />} />
       <Route path="/create" element={<Create />} />
       <Route path="/create/capture" element={<Capture />} />
       <Route path="/create/capture/result" element={<CaptureResult />} />
