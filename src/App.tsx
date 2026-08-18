@@ -8,6 +8,7 @@ import GenerationComplete from '@/pages/GenerationComplete/GenerationComplete';
 import Generating from '@/pages/Generating/Generating';
 import Home from '@/pages/Home/Home';
 import PublishRequested from '@/pages/PublishRequested/PublishRequested';
+import VoiceQuestion from '@/pages/VoiceQuestion/VoiceQuestion';
 
 const App = (): React.JSX.Element => (
   <BrowserRouter>
@@ -16,6 +17,7 @@ const App = (): React.JSX.Element => (
       <Route path="/create" element={<Create />} />
       <Route path="/create/capture" element={<Capture />} />
       <Route path="/create/capture/result" element={<CaptureResult />} />
+      <Route path="/create/questions/:questionIndex" element={<VoiceQuestion />} />
       <Route path="/create/generating" element={<Generating />} />
       <Route path="/create/complete" element={<GenerationComplete />} />
       <Route path="/create/requested" element={<PublishRequested />} />
