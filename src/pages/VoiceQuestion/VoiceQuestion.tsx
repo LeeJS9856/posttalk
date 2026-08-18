@@ -8,7 +8,7 @@ import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import PageHeader from '@/components/layout/PageHeader';
 import { VOICE_QUESTIONS } from '@/constants/questions';
 import { useAdDraft } from '@/hooks/useAdDraft';
-import { ActionArea, AnswerField, AnswerHint, Content, MicButton, Page, Popo, QuestionCount, RecordStatus, TitleArea } from '@/pages/VoiceQuestion/VoiceQuestion.styles';
+import { ActionArea, AnswerField, AnswerHint, Content, MicButton, Page, Popo, RecordStatus, TitleArea } from '@/pages/VoiceQuestion/VoiceQuestion.styles';
 
 const VoiceQuestion = (): React.JSX.Element => {
   const navigate = useNavigate();
@@ -18,9 +18,8 @@ const VoiceQuestion = (): React.JSX.Element => {
   const isLastQuestion = questionIndex === VOICE_QUESTIONS.length - 1;
   const isOptional = 'optional' in question && question.optional;
   const { draft, setAnswer } = useAdDraft();
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const finalTranscriptRef = useRef('');
   const [answer, setAnswerText] = useState(draft.answers[question.key] ?? '');
   const [isRecording, setIsRecording] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -31,11 +30,7 @@ const VoiceQuestion = (): React.JSX.Element => {
   }, [draft.answers, question.key]);
 
   const finishRecording = (): void => {
-    const recorder = mediaRecorderRef.current;
-    if (recorder?.state === 'recording') recorder.stop();
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    mediaRecorderRef.current = null;
-    streamRef.current = null;
+    recognitionRef.current = null;
     setIsRecording(false);
   };
 
@@ -73,20 +68,28 @@ const VoiceQuestion = (): React.JSX.Element => {
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      stream.getTracks().forEach((track) => track.stop());
       const recognition = new SpeechRecognitionApi();
 
-      streamRef.current = stream;
-      mediaRecorderRef.current = recorder;
       recognition.lang = 'ko-KR';
-      recognition.continuous = false;
+      recognition.continuous = true;
       recognition.interimResults = true;
       recognition.onresult = (event) => {
-        const transcript = Array.from({ length: event.results.length - event.resultIndex }, (_, index) => (
-          event.results[event.resultIndex + index]?.[0]?.transcript ?? ''
-        )).join('');
+        let interimTranscript = '';
 
-        setAnswerText(transcript.trim());
+        for (let index = event.resultIndex; index < event.results.length; index += 1) {
+          const result = event.results[index];
+          const transcript = result?.[0]?.transcript.trim() ?? '';
+
+          if (!transcript) continue;
+          if (result.isFinal) {
+            finalTranscriptRef.current = `${finalTranscriptRef.current} ${transcript}`.trim();
+          } else {
+            interimTranscript = `${interimTranscript} ${transcript}`.trim();
+          }
+        }
+
+        setAnswerText(`${finalTranscriptRef.current} ${interimTranscript}`.trim());
       };
       recognition.onerror = (event) => {
         if (event.error !== 'aborted') {
@@ -96,8 +99,8 @@ const VoiceQuestion = (): React.JSX.Element => {
       };
       recognition.onend = finishRecording;
 
-      recorder.start();
       recognitionRef.current = recognition;
+      finalTranscriptRef.current = answer.trim();
       setErrorMessage(null);
       setIsRecording(true);
       recognition.start();
@@ -134,7 +137,6 @@ const VoiceQuestion = (): React.JSX.Element => {
       <Content>
         <Popo src={popo} alt="" />
         <TitleArea>
-          <QuestionCount>{questionIndex + 1} / {VOICE_QUESTIONS.length}</QuestionCount>
           <FlowTitle>{question.question}</FlowTitle>
           <FlowSubtitle>마이크 버튼을 누르고 편하게 말씀해 주세요.</FlowSubtitle>
         </TitleArea>
