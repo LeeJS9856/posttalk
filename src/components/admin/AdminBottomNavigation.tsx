@@ -11,7 +11,7 @@ import { FONT_SIZE } from '@/constants/typography';
 const ADMIN_NAV_ITEMS: ReadonlyArray<{ label: string; icon: string; path?: string }> = [
   { label: '홈', icon: homeIcon, path: '/admin' },
   { label: '검토', icon: campaignIcon },
-  { label: '보관함', icon: archiveIcon },
+  { label: '보관함', icon: archiveIcon, path: '/admin/archive' },
   { label: '마이', icon: myIcon },
 ];
 

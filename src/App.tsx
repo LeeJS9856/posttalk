@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import Archive from '@/pages/Archive/Archive';
 import AdminHome from '@/pages/AdminHome/AdminHome';
+import AdminArchive from '@/pages/AdminArchive/AdminArchive';
 import Capture from '@/pages/Capture/Capture';
 import CaptureResult from '@/pages/CaptureResult/CaptureResult';
 import Create from '@/pages/Create/Create';
@@ -16,6 +17,7 @@ const App = (): React.JSX.Element => (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/admin" element={<AdminHome />} />
+      <Route path="/admin/archive" element={<AdminArchive />} />
       <Route path="/create" element={<Create />} />
       <Route path="/create/capture" element={<Capture />} />
       <Route path="/create/capture/result" element={<CaptureResult />} />
