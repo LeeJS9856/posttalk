@@ -7,11 +7,18 @@ import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
 import VideoPreview from '@/components/create/VideoPreview';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { AD_FORMAT_OPTIONS, PHOTO_PREVIEW_IMAGES, VIDEO_PREVIEW_SOURCE, type AdFormat } from '@/constants/create';
+import { useAdDraft } from '@/hooks/useAdDraft';
 import { ActionArea, Guide, GuideDescription, GuideTitle, Page, Title, TopContent } from '@/pages/Create/Create.styles';
 
 const Create = (): React.JSX.Element => {
   const [selectedFormat, setSelectedFormat] = useState<AdFormat>('photo');
   const navigate = useNavigate();
+  const { resetDraft } = useAdDraft();
+
+  const startCreation = (): void => {
+    resetDraft(selectedFormat);
+    navigate('/create/capture?asset=menu_board');
+  };
 
   return (
     <Page aria-label="광고 제작 페이지">
@@ -41,7 +48,7 @@ const Create = (): React.JSX.Element => {
           {selectedFormat === 'photo' ? '여러 장으로 보기 쉽게 정리해드려요.' : '짧은 영상으로 가게의 매력을 알려드려요.'}
         </GuideDescription>
         <ActionArea>
-          <PrimaryActionButton type="button" onClick={() => navigate('/create/capture')}>
+          <PrimaryActionButton type="button" onClick={startCreation}>
             선택하기
           </PrimaryActionButton>
         </ActionArea>
