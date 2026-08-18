@@ -22,7 +22,7 @@ export const ReviewCard = styled.button`
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 76px;
+  min-height: 92px;
   border: 0;
   border-radius: 10px;
   padding: 8px 14px 8px 10px;
@@ -32,8 +32,8 @@ export const ReviewCard = styled.button`
 `;
 
 export const Thumbnail = styled.img`
-  width: 58px;
-  height: 58px;
+  width: 72px;
+  height: 72px;
   flex: 0 0 auto;
   border-radius: 8px;
   object-fit: cover;
