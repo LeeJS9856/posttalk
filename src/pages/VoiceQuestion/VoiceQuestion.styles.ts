@@ -35,13 +35,6 @@ export const TitleArea = styled.section`
   }
 `;
 
-export const QuestionCount = styled.p`
-  margin-bottom: 6px;
-  color: ${COLORS.primary};
-  font-size: ${FONT_SIZE.label};
-  font-weight: 700;
-`;
-
 export const MicButton = styled.button<{ $recording: boolean }>`
   display: grid;
   width: 76px;
