@@ -19,7 +19,7 @@ const VoiceQuestion = (): React.JSX.Element => {
   const isOptional = 'optional' in question && question.optional;
   const { draft, setAnswer } = useAdDraft();
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const finalTranscriptRef = useRef('');
+  const initialAnswerRef = useRef('');
   const [answer, setAnswerText] = useState(draft.answers[question.key] ?? '');
   const [isRecording, setIsRecording] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -75,21 +75,12 @@ const VoiceQuestion = (): React.JSX.Element => {
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.onresult = (event) => {
-        let interimTranscript = '';
+        const recognizedText = Array.from(
+          { length: event.results.length },
+          (_, index) => event.results[index]?.[0]?.transcript.trim() ?? '',
+        ).filter(Boolean).join(' ');
 
-        for (let index = event.resultIndex; index < event.results.length; index += 1) {
-          const result = event.results[index];
-          const transcript = result?.[0]?.transcript.trim() ?? '';
-
-          if (!transcript) continue;
-          if (result.isFinal) {
-            finalTranscriptRef.current = `${finalTranscriptRef.current} ${transcript}`.trim();
-          } else {
-            interimTranscript = `${interimTranscript} ${transcript}`.trim();
-          }
-        }
-
-        setAnswerText(`${finalTranscriptRef.current} ${interimTranscript}`.trim());
+        setAnswerText(`${initialAnswerRef.current} ${recognizedText}`.trim());
       };
       recognition.onerror = (event) => {
         if (event.error !== 'aborted') {
@@ -100,7 +91,7 @@ const VoiceQuestion = (): React.JSX.Element => {
       recognition.onend = finishRecording;
 
       recognitionRef.current = recognition;
-      finalTranscriptRef.current = answer.trim();
+      initialAnswerRef.current = answer.trim();
       setErrorMessage(null);
       setIsRecording(true);
       recognition.start();
