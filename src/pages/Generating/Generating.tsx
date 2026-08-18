@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 import popo from '@/assets/popo.svg';
 import { createSubmission, getGenerationResult, startGeneration, uploadAsset } from '@/apis/creation';
+import { getServerHealth } from '@/apis/server';
 import { FlowTitleStrong } from '@/components/common/FlowTitle';
 import { COLORS } from '@/constants/colors';
 import { useAdDraft } from '@/hooks/useAdDraft';
@@ -32,6 +33,7 @@ const GeneratingContent = (): React.JSX.Element => {
       }
 
       try {
+        await getServerHealth();
         const [menuBoardAsset, foodPhotoAsset] = await Promise.all([
           uploadAsset({ assetType: 'menu_board', file: menuBoard.file }),
           uploadAsset({ assetType: 'food_photo', file: foodPhoto.file }),

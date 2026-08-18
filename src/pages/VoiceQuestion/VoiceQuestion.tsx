@@ -57,7 +57,21 @@ const VoiceQuestion = (): React.JSX.Element => {
       return;
     }
 
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setErrorMessage('보안 연결에서만 마이크를 사용할 수 있어요. HTTPS 주소로 다시 접속해주세요.');
+      return;
+    }
+
     try {
+      const permission = await navigator.permissions?.query({ name: 'microphone' });
+
+      if (permission?.state === 'denied') {
+        const message = '마이크 권한이 차단되어 있어요. 브라우저 주소창의 사이트 설정에서 마이크를 허용한 뒤 다시 시도해주세요.';
+        setErrorMessage(message);
+        window.alert(message);
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       const recognition = new SpeechRecognitionApi();
@@ -87,9 +101,13 @@ const VoiceQuestion = (): React.JSX.Element => {
       setErrorMessage(null);
       setIsRecording(true);
       recognition.start();
-    } catch {
+    } catch (error) {
       finishRecording();
-      setErrorMessage('마이크를 사용할 수 없어요. 마이크 권한을 허용한 뒤 다시 시도해주세요.');
+      const message = error instanceof DOMException && error.name === 'NotAllowedError'
+        ? '마이크 권한이 필요해요. 브라우저에서 표시되는 권한 요청을 허용하거나 사이트 설정에서 마이크를 허용해주세요.'
+        : '마이크를 시작하지 못했어요. 다른 앱이 마이크를 사용 중인지 확인한 뒤 다시 시도해주세요.';
+      setErrorMessage(message);
+      if (error instanceof DOMException && error.name === 'NotAllowedError') window.alert(message);
     }
   };
 
