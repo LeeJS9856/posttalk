@@ -20,6 +20,7 @@ const VoiceQuestion = (): React.JSX.Element => {
   const { draft, setAnswer } = useAdDraft();
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const initialAnswerRef = useRef('');
+  const recognizedTextRef = useRef('');
   const [answer, setAnswerText] = useState(draft.answers[question.key] ?? '');
   const [isRecording, setIsRecording] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -30,6 +31,7 @@ const VoiceQuestion = (): React.JSX.Element => {
   }, [draft.answers, question.key]);
 
   const finishRecording = (): void => {
+    setAnswerText(`${initialAnswerRef.current} ${recognizedTextRef.current}`.trim());
     recognitionRef.current = null;
     setIsRecording(false);
   };
@@ -41,7 +43,6 @@ const VoiceQuestion = (): React.JSX.Element => {
 
   const stopRecording = (): void => {
     recognitionRef.current?.stop();
-    finishRecording();
   };
 
   const startRecording = async (): Promise<void> => {
@@ -73,14 +74,12 @@ const VoiceQuestion = (): React.JSX.Element => {
 
       recognition.lang = 'ko-KR';
       recognition.continuous = true;
-      recognition.interimResults = true;
+      recognition.interimResults = false;
       recognition.onresult = (event) => {
-        const recognizedText = Array.from(
+        recognizedTextRef.current = Array.from(
           { length: event.results.length },
           (_, index) => event.results[index]?.[0]?.transcript.trim() ?? '',
         ).filter(Boolean).join(' ');
-
-        setAnswerText(`${initialAnswerRef.current} ${recognizedText}`.trim());
       };
       recognition.onerror = (event) => {
         if (event.error !== 'aborted') {
@@ -92,6 +91,7 @@ const VoiceQuestion = (): React.JSX.Element => {
 
       recognitionRef.current = recognition;
       initialAnswerRef.current = answer.trim();
+      recognizedTextRef.current = '';
       setErrorMessage(null);
       setIsRecording(true);
       recognition.start();
@@ -135,7 +135,7 @@ const VoiceQuestion = (): React.JSX.Element => {
         <MicButton type="button" $recording={isRecording} onClick={isRecording ? stopRecording : () => void startRecording()} aria-label={isRecording ? '녹음 멈추기' : '음성으로 답변하기'}>
           {isRecording ? <MdStop /> : <MdMic />}
         </MicButton>
-        <RecordStatus aria-live="polite">{isRecording ? '듣고 있어요. 말씀을 멈추면 자동으로 완료돼요.' : '말한 내용은 글자로 바뀌어요.'}</RecordStatus>
+        <RecordStatus aria-live="polite">{isRecording ? '듣고 있어요. 말씀을 마친 뒤 정지 버튼을 눌러주세요.' : '말한 내용은 녹음이 끝난 뒤 글자로 바뀌어요.'}</RecordStatus>
 
         <AnswerField value={answer} onChange={(event) => setAnswerText(event.target.value)} placeholder={question.hint} aria-label={`${question.question} 답변`} />
         <AnswerHint>{errorMessage ?? (isOptional ? '답변하지 않고 다음으로 넘어갈 수 있어요.' : '잘못 인식된 내용은 직접 수정할 수 있어요.')}</AnswerHint>
