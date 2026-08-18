@@ -4,7 +4,7 @@ import { getAdminHome, type AdminHomeData } from '@/apis/adminHome';
 import AdminBottomNavigation from '@/components/admin/AdminBottomNavigation';
 import ReviewAdCard from '@/components/home/ReviewAdCard';
 import DraggableBottomSheet from '@/components/layout/DraggableBottomSheet';
-import { AllButton, AppFrame, Hero, HeroMessage, HeroStrong, RecentCard, RecentList, ReviewList, Section, SectionHeader, SectionTitle } from '@/pages/AdminHome/AdminHome.styles';
+import { AllButton, AppFrame, EmptyMessage, Hero, HeroMessage, HeroStrong, RecentCard, RecentList, ReviewList, Section, SectionHeader, SectionTitle } from '@/pages/AdminHome/AdminHome.styles';
 
 const ADMIN_MARKET_NAME = '말바우시장';
 const FALLBACK_THUMBNAIL = 'https://images.unsplash.com/photo-1610057099431-d73a1c9d2f2f?auto=format&fit=crop&w=360&q=85';
@@ -58,11 +58,15 @@ const AdminHome = (): React.JSX.Element => {
           <SectionHeader>
             <SectionTitle>검수가 필요한 광고</SectionTitle>
           </SectionHeader>
-          <ReviewList>
-            {pendingItems.map((ad) => (
-              <ReviewAdCard key={ad.submissionId} status="pending" storeName={ad.storeName} image={ad.thumbnailUrl ?? FALLBACK_THUMBNAIL} onClick={() => undefined} />
-            ))}
-          </ReviewList>
+          {!isLoading && !hasError && pendingItems.length === 0 ? (
+            <EmptyMessage>검수가 필요한 광고가 없어요.</EmptyMessage>
+          ) : (
+            <ReviewList>
+              {pendingItems.map((ad) => (
+                <ReviewAdCard key={ad.submissionId} status="pending" storeName={ad.storeName} image={ad.thumbnailUrl ?? FALLBACK_THUMBNAIL} onClick={() => undefined} />
+              ))}
+            </ReviewList>
+          )}
         </Section>
 
         <Section>
@@ -70,14 +74,18 @@ const AdminHome = (): React.JSX.Element => {
             <SectionTitle>최근 업로드 된 광고</SectionTitle>
             <AllButton type="button" onClick={() => undefined}>전체 보기 ›</AllButton>
           </SectionHeader>
-          <RecentList>
-            {recentItems.map((ad) => (
-              <RecentCard key={ad.submissionId} type="button" onClick={() => undefined}>
-                <img src={ad.thumbnailUrl ?? FALLBACK_THUMBNAIL} alt={`${ad.title} 광고 미리보기`} />
-                <strong>{ad.title}</strong>
-              </RecentCard>
-            ))}
-          </RecentList>
+          {!isLoading && !hasError && recentItems.length === 0 ? (
+            <EmptyMessage>최근 업로드 된 광고가 없어요.</EmptyMessage>
+          ) : (
+            <RecentList>
+              {recentItems.map((ad) => (
+                <RecentCard key={ad.submissionId} type="button" onClick={() => undefined}>
+                  <img src={ad.thumbnailUrl ?? FALLBACK_THUMBNAIL} alt={`${ad.title} 광고 미리보기`} />
+                  <strong>{ad.title}</strong>
+                </RecentCard>
+              ))}
+            </RecentList>
+          )}
         </Section>
       </DraggableBottomSheet>
 
