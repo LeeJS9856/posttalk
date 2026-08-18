@@ -46,6 +46,7 @@ export class ApiError extends Error {
 type ApiRequestBody = BodyInit | Record<string, unknown> | undefined;
 
 export interface ApiRequestOptions {
+  baseUrl?: string;
   path: string;
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: ApiRequestBody;
@@ -70,6 +71,7 @@ const parseResponseBody = async (response: Response): Promise<unknown> => {
 };
 
 export const api = async <T>({
+  baseUrl = apiBaseUrl,
   path,
   method = 'GET',
   body,
@@ -85,7 +87,7 @@ export const api = async <T>({
     requestHeaders.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+  const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers: requestHeaders,
     body: requestBody,
