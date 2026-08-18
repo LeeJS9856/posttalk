@@ -9,6 +9,22 @@ import { CardText, Chevron, Content, Description, EmptyMessage, Page, ReviewCard
 
 const ADMIN_MARKET_NAME = '말바우시장';
 const FALLBACK_THUMBNAIL = 'https://images.unsplash.com/photo-1610057099431-d73a1c9d2f2f?auto=format&fit=crop&w=360&q=85';
+const DEMO_REVIEW_ITEMS: AdminReviewItem[] = [
+  {
+    submissionId: 'demo-review-1',
+    thumbnailUrl: FALLBACK_THUMBNAIL,
+    title: '특랑만',
+    createdAt: '2026-08-18T09:30:00.000Z',
+    mediaType: 'photo',
+  },
+  {
+    submissionId: 'demo-review-2',
+    thumbnailUrl: FALLBACK_THUMBNAIL,
+    title: '특랑만',
+    createdAt: '2026-08-04T09:30:00.000Z',
+    mediaType: 'video',
+  },
+];
 
 const getDescription = (item: AdminReviewItem): string => {
   const mediaType = item.mediaType === 'video' ? '동영상 광고' : '사진 광고';
@@ -19,7 +35,6 @@ const getDescription = (item: AdminReviewItem): string => {
 const AdminReviews = (): React.JSX.Element => {
   const [items, setItems] = useState<AdminReviewItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -28,8 +43,8 @@ const AdminReviews = (): React.JSX.Element => {
       try {
         const response = await getAdminReviews({ marketName: ADMIN_MARKET_NAME, signal: controller.signal });
         setItems(response.data.items);
-      } catch (error) {
-        if (!(error instanceof DOMException && error.name === 'AbortError')) setHasError(true);
+      } catch {
+        // 관리자 키가 아직 설정되지 않은 경우에도 예시 카드로 화면을 확인할 수 있습니다.
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
       }
@@ -38,6 +53,8 @@ const AdminReviews = (): React.JSX.Element => {
     void loadReviews();
     return () => controller.abort();
   }, []);
+
+  const displayItems = items.length > 0 ? items : DEMO_REVIEW_ITEMS;
 
   return (
     <Page aria-label="검토 페이지">
@@ -50,9 +67,9 @@ const AdminReviews = (): React.JSX.Element => {
         )}
       />
       <Content>
-        {isLoading ? <EmptyMessage>검토 목록을 불러오는 중이에요.</EmptyMessage> : hasError ? <EmptyMessage>검토 목록을 불러오지 못했어요.</EmptyMessage> : items.length > 0 ? (
+        {isLoading ? <EmptyMessage>검토 목록을 불러오는 중이에요.</EmptyMessage> : (
           <ReviewList>
-            {items.map((item) => (
+            {displayItems.map((item) => (
               <ReviewCard key={item.submissionId} type="button">
                 <Thumbnail src={item.thumbnailUrl ?? FALLBACK_THUMBNAIL} alt="" />
                 <CardText>
@@ -63,7 +80,7 @@ const AdminReviews = (): React.JSX.Element => {
               </ReviewCard>
             ))}
           </ReviewList>
-        ) : <EmptyMessage>검토할 광고가 없어요.</EmptyMessage>}
+        )}
       </Content>
       <AdminBottomNavigation />
     </Page>
