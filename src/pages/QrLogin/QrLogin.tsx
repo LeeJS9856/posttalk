@@ -4,10 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/layout/PageHeader';
 import { CameraFrame, CameraVideo, Content, Description, Page, Status, Title } from '@/pages/QrLogin/QrLogin.styles';
 
-type DetectedBarcode = { rawValue: string };
-type BarcodeDetectorInstance = { detect: (source: HTMLVideoElement) => Promise<DetectedBarcode[]> };
-type BarcodeDetectorConstructor = new (options: { formats: string[] }) => BarcodeDetectorInstance;
-
 const getQrToken = (rawValue: string): string | null => {
   try {
     return new URL(rawValue).searchParams.get('qrToken');
@@ -16,6 +12,8 @@ const getQrToken = (rawValue: string): string | null => {
   }
 };
 
+type ScannerControls = { stop: () => void };
+
 const QrLogin = (): React.JSX.Element => {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -23,47 +21,33 @@ const QrLogin = (): React.JSX.Element => {
   const [status, setStatus] = useState({ isError: false, message: '카메라를 QR 코드에 맞춰주세요.' });
 
   useEffect(() => {
-    let animationFrameId: number | null = null;
-    let stream: MediaStream | null = null;
+    let controls: ScannerControls | null = null;
     let isDisposed = false;
 
     const startScanner = async (): Promise<void> => {
-      const Detector = (window as unknown as { BarcodeDetector?: BarcodeDetectorConstructor }).BarcodeDetector;
-      if (!Detector) {
-        setStatus({ isError: true, message: '이 기기에서는 QR 자동 인식을 지원하지 않아요. 최신 Chrome에서 다시 시도해주세요.' });
-        return;
-      }
-
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' }, height: { ideal: 720 }, width: { ideal: 1280 } },
-        });
         const video = videoRef.current;
-        if (!video || isDisposed) return;
+        if (!video) return;
 
-        video.srcObject = stream;
-        await video.play();
-        const detector = new Detector({ formats: ['qr_code'] });
+        const { BrowserQRCodeReader } = await import('@zxing/browser');
+        const reader = new BrowserQRCodeReader(undefined, {
+          delayBetweenScanAttempts: 250,
+          delayBetweenScanSuccess: 500,
+        });
+        controls = await reader.decodeFromConstraints(
+          { video: { facingMode: { ideal: 'environment' }, height: { ideal: 720 }, width: { ideal: 1280 } } },
+          video,
+          (result, _error, scannerControls) => {
+            if (isDisposed || hasScannedRef.current || !result) return;
 
-        const scanFrame = async (): Promise<void> => {
-          if (isDisposed || hasScannedRef.current) return;
+            const qrToken = getQrToken(result.getText());
+            if (!qrToken) return;
 
-          if (video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
-            const detectedCodes = await detector.detect(video);
-            const qrToken = detectedCodes.map(({ rawValue }) => getQrToken(rawValue)).find((token): token is string => Boolean(token));
-
-            if (qrToken) {
-              hasScannedRef.current = true;
-              stream?.getTracks().forEach((track) => track.stop());
-              window.location.assign(`/?qrToken=${encodeURIComponent(qrToken)}`);
-              return;
-            }
-          }
-
-          animationFrameId = window.requestAnimationFrame(() => void scanFrame());
-        };
-
-        void scanFrame();
+            hasScannedRef.current = true;
+            scannerControls.stop();
+            window.location.assign(`/?qrToken=${encodeURIComponent(qrToken)}`);
+          },
+        );
       } catch (error) {
         if (!isDisposed) {
           const message = error instanceof DOMException && error.name === 'NotAllowedError'
@@ -77,8 +61,7 @@ const QrLogin = (): React.JSX.Element => {
     void startScanner();
     return () => {
       isDisposed = true;
-      if (animationFrameId !== null) window.cancelAnimationFrame(animationFrameId);
-      stream?.getTracks().forEach((track) => track.stop());
+      controls?.stop();
     };
   }, []);
 
