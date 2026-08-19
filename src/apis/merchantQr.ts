@@ -42,7 +42,7 @@ export interface MerchantSession {
 
 export interface MerchantQrActivationInput {
   category: string;
-  description: string;
+  locationAddress: string;
   marketName: string;
   ownerName: string;
   storeName: string;
