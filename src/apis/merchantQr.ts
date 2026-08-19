@@ -38,7 +38,7 @@ export interface MerchantQrOnboarding {
 }
 
 export interface MerchantQrData {
-  onboarding: MerchantQrOnboarding;
+  onboarding?: MerchantQrOnboarding;
   qr: {
     id: string;
     qrToken: string;

@@ -13,6 +13,14 @@ import { Card, Description, Field, Form, GuideItem, GuideList, GuideTitle, Input
 type EntryStatus = 'checking' | 'registering' | 'unregistered' | 'photo-guide' | 'error';
 type LocationStatus = 'idle' | 'loading' | 'ready' | 'error';
 
+const DEFAULT_ONBOARDING: MerchantQrOnboarding = {
+  needsCategorySelection: true,
+  needsLocationCapture: true,
+  selectedCategory: null,
+  categoryOptions: [],
+  photoGuide: null,
+};
+
 const getQrToken = (): string | null => new URLSearchParams(window.location.search).get('qrToken');
 
 const Entry = (): React.JSX.Element => {
@@ -66,7 +74,7 @@ const Entry = (): React.JSX.Element => {
           return;
         }
 
-        const nextOnboarding = response.data.onboarding;
+        const nextOnboarding = response.data.onboarding ?? DEFAULT_ONBOARDING;
         setOnboarding(nextOnboarding);
         setPhotoGuide(nextOnboarding.photoGuide);
         setForm((current) => ({ ...current, category: nextOnboarding.selectedCategory ?? current.category }));
@@ -104,7 +112,8 @@ const Entry = (): React.JSX.Element => {
 
     try {
       const response = await activateMerchantQr({ qrToken, ...form });
-      const nextPhotoGuide = response.data.onboarding.photoGuide;
+      const onboardingResponse = response.data.onboarding ?? (await getMerchantQr({ qrToken })).data.onboarding;
+      const nextPhotoGuide = onboardingResponse?.photoGuide;
 
       if (nextPhotoGuide) {
         setPhotoGuide(nextPhotoGuide);
