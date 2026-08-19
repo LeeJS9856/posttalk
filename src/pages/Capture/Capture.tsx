@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import menuExampleImage from '@/assets/menu.png';
 import popo from '@/assets/popo.svg';
 import { FlowTitleStrong } from '@/components/common/FlowTitle';
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
@@ -8,8 +9,6 @@ import PageHeader from '@/components/layout/PageHeader';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { ActionArea, CameraInput, ExampleImage, Guide, GuideCopy, Page, Popo } from '@/pages/Capture/Capture.styles';
 
-const MENU_EXAMPLE_IMAGE =
-  'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=960&q=85';
 const FOOD_EXAMPLE_IMAGE =
   'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=960&q=85';
 
@@ -40,7 +39,7 @@ const Capture = (): React.JSX.Element => {
           <br />
           <FlowTitleStrong>{isMenuBoard ? '메뉴판' : '주력 메뉴'}</FlowTitleStrong>을 찍어주세요
         </GuideCopy>
-        <ExampleImage src={isMenuBoard ? MENU_EXAMPLE_IMAGE : FOOD_EXAMPLE_IMAGE} alt={isMenuBoard ? '메뉴판 촬영 예시' : '음식 사진 촬영 예시'} />
+        <ExampleImage src={isMenuBoard ? menuExampleImage : FOOD_EXAMPLE_IMAGE} alt={isMenuBoard ? '메뉴판 촬영 예시' : '음식 사진 촬영 예시'} />
       </Guide>
 
       <ActionArea>
