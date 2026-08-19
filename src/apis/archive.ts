@@ -5,6 +5,13 @@ export type MerchantArchiveStatus = 'all' | 'pending_review' | 'approved' | 'rej
 
 export interface MerchantArchiveItem {
   submissionId: string;
+  generatedAssetUrl?: string | null;
+  previewAssets?: Array<{
+    assetType: string;
+    index: number;
+    sortOrder: number;
+    url: string;
+  }>;
   thumbnailUrl: string | null;
   title: string;
   storeName: string;
