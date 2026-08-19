@@ -26,6 +26,12 @@ const UI_STATUS_BY_API_STATUS: Record<MerchantArchiveItem['status'], ArchivedAd[
   approved: 'posted',
 };
 
+const FILTERED_STATUS: Record<Exclude<StatusFilter, 'all'>, ArchivedAd['status']> = {
+  pending: 'pending',
+  supplement: 'supplement',
+  posted: 'posted',
+};
+
 const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => ({
   id: item.submissionId,
   format: item.mediaType,
@@ -39,7 +45,7 @@ const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => ({
 const Archive = (): React.JSX.Element => {
   const [format, setFormat] = useState<ArchiveFormat>('photo');
   const [filter, setFilter] = useState<StatusFilter>('all');
-  const [ads, setAds] = useState<ArchivedAd[]>([]);
+  const [allAds, setAllAds] = useState<ArchivedAd[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -51,14 +57,16 @@ const Archive = (): React.JSX.Element => {
       setHasError(false);
 
       try {
-        const response = await getMerchantArchive({
-          storeId: TEMP_QR_USER_SESSION.storeId,
-          mediaType: format,
-          status: API_STATUS_BY_FILTER[filter],
-          signal: controller.signal,
-        });
+        const responses = await Promise.all(
+          (['photo', 'video'] as const).map((mediaType) => getMerchantArchive({
+            storeId: TEMP_QR_USER_SESSION.storeId,
+            mediaType,
+            status: API_STATUS_BY_FILTER.all,
+            signal: controller.signal,
+          })),
+        );
 
-        setAds(response.data.items.map(toArchivedAd));
+        setAllAds(responses.flatMap((response) => response.data.items.map(toArchivedAd)));
       } catch (error) {
         if (!(error instanceof DOMException && error.name === 'AbortError')) {
           setHasError(true);
@@ -71,7 +79,10 @@ const Archive = (): React.JSX.Element => {
     void loadArchive();
 
     return () => controller.abort();
-  }, [filter, format]);
+  }, []);
+
+  const ads = allAds.filter((ad) =>
+    ad.format === format && (filter === 'all' || ad.status === FILTERED_STATUS[filter]));
 
   return (
     <Page aria-label="보관함 페이지">
