@@ -13,6 +13,16 @@ export type UploadedAsset = {
   mimeType: string;
 };
 
+export type PhotoCheckResult = {
+  review: {
+    feedback: string[];
+    passed: boolean;
+    recommendedAction: string;
+    score: number;
+    summary: string;
+  };
+};
+
 type SubmissionData = { submissionId: string };
 type GenerationJobData = { jobId: string; submissionId: string; status: string };
 type GenerationResultData = { status: string; resultUrl?: string | null };
@@ -27,6 +37,23 @@ export const uploadAsset = async ({ assetType, file, session }: { assetType: Upl
     path: '/api/uploads',
     method: 'POST',
     body,
+  });
+
+  return response.data;
+};
+
+export const checkPhoto = async ({ asset, assetType, session, shotOrder }: { asset: UploadedAsset; assetType: UploadAssetType; session: MerchantSession; shotOrder: number }): Promise<PhotoCheckResult> => {
+  const response = await api<ApiSuccessResponse<PhotoCheckResult>>({
+    path: '/api/photo-check',
+    method: 'POST',
+    body: {
+      qrToken: session.qrToken,
+      bucket: asset.bucket,
+      filePath: asset.filePath,
+      assetType,
+      category: session.category ?? 'restaurant_food',
+      shotOrder,
+    },
   });
 
   return response.data;
