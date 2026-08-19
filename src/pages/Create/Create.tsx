@@ -20,7 +20,7 @@ const Create = (): React.JSX.Element => {
 
   const startCreation = (): void => {
     resetDraft(selectedFormat);
-    navigate(selectedFormat === 'photo' ? '/create/questions/0' : '/create/capture?asset=menu_board');
+    navigate('/create/questions/0');
   };
 
   return (

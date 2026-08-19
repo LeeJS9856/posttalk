@@ -23,6 +23,14 @@ export type AdSessionPhotoData = {
   status: 'collecting' | 'generating' | string;
 };
 
+export type AdSessionVideoData = {
+  request?: AdSessionRequest;
+  response: 'fail' | 'success';
+  retryMessage?: string;
+  state?: string;
+  status: 'collecting' | 'ready_for_generation' | string;
+};
+
 export type GeneratedAsset = {
   filePath?: string;
   publicUrl?: string;
@@ -58,7 +66,7 @@ export type AdSessionData = {
 };
 
 export const startAdSession = ({ adType, menuIntro, storeId, storeSpecialty }: {
-  adType: 'photo';
+  adType: 'photo' | 'video';
   menuIntro: string;
   storeId: string;
   storeSpecialty: string;
@@ -78,6 +86,20 @@ export const submitAdSessionPhoto = ({ asset, sessionId }: {
     path: `/api/ad-sessions/${encodeURIComponent(sessionId)}/photos`,
     method: 'POST',
     body: { bucket, filePath, fileName, mimeType, fileSize },
+  });
+};
+
+export const submitAdSessionVideo = ({ asset, durationSeconds, sessionId }: {
+  asset: { bucket: string; fileName?: string; filePath: string; fileSize?: number; mimeType?: string };
+  durationSeconds: number;
+  sessionId: string;
+}) => {
+  const { bucket, fileName, filePath, fileSize, mimeType } = asset;
+
+  return api<ApiSuccessResponse<AdSessionVideoData>>({
+    path: `/api/ad-sessions/${encodeURIComponent(sessionId)}/videos`,
+    method: 'POST',
+    body: { bucket, filePath, fileName, mimeType, fileSize, durationSeconds },
   });
 };
 

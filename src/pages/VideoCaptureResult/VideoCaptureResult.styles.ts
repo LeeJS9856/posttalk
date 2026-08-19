@@ -15,3 +15,4 @@ export const EmptyVideo = styled.p`display: grid; width: 100%; aspect-ratio: 9 /
 export const ActionArea = styled.div`display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin: auto 24px 0;`;
 export const RetakeButton = styled(Button)`border: 1px solid ${COLORS.black400}; border-radius: 10px; color: ${COLORS.black500}; background: ${COLORS.white};`;
 export const CameraInput = styled.input`display: none;`;
+export const ErrorMessage = styled.p`margin-top: 12px; color: #c24a3d; font-size: ${FONT_SIZE.body};`;
