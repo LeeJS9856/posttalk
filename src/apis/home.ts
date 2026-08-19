@@ -25,6 +25,7 @@ export interface MerchantHomeAd {
   thumbnailUrl: string | null;
   title: string;
   createdAt: string;
+  updatedAt?: string;
   status: 'pending_review' | 'rejected' | 'approved';
   statusLabel: string;
 }
