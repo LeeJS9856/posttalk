@@ -77,7 +77,7 @@ const Entry = (): React.JSX.Element => {
   return (
     <Page aria-label="QR 진입 페이지">
       <Card>
-        <Title>포스톡 시작하기</Title>
+        <Title>포스트톡 시작하기</Title>
         <Description>{message}</Description>
         {isFormVisible && (
           <Form onSubmit={(event) => void handleSubmit(event)}>
