@@ -4,10 +4,8 @@ export interface MerchantQrStore {
   id: string;
   marketName: string;
   storeName: string;
+  category?: string | null;
   ownerName?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  locationAddress?: string | null;
 }
 
 export interface MerchantCategoryOption {
@@ -15,26 +13,9 @@ export interface MerchantCategoryOption {
   label: string;
 }
 
-export interface PhotoGuideShot {
-  description: string;
-  emphasis?: string;
-  order: number;
-  title: string;
-}
-
-export interface PhotoGuide {
-  category: string;
-  categoryShots: PhotoGuideShot[];
-  commonShots: PhotoGuideShot[];
-  totalRecommendedShots: number;
-}
-
 export interface MerchantQrOnboarding {
   categoryOptions: MerchantCategoryOption[];
   needsCategorySelection: boolean;
-  needsLocationCapture: boolean;
-  photoGuide: PhotoGuide | null;
-  selectedCategory: string | null;
 }
 
 export interface MerchantQrData {
@@ -61,9 +42,7 @@ export interface MerchantSession {
 
 export interface MerchantQrActivationInput {
   category: string;
-  latitude: number;
-  locationAddress?: string;
-  longitude: number;
+  description: string;
   marketName: string;
   ownerName: string;
   storeName: string;

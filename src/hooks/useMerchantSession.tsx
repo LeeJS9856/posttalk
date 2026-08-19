@@ -64,7 +64,7 @@ export const MerchantSessionProvider = ({ children }: { children: ReactNode }): 
           storeId: qr.store.id,
           marketName: qr.store.marketName,
           storeName: qr.store.storeName,
-          category: response.data.onboarding?.selectedCategory ?? undefined,
+          category: qr.store.category ?? undefined,
           submitterName: qr.store.ownerName ?? qr.store.storeName,
           submitterAffiliation: qr.store.storeName,
         };
