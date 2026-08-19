@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getAdminReviews, type AdminReviewItem } from '@/apis/adminReviews';
 import chevronRightIcon from '@/assets/icons/chevron right.svg?raw';
 import AdminBottomNavigation from '@/components/admin/AdminBottomNavigation';
+import AdminReviewCardSkeleton from '@/components/admin/AdminReviewCardSkeleton';
 import PageHeader from '@/components/layout/PageHeader';
 import { SearchButton, SearchIcon } from '@/pages/Archive/Archive.styles';
 import { CardText, Chevron, Content, Description, EmptyMessage, Page, ReviewCard, ReviewList, Thumbnail, Title } from '@/pages/AdminReviews/AdminReviews.styles';
@@ -52,7 +53,13 @@ const AdminReviews = (): React.JSX.Element => {
         )}
       />
       <Content>
-        {isLoading ? <EmptyMessage>검토 목록을 불러오는 중이에요.</EmptyMessage> : hasError ? <EmptyMessage>검토 목록을 불러오지 못했어요.</EmptyMessage> : items.length > 0 ? (
+        {isLoading ? (
+          <ReviewList aria-label="검토 목록을 불러오는 중">
+            <AdminReviewCardSkeleton />
+            <AdminReviewCardSkeleton />
+            <AdminReviewCardSkeleton />
+          </ReviewList>
+        ) : hasError ? <EmptyMessage>검토 목록을 불러오지 못했어요.</EmptyMessage> : items.length > 0 ? (
           <ReviewList>
             {items.map((item) => (
               <ReviewCard key={item.submissionId} type="button" onClick={() => navigate(`/admin/reviews/${item.submissionId}`, { state: { review: item } })}>

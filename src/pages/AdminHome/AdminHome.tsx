@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { getAdminHome, type AdminHomeData } from '@/apis/adminHome';
 import AdminBottomNavigation from '@/components/admin/AdminBottomNavigation';
+import HomeAdSkeleton from '@/components/home/HomeAdSkeleton';
 import ReviewAdCard from '@/components/home/ReviewAdCard';
 import DraggableBottomSheet from '@/components/layout/DraggableBottomSheet';
 import { AllButton, AppFrame, EmptyMessage, Hero, HeroMessage, HeroStrong, RecentCard, RecentList, ReviewList, Section, SectionHeader, SectionTitle } from '@/pages/AdminHome/AdminHome.styles';
@@ -60,7 +61,12 @@ const AdminHome = (): React.JSX.Element => {
           <SectionHeader>
             <SectionTitle>검수가 필요한 광고</SectionTitle>
           </SectionHeader>
-          {!isLoading && !hasError && pendingItems.length === 0 ? (
+          {isLoading ? (
+            <ReviewList>
+              <HomeAdSkeleton variant="attention" />
+              <HomeAdSkeleton variant="attention" />
+            </ReviewList>
+          ) : !hasError && pendingItems.length === 0 ? (
             <EmptyMessage>검수가 필요한 광고가 없어요.</EmptyMessage>
           ) : (
             <ReviewList>
@@ -76,7 +82,12 @@ const AdminHome = (): React.JSX.Element => {
             <SectionTitle>최근 업로드 된 광고</SectionTitle>
             <AllButton type="button" onClick={() => navigate('/admin/reviews')}>전체 보기 ›</AllButton>
           </SectionHeader>
-          {!isLoading && !hasError && recentItems.length === 0 ? (
+          {isLoading ? (
+            <RecentList>
+              <HomeAdSkeleton variant="promotion" />
+              <HomeAdSkeleton variant="promotion" />
+            </RecentList>
+          ) : !hasError && recentItems.length === 0 ? (
             <EmptyMessage>최근 업로드 된 광고가 없어요.</EmptyMessage>
           ) : (
             <RecentList>
