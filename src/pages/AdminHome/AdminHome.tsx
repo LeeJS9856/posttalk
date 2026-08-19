@@ -21,7 +21,7 @@ const AdminHome = (): React.JSX.Element => {
 
     const loadAdminHome = async (): Promise<void> => {
       try {
-        const response = await getAdminHome({ signal: controller.signal });
+        const response = await getAdminHome({ marketName: ADMIN_MARKET_NAME, signal: controller.signal });
         setHomeData(response.data);
       } catch (error) {
         if (!(error instanceof DOMException && error.name === 'AbortError')) setHasError(true);

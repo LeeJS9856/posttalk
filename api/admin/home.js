@@ -11,7 +11,10 @@ export default async function handler(request, response) {
     return;
   }
 
-  const backendResponse = await fetch(`${BACKEND_BASE_URL}/api/admin/home`, {
+  const marketName = typeof request.query.marketName === 'string' ? request.query.marketName : '';
+  const searchParams = new URLSearchParams({ marketName });
+
+  const backendResponse = await fetch(`${BACKEND_BASE_URL}/api/admin/home?${searchParams.toString()}`, {
     headers: {
       Accept: 'application/json',
       'x-admin-api-key': adminApiKey,
