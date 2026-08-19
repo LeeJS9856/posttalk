@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { getMerchantHome, type MerchantAttentionItem, type MerchantHomeData } from '@/apis/home';
 import FloatingCreateButton from '@/components/common/FloatingCreateButton';
+import HomeAdSkeleton from '@/components/home/HomeAdSkeleton';
 import PromotionCard from '@/components/home/PromotionCard';
 import ReviewAdCard from '@/components/home/ReviewAdCard';
 import BottomNavigation from '@/components/layout/BottomNavigation';
@@ -78,9 +79,14 @@ const Home = (): React.JSX.Element => {
             <SectionTitle>확인이 필요한 광고</SectionTitle>
             <AllButton type="button" onClick={() => navigate('/archive')}>전체 보기</AllButton>
           </SectionHeader>
-          {isLoading ? <EmptyMessage>광고를 불러오는 중이에요.</EmptyMessage> : hasError ? <EmptyMessage>광고를 불러오지 못했어요.</EmptyMessage> : attentionItems.length > 0 ? (
+          {isLoading ? (
+            <ReviewList aria-label="확인이 필요한 광고를 불러오는 중">
+              <HomeAdSkeleton variant="attention" />
+              <HomeAdSkeleton variant="attention" />
+            </ReviewList>
+          ) : hasError ? <EmptyMessage>광고를 불러오지 못했어요.</EmptyMessage> : attentionItems.length > 0 ? (
             <ReviewList>
-              {attentionItems.map((item) => (
+              {attentionItems.slice(0, 2).map((item) => (
                 <ReviewAdCard
                   key={item.submissionId}
                   status={toReviewStatus(item)}
@@ -99,15 +105,25 @@ const Home = (): React.JSX.Element => {
             <AllButton type="button" onClick={() => navigate('/archive')}>전체 보기</AllButton>
           </SectionHeader>
           <PromotionList>
-            {myAds.map((ad) => (
-              <PromotionCard
-                key={ad.submissionId}
-                image={ad.thumbnailUrl ?? FALLBACK_THUMBNAIL}
-                title={ad.title}
-                onClick={() => navigate('/archive')}
-              />
-            ))}
-            <PromotionCard onClick={() => navigate('/create')} />
+            {isLoading ? (
+              <>
+                <HomeAdSkeleton variant="promotion" />
+                <HomeAdSkeleton variant="promotion" />
+                <HomeAdSkeleton variant="promotion" />
+              </>
+            ) : (
+              <>
+                <PromotionCard onClick={() => navigate('/create')} />
+                {myAds.map((ad) => (
+                  <PromotionCard
+                    key={ad.submissionId}
+                    image={ad.thumbnailUrl ?? FALLBACK_THUMBNAIL}
+                    title={ad.title}
+                    onClick={() => navigate('/archive')}
+                  />
+                ))}
+              </>
+            )}
           </PromotionList>
         </Section>
       </DraggableBottomSheet>
