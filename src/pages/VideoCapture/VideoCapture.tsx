@@ -194,7 +194,7 @@ const VideoCapture = (): React.JSX.Element => {
         {errorMessage && <HelperText role="alert">{errorMessage}</HelperText>}
       </Guide>
       {hasSessionRequest && <ActionArea>
-        <PrimaryActionButton type="button" onClick={() => setIsSourceModalOpen(true)}>2초 영상 촬영하기</PrimaryActionButton>
+        <PrimaryActionButton type="button" onClick={() => setIsSourceModalOpen(true)}>촬영하기</PrimaryActionButton>
       </ActionArea>}
       <CameraInput ref={galleryInputRef} type="file" accept="video/*" onChange={(event) => void handleGalleryChange(event)} />
 
