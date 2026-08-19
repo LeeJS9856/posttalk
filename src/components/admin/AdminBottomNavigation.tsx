@@ -2,15 +2,15 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import archiveIcon from '@/assets/icons/archive.svg?raw';
-import campaignIcon from '@/assets/icons/campaign.svg?raw';
 import homeIcon from '@/assets/icons/home.svg?raw';
+import reviewIcon from '@/assets/icons/review.svg?raw';
 // import myIcon from '@/assets/icons/my.svg?raw';
 import { COLORS } from '@/constants/colors';
 import { FONT_SIZE } from '@/constants/typography';
 
 const ADMIN_NAV_ITEMS: ReadonlyArray<{ label: string; icon: string; path?: string }> = [
   { label: '홈', icon: homeIcon, path: '/admin' },
-  { label: '검토', icon: campaignIcon, path: '/admin/reviews' },
+  { label: '검토', icon: reviewIcon, path: '/admin/reviews' },
   { label: '보관함', icon: archiveIcon, path: '/admin/archive' },
   // 나중에 관리자 마이 페이지를 추가할 때 다시 활성화합니다.
   // { label: '마이', icon: myIcon },
