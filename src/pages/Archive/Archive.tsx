@@ -7,10 +7,12 @@ import {
 } from '@/apis/archive';
 import ArchivedAdCard from '@/components/archive/ArchivedAdCard';
 import ArchivedAdCardSkeleton from '@/components/archive/ArchivedAdCardSkeleton';
+import LoginRequiredContent from '@/components/auth/LoginRequiredContent';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import PageHeader from '@/components/layout/PageHeader';
 import { ARCHIVE_FILTERS, type ArchivedAd, type ArchiveFormat, type StatusFilter } from '@/constants/archive';
 import { TEMP_QR_USER_SESSION } from '@/constants/user';
+import { useAuth } from '@/hooks/useAuth';
 import { AdList, Content, EmptyMessage, FilterButton, FilterList, FormatIndicator, FormatTab, FormatTabs, Page, SearchButton, SearchIcon } from '@/pages/Archive/Archive.styles';
 
 const API_STATUS_BY_FILTER: Record<StatusFilter, MerchantArchiveStatus> = {
@@ -43,6 +45,7 @@ const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => ({
 });
 
 const Archive = (): React.JSX.Element => {
+  const { isLoggedIn } = useAuth();
   const [format, setFormat] = useState<ArchiveFormat>('photo');
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [allAds, setAllAds] = useState<ArchivedAd[]>([]);
@@ -50,6 +53,8 @@ const Archive = (): React.JSX.Element => {
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     const controller = new AbortController();
 
     const loadArchive = async () => {
@@ -79,7 +84,7 @@ const Archive = (): React.JSX.Element => {
     void loadArchive();
 
     return () => controller.abort();
-  }, []);
+  }, [isLoggedIn]);
 
   const ads = allAds.filter((ad) =>
     ad.format === format && (filter === 'all' || ad.status === FILTERED_STATUS[filter]));
@@ -120,7 +125,7 @@ const Archive = (): React.JSX.Element => {
       </FilterList>
 
       <Content>
-        {isLoading ? (
+        {!isLoggedIn ? <LoginRequiredContent /> : isLoading ? (
           <AdList aria-label="보관함 광고를 불러오는 중">
             <ArchivedAdCardSkeleton />
             <ArchivedAdCardSkeleton />
