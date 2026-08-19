@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import {
   getAdminArchive,
@@ -44,6 +45,7 @@ const toArchivedAd = (item: AdminArchiveItem): ArchivedAd => ({
 });
 
 const AdminArchive = (): React.JSX.Element => {
+  const navigate = useNavigate();
   const [format, setFormat] = useState<ArchiveFormat>('photo');
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [allAds, setAllAds] = useState<ArchivedAd[]>([]);
@@ -113,7 +115,7 @@ const AdminArchive = (): React.JSX.Element => {
             <ArchivedAdCardSkeleton />
           </AdList>
         ) : hasError ? <EmptyMessage>보관함을 불러오지 못했어요.</EmptyMessage> : ads.length > 0 ? (
-          <AdList>{ads.map((ad) => <ArchivedAdCard key={ad.id} {...ad} />)}</AdList>
+          <AdList>{ads.map((ad) => <ArchivedAdCard key={ad.id} {...ad} onClick={() => navigate(`/admin/reviews/${ad.id}`)} />)}</AdList>
         ) : <EmptyMessage>해당 조건의 광고가 없어요.</EmptyMessage>}
       </Content>
       <AdminBottomNavigation />
