@@ -24,7 +24,7 @@ export const LEGACY_VOICE_QUESTIONS = [
 ] as const;
 
 export const getVoiceQuestions = (format: AdFormat) =>
-  format === 'photo' ? SESSION_VOICE_QUESTIONS : LEGACY_VOICE_QUESTIONS;
+  format === 'photo' || format === 'video' ? SESSION_VOICE_QUESTIONS : LEGACY_VOICE_QUESTIONS;
 
 export type VoiceQuestionKey =
   | (typeof SESSION_VOICE_QUESTIONS)[number]['key']

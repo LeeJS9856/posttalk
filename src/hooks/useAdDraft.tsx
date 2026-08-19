@@ -15,6 +15,11 @@ export type SessionPhotoAsset = DraftAsset & {
   assetType: string;
 };
 
+export type VideoClip = DraftAsset & {
+  duration: number;
+  stepIndex: number;
+};
+
 type AdDraft = {
   answers: Partial<Record<VoiceQuestionKey, string>>;
   currentRequest?: AdSessionRequest;
@@ -30,6 +35,7 @@ type AdDraft = {
   submissionId?: string;
   submissionCaption?: string;
   submissionHashtags?: string[];
+  videoClips: VideoClip[];
 };
 
 type AdDraftContextValue = {
@@ -50,9 +56,10 @@ type AdDraftContextValue = {
   setRetryMessage: (message?: string) => void;
   setSession: ({ sessionId, request }: { sessionId: string; request: AdSessionRequest }) => void;
   setSessionPhoto: (assetType: string, file: File) => void;
+  setVideoClip: ({ duration, file, stepIndex }: { duration: number; file: File; stepIndex: number }) => void;
 };
 
-const createInitialDraft = (format: AdFormat = 'photo'): AdDraft => ({ answers: {}, format });
+const createInitialDraft = (format: AdFormat = 'photo'): AdDraft => ({ answers: {}, format, videoClips: [] });
 
 const revokePreviewUrl = (asset?: DraftAsset): void => {
   if (asset?.previewUrl.startsWith('blob:')) URL.revokeObjectURL(asset.previewUrl);
@@ -69,6 +76,7 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
       revokePreviewUrl(current.menuBoard);
       revokePreviewUrl(current.foodPhoto);
       revokePreviewUrl(current.sessionPhoto);
+      current.videoClips.forEach(revokePreviewUrl);
       return createInitialDraft(format);
     }),
     setAnswer: (key, answer) => setDraft((current) => ({
@@ -105,6 +113,17 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
       return {
         ...current,
         sessionPhoto: { assetType, file, previewUrl: URL.createObjectURL(file) },
+      };
+    }),
+    setVideoClip: ({ duration, file, stepIndex }) => setDraft((current) => {
+      const previousClip = current.videoClips.find((clip) => clip.stepIndex === stepIndex);
+      revokePreviewUrl(previousClip);
+      const videoClip: VideoClip = { duration, file, stepIndex, previewUrl: URL.createObjectURL(file) };
+
+      return {
+        ...current,
+        videoClips: [...current.videoClips.filter((clip) => clip.stepIndex !== stepIndex), videoClip]
+          .sort((first, second) => first.stepIndex - second.stepIndex),
       };
     }),
   }), [draft]);

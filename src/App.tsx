@@ -15,6 +15,9 @@ import Generating from '@/pages/Generating/Generating';
 import Home from '@/pages/Home/Home';
 import PublishRequested from '@/pages/PublishRequested/PublishRequested';
 import VoiceQuestion from '@/pages/VoiceQuestion/VoiceQuestion';
+import VideoCapture from '@/pages/VideoCapture/VideoCapture';
+import VideoCaptureResult from '@/pages/VideoCaptureResult/VideoCaptureResult';
+import VideoCaptureComplete from '@/pages/VideoCaptureComplete/VideoCaptureComplete';
 import { MerchantSessionProvider } from '@/hooks/useMerchantSession';
 import { useMerchantSession } from '@/hooks/useMerchantSession';
 
@@ -43,6 +46,9 @@ const App = (): React.JSX.Element => (
         <Route path="/create/capture" element={<Capture />} />
         <Route path="/create/capture/result" element={<CaptureResult />} />
         <Route path="/create/questions/:questionIndex" element={<VoiceQuestion />} />
+        <Route path="/create/video-capture" element={<VideoCapture />} />
+        <Route path="/create/video-capture/result" element={<VideoCaptureResult />} />
+        <Route path="/create/video-capture/complete" element={<VideoCaptureComplete />} />
         <Route path="/create/generating" element={<Generating />} />
         <Route path="/create/complete" element={<GenerationComplete />} />
         <Route path="/create/requested" element={<PublishRequested />} />

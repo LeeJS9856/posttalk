@@ -116,7 +116,7 @@ const VoiceQuestion = (): React.JSX.Element => {
 
     setAnswer(question.key, trimmedAnswer);
     if (isLastQuestion) {
-      navigate(draft.format === 'photo' ? '/create/capture' : '/create/generating');
+      navigate(draft.format === 'photo' ? '/create/capture' : '/create/video-capture?step=0');
       return;
     }
 
@@ -125,7 +125,7 @@ const VoiceQuestion = (): React.JSX.Element => {
 
   return (
     <Page aria-label={`광고 제작 질문 ${questionIndex + 1}`}>
-      <PageHeader title="광고 제작" onBack={() => navigate(questionIndex === 0 ? (draft.format === 'photo' ? '/create' : '/create/capture/result?asset=food_photo') : `/create/questions/${questionIndex - 1}`)} />
+      <PageHeader title="광고 제작" onBack={() => navigate(questionIndex === 0 ? '/create' : `/create/questions/${questionIndex - 1}`)} />
       <Content>
         <Popo src={popo} alt="" />
         <TitleArea>
