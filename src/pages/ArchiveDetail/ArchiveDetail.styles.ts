@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 
-import Button from '@/components/common/Button';
 import PageFrame from '@/components/layout/PageFrame';
 import { COLORS } from '@/constants/colors';
 import { FONT_SIZE } from '@/constants/typography';
@@ -61,31 +60,4 @@ export const EmptyMessage = styled.p`
   color: ${COLORS.black500};
   font-size: ${FONT_SIZE.body};
   text-align: center;
-`;
-
-export const ActionArea = styled.footer`
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 8px;
-  padding: 12px 20px 14px;
-  border-top: 1px solid ${COLORS.black200};
-  background: ${COLORS.background.main};
-`;
-
-export const SecondaryButton = styled(Button)`
-  border: 1px solid ${COLORS.black400};
-  border-radius: 10px;
-  color: ${COLORS.black500};
-  background: ${COLORS.white};
-  box-shadow: 0 2px 5px rgba(33, 33, 33, 0.12);
-
-  &:hover {
-    background: ${COLORS.white};
-  }
-`;
-
-export const PrimaryButton = styled(Button)`
-  border-radius: 10px;
-  background: ${COLORS.primary700};
-  box-shadow: 0 3px 8px rgba(33, 33, 33, 0.18);
 `;
