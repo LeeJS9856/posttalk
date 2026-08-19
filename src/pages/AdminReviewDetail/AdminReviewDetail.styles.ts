@@ -65,6 +65,26 @@ export const ActionArea = styled.footer`
   background: ${COLORS.background.main};
 `;
 
+export const RejectionReasonArea = styled.footer`
+  padding: 16px 20px 18px;
+  border-top: 1px solid ${COLORS.black200};
+  background: ${COLORS.background.main};
+`;
+
+export const RejectionReasonLabel = styled.strong`
+  display: block;
+  color: ${COLORS.statusWarning};
+  font-size: ${FONT_SIZE.label};
+  font-weight: 700;
+`;
+
+export const RejectionReason = styled.p`
+  margin-top: 6px;
+  color: ${COLORS.black700};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.45;
+`;
+
 export const RejectButton = styled(Button)`
   border: 1px solid ${COLORS.black400};
   border-radius: 10px;

@@ -115,7 +115,7 @@ const AdminArchive = (): React.JSX.Element => {
             <ArchivedAdCardSkeleton />
           </AdList>
         ) : hasError ? <EmptyMessage>보관함을 불러오지 못했어요.</EmptyMessage> : ads.length > 0 ? (
-          <AdList>{ads.map((ad) => <ArchivedAdCard key={ad.id} {...ad} onClick={() => navigate(`/admin/reviews/${ad.id}`)} />)}</AdList>
+          <AdList>{ads.map((ad) => <ArchivedAdCard key={ad.id} {...ad} onClick={() => navigate(`/admin/reviews/${ad.id}`, { state: { archiveStatus: ad.status } })} />)}</AdList>
         ) : <EmptyMessage>해당 조건의 광고가 없어요.</EmptyMessage>}
       </Content>
       <AdminBottomNavigation />

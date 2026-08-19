@@ -13,6 +13,11 @@ export interface AdminReviewsData {
 }
 
 export interface AdminReviewDetail extends AdminReviewItem {
+  status?: 'pending_review' | 'approved' | 'rejected';
+  rejectionReason?: string | null;
+  rejection?: {
+    reason?: string | null;
+  } | null;
   primaryAssetUrl: string | null;
   assets?: Array<{
     assetType?: string;
