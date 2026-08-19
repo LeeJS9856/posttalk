@@ -16,6 +16,6 @@ export type ArchivedAd = {
 export const ARCHIVE_FILTERS: ReadonlyArray<{ label: string; value: StatusFilter }> = [
   { label: '전체', value: 'all' },
   { label: '승인 대기중', value: 'pending' },
-  { label: '보충 필요', value: 'supplement' },
+  { label: '반려됨', value: 'supplement' },
   { label: '게시 완료', value: 'posted' },
 ];
