@@ -11,7 +11,7 @@ import ArchivedAdCardSkeleton from '@/components/archive/ArchivedAdCardSkeleton'
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import PageHeader from '@/components/layout/PageHeader';
 import { ARCHIVE_FILTERS, type ArchivedAd, type ArchiveFormat, type StatusFilter } from '@/constants/archive';
-import { TEMP_QR_USER_SESSION } from '@/constants/user';
+import { useMerchantSession } from '@/hooks/useMerchantSession';
 import { AdList, Content, EmptyMessage, FilterButton, FilterList, FormatIndicator, FormatTab, FormatTabs, Page, SearchButton, SearchIcon } from '@/pages/Archive/Archive.styles';
 
 const API_STATUS_BY_FILTER: Record<StatusFilter, MerchantArchiveStatus> = {
@@ -45,6 +45,7 @@ const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => ({
 
 const Archive = (): React.JSX.Element => {
   const navigate = useNavigate();
+  const { errorMessage: qrErrorMessage, isLoading: isQrLoading, session } = useMerchantSession();
   const [format, setFormat] = useState<ArchiveFormat>('photo');
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [allAds, setAllAds] = useState<ArchivedAd[]>([]);
@@ -52,6 +53,11 @@ const Archive = (): React.JSX.Element => {
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
+    if (isQrLoading || !session) {
+      setIsLoading(false);
+      return;
+    }
+
     const controller = new AbortController();
 
     const loadArchive = async () => {
@@ -61,7 +67,7 @@ const Archive = (): React.JSX.Element => {
       try {
         const responses = await Promise.all(
           (['photo', 'video'] as const).map((mediaType) => getMerchantArchive({
-            storeId: TEMP_QR_USER_SESSION.storeId,
+            storeId: session.storeId,
             mediaType,
             status: API_STATUS_BY_FILTER.all,
             signal: controller.signal,
@@ -81,7 +87,7 @@ const Archive = (): React.JSX.Element => {
     void loadArchive();
 
     return () => controller.abort();
-  }, []);
+  }, [isQrLoading, session]);
 
   const ads = allAds.filter((ad) =>
     ad.format === format && (filter === 'all' || ad.status === FILTERED_STATUS[filter]));
@@ -122,11 +128,13 @@ const Archive = (): React.JSX.Element => {
       </FilterList>
 
       <Content>
-        {isLoading ? (
+        {isQrLoading || isLoading ? (
           <AdList aria-label="보관함 광고를 불러오는 중">
             <ArchivedAdCardSkeleton />
             <ArchivedAdCardSkeleton />
           </AdList>
+        ) : !session ? (
+          <EmptyMessage>{qrErrorMessage ?? 'QR 링크로 접속해주세요.'}</EmptyMessage>
         ) : hasError ? (
           <EmptyMessage>보관함을 불러오지 못했어요.</EmptyMessage>
         ) : ads.length > 0 ? (

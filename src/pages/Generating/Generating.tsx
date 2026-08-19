@@ -8,6 +8,7 @@ import { getServerHealth } from '@/apis/server';
 import { FlowTitleStrong } from '@/components/common/FlowTitle';
 import { COLORS } from '@/constants/colors';
 import { useAdDraft } from '@/hooks/useAdDraft';
+import { useMerchantSession } from '@/hooks/useMerchantSession';
 import { Content, Description, LoaderArea, Page, Popo, Title } from '@/pages/Generating/Generating.styles';
 
 const Generating = (): React.JSX.Element => (
@@ -17,15 +18,21 @@ const Generating = (): React.JSX.Element => (
 const GeneratingContent = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { draft, setGeneratedResultUrl, setGeneration } = useAdDraft();
+  const { errorMessage: qrErrorMessage, isLoading: isQrLoading, session } = useMerchantSession();
   const startedRef = useRef(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (startedRef.current) return;
+    if (isQrLoading || startedRef.current) return;
     startedRef.current = true;
 
     const generateAdvertisement = async (): Promise<void> => {
       const { answers, foodPhoto, format, menuBoard } = draft;
+
+      if (!session) {
+        setErrorMessage(qrErrorMessage ?? 'QR로 가게 정보를 확인해주세요.');
+        return;
+      }
 
       if (!menuBoard || !foodPhoto || !answers.storeType || !answers.targetMenuName || !answers.appealPoint) {
         setErrorMessage('광고 생성에 필요한 사진 또는 답변이 없어요. 다시 입력해주세요.');
@@ -35,8 +42,8 @@ const GeneratingContent = (): React.JSX.Element => {
       try {
         await getServerHealth();
         const [menuBoardAsset, foodPhotoAsset] = await Promise.all([
-          uploadAsset({ assetType: 'menu_board', file: menuBoard.file }),
-          uploadAsset({ assetType: 'food_photo', file: foodPhoto.file }),
+          uploadAsset({ assetType: 'menu_board', file: menuBoard.file, session }),
+          uploadAsset({ assetType: 'food_photo', file: foodPhoto.file, session }),
         ]);
         const submission = await createSubmission({
           answers: {
@@ -49,6 +56,7 @@ const GeneratingContent = (): React.JSX.Element => {
             extraMessage: answers.extraMessage,
           },
           assets: [menuBoardAsset, foodPhotoAsset],
+          session,
         });
         const job = await startGeneration({ format, submissionId: submission.submissionId });
         setGeneration({ jobId: job.jobId, submissionId: submission.submissionId });
@@ -74,7 +82,7 @@ const GeneratingContent = (): React.JSX.Element => {
     };
 
     void generateAdvertisement();
-  }, [draft, navigate, setGeneratedResultUrl, setGeneration]);
+  }, [draft, isQrLoading, navigate, qrErrorMessage, session, setGeneratedResultUrl, setGeneration]);
 
   return (
     <Page aria-label="광고 생성 중" aria-busy="true">

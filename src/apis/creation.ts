@@ -1,6 +1,6 @@
 import { api, type ApiSuccessResponse } from '@/apis/api';
+import type { MerchantSession } from '@/apis/merchantQr';
 import type { AdFormat } from '@/constants/create';
-import { TEMP_QR_USER_SESSION } from '@/constants/user';
 
 export type UploadAssetType = 'menu_board' | 'food_photo';
 
@@ -17,10 +17,10 @@ type SubmissionData = { submissionId: string };
 type GenerationJobData = { jobId: string; submissionId: string; status: string };
 type GenerationResultData = { status: string; resultUrl?: string | null };
 
-export const uploadAsset = async ({ assetType, file }: { assetType: UploadAssetType; file: File }): Promise<UploadedAsset> => {
+export const uploadAsset = async ({ assetType, file, session }: { assetType: UploadAssetType; file: File; session: MerchantSession }): Promise<UploadedAsset> => {
   const body = new FormData();
   body.append('assetType', assetType);
-  body.append('storeId', TEMP_QR_USER_SESSION.storeId);
+  body.append('storeId', session.storeId);
   body.append('file', file);
 
   const response = await api<ApiSuccessResponse<UploadedAsset>>({
@@ -35,6 +35,7 @@ export const uploadAsset = async ({ assetType, file }: { assetType: UploadAssetT
 export const createSubmission = async ({
   answers,
   assets,
+  session,
 }: {
   answers: {
     appealPoint: string;
@@ -46,15 +47,16 @@ export const createSubmission = async ({
     targetMenuName: string;
   };
   assets: UploadedAsset[];
+  session: MerchantSession;
 }): Promise<SubmissionData> => {
   const response = await api<ApiSuccessResponse<SubmissionData>>({
     path: '/api/submissions',
     method: 'POST',
     body: {
-      storeId: TEMP_QR_USER_SESSION.storeId,
-      submitterName: TEMP_QR_USER_SESSION.submitterName,
-      submitterAffiliation: TEMP_QR_USER_SESSION.submitterAffiliation,
-      qrPayload: TEMP_QR_USER_SESSION.qrPayload,
+      storeId: session.storeId,
+      submitterName: session.submitterName,
+      submitterAffiliation: session.submitterAffiliation,
+      qrPayload: session.qrPayload,
       title: answers.targetMenuName,
       ...answers,
       assets: assets.map((asset, sortOrder) => ({ ...asset, sortOrder })),
