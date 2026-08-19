@@ -80,7 +80,7 @@ const Home = (): React.JSX.Element => {
           </SectionHeader>
           {isLoading ? <EmptyMessage>광고를 불러오는 중이에요.</EmptyMessage> : hasError ? <EmptyMessage>광고를 불러오지 못했어요.</EmptyMessage> : attentionItems.length > 0 ? (
             <ReviewList>
-              {attentionItems.map((item) => (
+              {attentionItems.slice(0, 2).map((item) => (
                 <ReviewAdCard
                   key={item.submissionId}
                   status={toReviewStatus(item)}
@@ -99,6 +99,7 @@ const Home = (): React.JSX.Element => {
             <AllButton type="button" onClick={() => navigate('/archive')}>전체 보기</AllButton>
           </SectionHeader>
           <PromotionList>
+            <PromotionCard onClick={() => navigate('/create')} />
             {myAds.map((ad) => (
               <PromotionCard
                 key={ad.submissionId}
@@ -107,7 +108,6 @@ const Home = (): React.JSX.Element => {
                 onClick={() => navigate('/archive')}
               />
             ))}
-            <PromotionCard onClick={() => navigate('/create')} />
           </PromotionList>
         </Section>
       </DraggableBottomSheet>
