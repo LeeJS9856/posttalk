@@ -43,17 +43,19 @@ const AdminBottomNavigation = (): React.JSX.Element => {
 };
 
 const Navigation = styled.nav`
-  position: absolute;
-  right: 0;
+  position: fixed;
+  right: auto;
   bottom: 0;
-  left: 0;
+  left: 50%;
   z-index: 20;
   display: grid;
+  width: min(100%, 480px);
   grid-template-columns: repeat(${ADMIN_NAV_ITEMS.length}, 1fr);
   min-height: 80px;
   padding: 4px 0;
   border-top: 1px solid ${COLORS.black200};
   background: ${COLORS.white};
+  transform: translateX(-50%);
 `;
 
 const NavigationItem = styled.button<{ $active: boolean }>`
