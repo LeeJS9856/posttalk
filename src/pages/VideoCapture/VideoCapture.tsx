@@ -64,11 +64,7 @@ const VideoCapture = (): React.JSX.Element => {
   const stepIndex = Math.min(Math.max(requestedStep, 0), steps.length - 1);
   const step = steps[stepIndex];
   const hasSessionRequest = Boolean(draft.currentRequest);
-  const requestCopy = draft.currentRequest?.prompt
-    .replace(/^\s*영상\s*요청\s*[:：]\s*/, '')
-    .trim();
-  const requestSubject = requestCopy?.match(/^(.+?)(?:이|가|을|를)(?=\s)/)?.[1];
-  const requestTarget = requestSubject ?? requestCopy?.replace(/\s*2초.*$/, '') ?? step.title;
+  const requestTarget = draft.currentRequest?.prompt.trim() || step.title;
 
   const closeCamera = (): void => {
     if (recordTimeoutRef.current !== null) window.clearTimeout(recordTimeoutRef.current);
