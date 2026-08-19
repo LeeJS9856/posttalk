@@ -32,3 +32,9 @@ export const getMerchantQr = ({ qrToken, signal }: { qrToken: string; signal?: A
     path: `/api/merchant-qrs/${encodeURIComponent(qrToken)}`,
     signal,
   });
+
+export const activateMerchantQr = ({ qrToken }: { qrToken: string }) =>
+  api<ApiSuccessResponse<MerchantQrData>>({
+    path: `/api/merchant-qrs/${encodeURIComponent(qrToken)}/activate`,
+    method: 'POST',
+  });

@@ -12,6 +12,7 @@ import Create from '@/pages/Create/Create';
 import GenerationComplete from '@/pages/GenerationComplete/GenerationComplete';
 import Generating from '@/pages/Generating/Generating';
 import Home from '@/pages/Home/Home';
+import MerchantQrActivate from '@/pages/MerchantQrActivate/MerchantQrActivate';
 import PublishRequested from '@/pages/PublishRequested/PublishRequested';
 import VoiceQuestion from '@/pages/VoiceQuestion/VoiceQuestion';
 import { MerchantSessionProvider } from '@/hooks/useMerchantSession';
@@ -21,6 +22,7 @@ const App = (): React.JSX.Element => (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/merchant-qr/activate" element={<MerchantQrActivate />} />
         <Route path="/admin" element={<AdminHome />} />
         <Route path="/admin/archive" element={<AdminArchive />} />
         <Route path="/admin/reviews" element={<AdminReviews />} />
