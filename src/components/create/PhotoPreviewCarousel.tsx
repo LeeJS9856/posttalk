@@ -1,4 +1,5 @@
-import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
@@ -10,24 +11,36 @@ type PhotoPreviewCarouselProps = {
 
 const PhotoPreviewCarousel = ({ images }: PhotoPreviewCarouselProps): React.JSX.Element => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const startX = useRef<number | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const handleEscape = (event: globalThis.KeyboardEvent): void => {
+      if (event.key === 'Escape') setIsLightboxOpen(false);
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, []);
 
   const moveTo = (nextIndex: number): void => {
     setCurrentIndex(Math.min(Math.max(nextIndex, 0), images.length - 1));
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>): void => {
-    startX.current = event.clientX;
+    pointerStart.current = { x: event.clientX, y: event.clientY };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const handlePointerEnd = (event: PointerEvent<HTMLDivElement>): void => {
-    if (startX.current === null) return;
+    if (pointerStart.current === null) return;
 
-    const distance = event.clientX - startX.current;
-    if (distance <= -SWIPE_THRESHOLD) moveTo(currentIndex + 1);
-    if (distance >= SWIPE_THRESHOLD) moveTo(currentIndex - 1);
-    startX.current = null;
+    const distanceX = event.clientX - pointerStart.current.x;
+    const distanceY = event.clientY - pointerStart.current.y;
+    if (distanceX <= -SWIPE_THRESHOLD) moveTo(currentIndex + 1);
+    if (distanceX >= SWIPE_THRESHOLD) moveTo(currentIndex - 1);
+    if (Math.abs(distanceX) < 8 && Math.abs(distanceY) < 8) setIsLightboxOpen(true);
+    pointerStart.current = null;
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -45,7 +58,7 @@ const PhotoPreviewCarousel = ({ images }: PhotoPreviewCarouselProps): React.JSX.
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerEnd}
       onPointerCancel={() => {
-        startX.current = null;
+        pointerStart.current = null;
       }}
     >
       <Track $currentIndex={currentIndex}>
@@ -60,6 +73,12 @@ const PhotoPreviewCarousel = ({ images }: PhotoPreviewCarouselProps): React.JSX.
           <Dot key={image} $active={index === currentIndex} aria-hidden="true" />
         ))}
       </Pagination>
+      {isLightboxOpen && createPortal(
+        <Lightbox role="dialog" aria-modal="true" aria-label="사진 원본 비율 미리보기" onClick={() => setIsLightboxOpen(false)}>
+          <LightboxImage src={images[currentIndex]} alt={`사진 광고 원본 비율 ${currentIndex + 1}`} onClick={(event) => event.stopPropagation()} />
+        </Lightbox>,
+        document.body,
+      )}
     </Carousel>
   );
 };
@@ -118,6 +137,23 @@ const Dot = styled.span<{ $active: boolean }>`
   background: ${({ $active }) => ($active ? COLORS.primary : 'rgba(255, 255, 255, 0.94)')};
   box-shadow: 0 1px 3px rgba(33, 33, 33, 0.18);
   transition: background 180ms ease-out;
+`;
+
+const Lightbox = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.72);
+`;
+
+const LightboxImage = styled.img`
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 `;
 
 export default PhotoPreviewCarousel;
