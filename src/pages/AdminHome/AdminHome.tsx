@@ -27,7 +27,7 @@ const AdminHome = (): React.JSX.Element => {
       } catch (error) {
         if (!(error instanceof DOMException && error.name === 'AbortError')) setHasError(true);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     };
 
@@ -39,6 +39,7 @@ const AdminHome = (): React.JSX.Element => {
   const pendingItems = homeData?.pendingItems ?? [];
   const recentItems = homeData?.recentItems ?? [];
   const pendingCount = homeData?.summary.pendingReviewCount ?? pendingItems.length;
+  const isHomeReady = !isLoading && !hasError && homeData !== null;
 
   return (
     <AppFrame>
@@ -46,7 +47,7 @@ const AdminHome = (): React.JSX.Element => {
         <HeroMessage>
           <HeroStrong>{marketName}</HeroStrong> 사장님,
           <br />
-          {isLoading ? '관리자 홈 정보를 불러오고 있어요.' : hasError ? '관리자 홈 정보를 불러오지 못했어요.' : (
+          {!isHomeReady ? hasError ? '관리자 홈 정보를 불러오지 못했어요.' : '관리자 홈 정보를 불러오고 있어요.' : (
             <>
               검수가 필요한 광고가
               <br />
