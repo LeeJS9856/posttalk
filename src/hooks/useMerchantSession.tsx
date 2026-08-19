@@ -9,19 +9,23 @@ type MerchantSessionContextValue = {
 };
 
 const MerchantSessionContext = createContext<MerchantSessionContextValue | null>(null);
-const SESSION_STORAGE_KEY = 'posttalk-merchant-session';
+const MERCHANT_SESSION_STORAGE_KEY = 'posttalk-merchant-session';
 
 const getQrToken = (): string | null => new URLSearchParams(window.location.search).get('qrToken');
 const isEntryPage = (): boolean => window.location.pathname === '/entry';
 
 const getStoredSession = (): MerchantSession | null => {
-  const storedSession = sessionStorage.getItem(SESSION_STORAGE_KEY);
+  const storedSession = localStorage.getItem(MERCHANT_SESSION_STORAGE_KEY) ?? sessionStorage.getItem(MERCHANT_SESSION_STORAGE_KEY);
   if (!storedSession) return null;
 
   try {
-    return JSON.parse(storedSession) as MerchantSession;
+    const session = JSON.parse(storedSession) as MerchantSession;
+    localStorage.setItem(MERCHANT_SESSION_STORAGE_KEY, storedSession);
+    sessionStorage.removeItem(MERCHANT_SESSION_STORAGE_KEY);
+    return session;
   } catch {
-    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    localStorage.removeItem(MERCHANT_SESSION_STORAGE_KEY);
+    sessionStorage.removeItem(MERCHANT_SESSION_STORAGE_KEY);
     return null;
   }
 };
@@ -64,11 +68,12 @@ export const MerchantSessionProvider = ({ children }: { children: ReactNode }): 
           submitterAffiliation: qr.store.storeName,
         };
 
-        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextSession));
+        localStorage.setItem(MERCHANT_SESSION_STORAGE_KEY, JSON.stringify(nextSession));
         setSession(nextSession);
       } catch (error) {
         if (!(error instanceof DOMException && error.name === 'AbortError')) {
-          sessionStorage.removeItem(SESSION_STORAGE_KEY);
+          localStorage.removeItem(MERCHANT_SESSION_STORAGE_KEY);
+          sessionStorage.removeItem(MERCHANT_SESSION_STORAGE_KEY);
           setSession(null);
           setErrorMessage(error instanceof Error ? error.message : 'QR 정보를 불러오지 못했어요.');
         }
