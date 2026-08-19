@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 
 import { activateMerchantQr, getMerchantQr, type MerchantCategoryOption, type MerchantQrActivationInput } from '@/apis/merchantQr';
-import { Card, Description, Field, Form, Input, Message, Page, Select, SubmitButton, Textarea, Title } from '@/pages/Entry/Entry.styles';
+import { Card, Description, Field, Form, Input, Message, Page, Select, SubmitButton, Title } from '@/pages/Entry/Entry.styles';
 
 type EntryStatus = 'checking' | 'selecting-category' | 'registering' | 'unregistered' | 'error';
+type EntryForm = MerchantQrActivationInput;
 
 const getQrToken = (): string | null => new URLSearchParams(window.location.search).get('qrToken');
 
@@ -13,12 +14,12 @@ const Entry = (): React.JSX.Element => {
   const [status, setStatus] = useState<EntryStatus>(qrToken ? 'checking' : 'error');
   const [message, setMessage] = useState(qrToken ? 'QR 상태를 확인하고 있어요.' : 'QR 토큰이 없어요. QR 링크로 다시 접속해주세요.');
   const [categoryOptions, setCategoryOptions] = useState<MerchantCategoryOption[]>([]);
-  const [form, setForm] = useState<MerchantQrActivationInput>({
+  const [form, setForm] = useState<EntryForm>({
     marketName: '',
     storeName: '',
     ownerName: '',
     category: '',
-    description: '',
+    locationAddress: '',
   });
 
   useEffect(() => {
@@ -50,7 +51,7 @@ const Entry = (): React.JSX.Element => {
     return () => controller.abort();
   }, [qrToken]);
 
-  const updateField = (field: keyof MerchantQrActivationInput, value: string): void => {
+  const updateField = (field: keyof EntryForm, value: string): void => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -99,7 +100,7 @@ const Entry = (): React.JSX.Element => {
             <Field>시장 이름<Input required value={form.marketName} onChange={(event) => updateField('marketName', event.target.value)} /></Field>
             <Field>가게 이름<Input required value={form.storeName} onChange={(event) => updateField('storeName', event.target.value)} /></Field>
             <Field>사장님 이름<Input required value={form.ownerName} onChange={(event) => updateField('ownerName', event.target.value)} /></Field>
-            <Field>가게 소개<Textarea required value={form.description} onChange={(event) => updateField('description', event.target.value)} /></Field>
+            <Field>가게 주소<Input required placeholder="예: 광주 북구 용봉로 77" value={form.locationAddress} onChange={(event) => updateField('locationAddress', event.target.value)} /></Field>
             <SubmitButton type="submit" disabled={status === 'registering'}>
               {status === 'registering' ? '연결 중...' : '가게 정보 등록하기'}
             </SubmitButton>
