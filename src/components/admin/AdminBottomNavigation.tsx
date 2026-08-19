@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { getAdminHome } from '@/apis/adminHome';
 import archiveIcon from '@/assets/icons/archive.svg?raw';
 import homeIcon from '@/assets/icons/home.svg?raw';
 import reviewIcon from '@/assets/icons/review.svg?raw';
@@ -15,10 +17,28 @@ const ADMIN_NAV_ITEMS: ReadonlyArray<{ label: string; icon: string; path?: strin
   // 나중에 관리자 마이 페이지를 추가할 때 다시 활성화합니다.
   // { label: '마이', icon: myIcon },
 ];
+const ADMIN_MARKET_NAME = '양동시장';
 
 const AdminBottomNavigation = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [hasPendingReview, setHasPendingReview] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadPendingReview = async (): Promise<void> => {
+      try {
+        const response = await getAdminHome({ marketName: ADMIN_MARKET_NAME, signal: controller.signal });
+        setHasPendingReview(response.data.summary.pendingReviewCount > 0 || response.data.pendingItems.length > 0);
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) setHasPendingReview(false);
+      }
+    };
+
+    void loadPendingReview();
+    return () => controller.abort();
+  }, []);
 
   return (
     <Navigation aria-label="관리자 하단 메뉴">
@@ -34,6 +54,7 @@ const AdminBottomNavigation = (): React.JSX.Element => {
             onClick={() => path && navigate(path)}
           >
             <NavIcon aria-hidden="true" dangerouslySetInnerHTML={{ __html: icon }} />
+            {label === '검토' && hasPendingReview && <PendingDot aria-label="검토 대기 광고 있음" />}
             <span>{label}</span>
           </NavigationItem>
         );
@@ -59,6 +80,7 @@ const Navigation = styled.nav`
 `;
 
 const NavigationItem = styled.button<{ $active: boolean }>`
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -69,6 +91,17 @@ const NavigationItem = styled.button<{ $active: boolean }>`
   background: transparent;
   font-size: ${FONT_SIZE.caption};
   font-weight: ${({ $active }) => ($active ? 700 : 400)};
+`;
+
+const PendingDot = styled.span`
+  position: absolute;
+  top: 15px;
+  right: calc(50% - 19px);
+  width: 7px;
+  height: 7px;
+  border: 1px solid ${COLORS.white};
+  border-radius: 50%;
+  background: #ef6c53;
 `;
 
 const NavIcon = styled.span`
