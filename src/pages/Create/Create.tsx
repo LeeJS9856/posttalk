@@ -3,17 +3,20 @@ import { useNavigate } from 'react-router-dom';
 
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import SegmentedToggle from '@/components/common/SegmentedToggle';
+import QrLoginRequired from '@/components/auth/QrLoginRequired';
 import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
 import VideoPreview from '@/components/create/VideoPreview';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { AD_FORMAT_OPTIONS, PHOTO_PREVIEW_IMAGES, VIDEO_PREVIEW_SOURCE, type AdFormat } from '@/constants/create';
 import { useAdDraft } from '@/hooks/useAdDraft';
+import { useMerchantSession } from '@/hooks/useMerchantSession';
 import { ActionArea, Guide, GuideDescription, GuideTitle, Page, Title, TopContent } from '@/pages/Create/Create.styles';
 
 const Create = (): React.JSX.Element => {
   const [selectedFormat, setSelectedFormat] = useState<AdFormat>('photo');
   const navigate = useNavigate();
   const { resetDraft } = useAdDraft();
+  const { isLoading: isQrLoading, session } = useMerchantSession();
 
   const startCreation = (): void => {
     resetDraft(selectedFormat);
@@ -22,6 +25,10 @@ const Create = (): React.JSX.Element => {
 
   return (
     <Page aria-label="광고 제작 페이지">
+      {!isQrLoading && !session ? (
+        <QrLoginRequired />
+      ) : (
+        <>
       <TopContent>
         <Title>
           어떤 광고를 만들어볼까요?
@@ -55,6 +62,8 @@ const Create = (): React.JSX.Element => {
       </Guide>
 
       <BottomNavigation />
+        </>
+      )}
     </Page>
   );
 };
