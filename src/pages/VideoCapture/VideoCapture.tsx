@@ -66,11 +66,9 @@ const VideoCapture = (): React.JSX.Element => {
   const hasSessionRequest = Boolean(draft.currentRequest);
   const requestCopy = draft.currentRequest?.prompt
     .replace(/^\s*영상\s*요청\s*[:：]\s*/, '')
-    .replace(/영상\s*$/, '영상을 찍어주세요')
     .trim();
   const requestSubject = requestCopy?.match(/^(.+?)(?:이|가|을|를)(?=\s)/)?.[1];
-  const requestSuffix = requestSubject ? requestCopy?.slice(requestSubject.length) : requestCopy;
-  const durationHint = requestCopy?.includes('2초') ? '' : ' 2초 이상 촬영해주세요.';
+  const requestTarget = requestSubject ?? requestCopy?.replace(/\s*2초.*$/, '') ?? step.title;
 
   const closeCamera = (): void => {
     if (recordTimeoutRef.current !== null) window.clearTimeout(recordTimeoutRef.current);
@@ -187,8 +185,8 @@ const VideoCapture = (): React.JSX.Element => {
         <Popo src={popo} alt="" />
         {hasSessionRequest ? (
           <>
-            <GuideCopy>{requestSubject ? <><FlowTitleStrong>{requestSubject}</FlowTitleStrong>{requestSuffix}</> : requestCopy}</GuideCopy>
-            <HelperText>{draft.currentRequest?.helperText ?? step.helperText}{durationHint}</HelperText>
+            <GuideCopy>아래 영상처럼<br /><FlowTitleStrong>{requestTarget}</FlowTitleStrong>을 2초간 찍어주세요</GuideCopy>
+            <HelperText>{draft.currentRequest?.helperText ?? step.helperText}</HelperText>
           </>
         ) : <GuideCopy>영상 촬영 요청을 준비하고 있어요.</GuideCopy>}
         {errorMessage && <HelperText role="alert">{errorMessage}</HelperText>}
