@@ -27,7 +27,6 @@ import {
   Popo,
   RecordButton,
   RecordStatus,
-  StepIndicator,
 } from '@/pages/VideoCapture/VideoCapture.styles';
 
 const getVideoDuration = (file: File): Promise<number> => new Promise((resolve, reject) => {
@@ -188,7 +187,6 @@ const VideoCapture = (): React.JSX.Element => {
         <Popo src={popo} alt="" />
         {hasSessionRequest ? (
           <>
-            <StepIndicator>{stepIndex + 1} / {steps.length}</StepIndicator>
             <GuideCopy>{requestSubject ? <><FlowTitleStrong>{requestSubject}</FlowTitleStrong>{requestSuffix}</> : requestCopy}</GuideCopy>
             <HelperText>{draft.currentRequest?.helperText ?? step.helperText}{durationHint}</HelperText>
           </>

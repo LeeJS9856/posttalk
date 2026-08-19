@@ -21,12 +21,6 @@ export const Guide = styled.main`
   text-align: center;
 `;
 export const Popo = styled.img`width: 57px; height: 54px;`;
-export const StepIndicator = styled.p`
-  margin-top: 16px;
-  color: ${COLORS.primary700};
-  font-size: ${FONT_SIZE.label};
-  font-weight: 700;
-`;
 export const GuideCopy = styled(FlowTitle)`margin-top: 14px;`;
 export const HelperText = styled.p`
   margin-top: 12px;
