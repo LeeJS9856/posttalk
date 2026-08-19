@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import Archive from '@/pages/Archive/Archive';
 import ArchiveDetail from '@/pages/ArchiveDetail/ArchiveDetail';
@@ -9,20 +9,32 @@ import AdminReviewDetailPage from '@/pages/AdminReviewDetail/AdminReviewDetail';
 import Capture from '@/pages/Capture/Capture';
 import CaptureResult from '@/pages/CaptureResult/CaptureResult';
 import Create from '@/pages/Create/Create';
+import Entry from '@/pages/Entry/Entry';
 import GenerationComplete from '@/pages/GenerationComplete/GenerationComplete';
 import Generating from '@/pages/Generating/Generating';
 import Home from '@/pages/Home/Home';
-import MerchantQrActivate from '@/pages/MerchantQrActivate/MerchantQrActivate';
 import PublishRequested from '@/pages/PublishRequested/PublishRequested';
 import VoiceQuestion from '@/pages/VoiceQuestion/VoiceQuestion';
 import { MerchantSessionProvider } from '@/hooks/useMerchantSession';
+import { useMerchantSession } from '@/hooks/useMerchantSession';
+
+const Root = (): React.JSX.Element => {
+  const { isLoading, session } = useMerchantSession();
+  const qrToken = new URLSearchParams(window.location.search).get('qrToken');
+
+  if (qrToken && !isLoading && !session) {
+    return <Navigate to={`/entry${window.location.search}`} replace />;
+  }
+
+  return <Home />;
+};
 
 const App = (): React.JSX.Element => (
   <MerchantSessionProvider>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/merchant-qr/activate" element={<MerchantQrActivate />} />
+        <Route path="/" element={<Root />} />
+        <Route path="/entry" element={<Entry />} />
         <Route path="/admin" element={<AdminHome />} />
         <Route path="/admin/archive" element={<AdminArchive />} />
         <Route path="/admin/reviews" element={<AdminReviews />} />

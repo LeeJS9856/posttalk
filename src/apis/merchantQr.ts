@@ -27,14 +27,26 @@ export interface MerchantSession {
   submitterName: string;
 }
 
+export interface MerchantQrActivationInput {
+  category: string;
+  description: string;
+  marketName: string;
+  ownerName: string;
+  storeName: string;
+}
+
 export const getMerchantQr = ({ qrToken, signal }: { qrToken: string; signal?: AbortSignal }) =>
   api<ApiSuccessResponse<MerchantQrData>>({
     path: `/api/merchant-qrs/${encodeURIComponent(qrToken)}`,
     signal,
   });
 
-export const activateMerchantQr = ({ qrToken }: { qrToken: string }) =>
+export const activateMerchantQr = ({
+  qrToken,
+  ...input
+}: MerchantQrActivationInput & { qrToken: string }) =>
   api<ApiSuccessResponse<MerchantQrData>>({
     path: `/api/merchant-qrs/${encodeURIComponent(qrToken)}/activate`,
     method: 'POST',
+    body: input,
   });

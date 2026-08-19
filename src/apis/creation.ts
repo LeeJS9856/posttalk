@@ -20,7 +20,7 @@ type GenerationResultData = { status: string; resultUrl?: string | null };
 export const uploadAsset = async ({ assetType, file, session }: { assetType: UploadAssetType; file: File; session: MerchantSession }): Promise<UploadedAsset> => {
   const body = new FormData();
   body.append('assetType', assetType);
-  body.append('storeId', session.storeId);
+  body.append('qrToken', session.qrToken);
   body.append('file', file);
 
   const response = await api<ApiSuccessResponse<UploadedAsset>>({
@@ -53,10 +53,7 @@ export const createSubmission = async ({
     path: '/api/submissions',
     method: 'POST',
     body: {
-      storeId: session.storeId,
-      submitterName: session.submitterName,
-      submitterAffiliation: session.submitterAffiliation,
-      qrPayload: session.qrPayload,
+      qrToken: session.qrToken,
       title: answers.targetMenuName,
       ...answers,
       assets: assets.map((asset, sortOrder) => ({ ...asset, sortOrder })),

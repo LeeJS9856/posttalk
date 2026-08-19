@@ -12,6 +12,7 @@ const MerchantSessionContext = createContext<MerchantSessionContextValue | null>
 const SESSION_STORAGE_KEY = 'posttalk-merchant-session';
 
 const getQrToken = (): string | null => new URLSearchParams(window.location.search).get('qrToken');
+const isEntryPage = (): boolean => window.location.pathname === '/entry';
 
 const getStoredSession = (): MerchantSession | null => {
   const storedSession = sessionStorage.getItem(SESSION_STORAGE_KEY);
@@ -27,10 +28,15 @@ const getStoredSession = (): MerchantSession | null => {
 
 export const MerchantSessionProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
   const [session, setSession] = useState<MerchantSession | null>(getStoredSession);
-  const [isLoading, setIsLoading] = useState(() => Boolean(getQrToken()));
+  const [isLoading, setIsLoading] = useState(() => Boolean(getQrToken()) && !isEntryPage());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isEntryPage()) {
+      setIsLoading(false);
+      return;
+    }
+
     const qrToken = getQrToken();
     if (!qrToken) {
       setIsLoading(false);
