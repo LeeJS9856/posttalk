@@ -34,15 +34,23 @@ const FILTERED_STATUS: Record<Exclude<StatusFilter, 'all'>, ArchivedAd['status']
   posted: 'posted',
 };
 
-const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => ({
-  id: item.submissionId,
-  format: item.mediaType,
-  title: item.title,
-  date: item.createdAt.slice(0, 10).replaceAll('-', '.'),
-  status: UI_STATUS_BY_API_STATUS[item.status],
-  images: item.mediaType === 'photo' && item.thumbnailUrl ? [item.thumbnailUrl] : [],
-  thumbnailUrl: item.thumbnailUrl ?? undefined,
-});
+const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => {
+  const previewImages = [...(item.previewAssets ?? [])]
+    .sort((first, second) => first.sortOrder - second.sortOrder)
+    .map((asset) => asset.url)
+    .filter(Boolean);
+  const fallbackImage = item.thumbnailUrl ?? item.generatedAssetUrl ?? undefined;
+
+  return {
+    id: item.submissionId,
+    format: item.mediaType,
+    title: item.title,
+    date: item.createdAt.slice(0, 10).replaceAll('-', '.'),
+    status: UI_STATUS_BY_API_STATUS[item.status],
+    images: item.mediaType === 'photo' ? (previewImages.length > 0 ? previewImages : (fallbackImage ? [fallbackImage] : [])) : [],
+    thumbnailUrl: fallbackImage,
+  };
+};
 
 const Archive = (): React.JSX.Element => {
   const navigate = useNavigate();
