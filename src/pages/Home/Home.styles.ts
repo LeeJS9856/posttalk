@@ -47,6 +47,10 @@ export const HeroStrong = styled.strong`
 
 export const Section = styled.section<{ $withTopBorder?: boolean }>`
   padding-top: ${({ $withTopBorder }) => ($withTopBorder ? '14px' : '0')};
+
+  & + & {
+    margin-top: 24px;
+  }
 `;
 
 export const SectionHeader = styled.div`
@@ -82,6 +86,19 @@ export const PromotionList = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+`;
+
+export const ReviewList = styled.div`
+  display: grid;
+  gap: 12px;
+`;
+
+export const EmptyMessage = styled.p`
+  margin: 0;
+  padding: 20px 0;
+  color: ${COLORS.black500};
+  font-size: ${FONT_SIZE.body};
+  text-align: center;
 `;
 
 export const FloatingButtonArea = styled.div`

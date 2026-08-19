@@ -5,6 +5,7 @@ import { COLORS } from '@/constants/colors';
 import { FONT_SIZE } from '@/constants/typography';
 
 export const Page = styled(PageFrame)`
+  position: relative;
   padding-bottom: 80px;
   background: ${COLORS.background.main};
 `;

@@ -77,6 +77,18 @@ export const ReviewList = styled.div`
   gap: 12px;
 `;
 
+export const EmptyMessage = styled.p`
+  display: grid;
+  min-height: 86px;
+  place-items: center;
+  margin: 0;
+  border-radius: 12px;
+  color: ${COLORS.black500};
+  background: ${COLORS.primary100};
+  font-size: ${FONT_SIZE.body};
+  text-align: center;
+`;
+
 export const RecentList = styled.div`
   display: flex;
   gap: 14px;

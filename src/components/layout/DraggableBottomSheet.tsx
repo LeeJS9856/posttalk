@@ -34,18 +34,17 @@ const DraggableBottomSheet = ({ children }: DraggableBottomSheetProps): React.JS
 
   return (
     <Sheet $expanded={isExpanded}>
-      <SheetHandle aria-hidden="true">
-        <HandleBar />
-      </SheetHandle>
-      <SheetContent
+      <SheetHandle
+        aria-hidden="true"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={() => {
           touchStartY.current = null;
         }}
       >
-        {children}
-      </SheetContent>
+        <HandleBar />
+      </SheetHandle>
+      <SheetContent>{children}</SheetContent>
     </Sheet>
   );
 };
@@ -80,9 +79,9 @@ const HandleBar = styled.span`
 
 const SheetContent = styled.div`
   height: calc(100% - 34px);
-  overflow: hidden;
+  overflow-y: auto;
   padding: 10px 24px 132px;
-  touch-action: none;
+  touch-action: pan-y;
 `;
 
 export default DraggableBottomSheet;

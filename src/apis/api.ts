@@ -98,6 +98,11 @@ export const api = async <T>({
   if (!response.ok) {
     const errorBody = responseBody as Partial<ApiErrorResponse>;
 
+    console.error(`[API] ${method} ${path} failed`, {
+      status: response.status,
+      response: responseBody,
+    });
+
     throw new ApiError({
       status: response.status,
       message: errorBody.message ?? response.statusText ?? 'API request failed.',
@@ -105,6 +110,8 @@ export const api = async <T>({
       details: errorBody.error?.details,
     });
   }
+
+  console.info(`[API] ${method} ${path} succeeded`, responseBody);
 
   return responseBody as T;
 };
