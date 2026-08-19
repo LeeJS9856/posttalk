@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import heroImage from '@/assets/temporary-market-hero.jpg';
+import heroImage from '@/assets/market-image.png';
 import PageFrame from '@/components/layout/PageFrame';
 import { COLORS } from '@/constants/colors';
 import { FONT_SIZE } from '@/constants/typography';
