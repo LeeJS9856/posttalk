@@ -30,7 +30,7 @@ const ArchiveDetail = (): React.JSX.Element => {
             {previewImages.length > 0 ? (
               ad.format === 'photo' ? <PhotoPreviewCarousel images={previewImages} /> : <PreviewImage src={previewImages[0]} alt={`${ad.title} 광고 미리보기`} />
             ) : <EmptyMessage>미리보기를 준비 중이에요.</EmptyMessage>}
-            <AdContent>광고 내용은 준비 중이에요.</AdContent>
+            <AdContent>{ad.caption || '광고 내용을 준비하고 있어요.'}</AdContent>
           </>
         )}
       </Content>
