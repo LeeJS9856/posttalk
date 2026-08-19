@@ -22,6 +22,8 @@ const VoiceQuestion = (): React.JSX.Element => {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const initialAnswerRef = useRef('');
   const recognizedTextRef = useRef('');
+  const shouldKeepRecordingRef = useRef(false);
+  const restartTimerRef = useRef<number | null>(null);
   const [answer, setAnswerText] = useState(draft.answers[question.key] ?? '');
   const [isRecording, setIsRecording] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -32,17 +34,22 @@ const VoiceQuestion = (): React.JSX.Element => {
   }, [draft.answers, question.key]);
 
   const finishRecording = (): void => {
+    shouldKeepRecordingRef.current = false;
+    if (restartTimerRef.current !== null) window.clearTimeout(restartTimerRef.current);
+    restartTimerRef.current = null;
     setAnswerText(`${initialAnswerRef.current} ${recognizedTextRef.current}`.trim());
     recognitionRef.current = null;
     setIsRecording(false);
   };
 
   useEffect(() => () => {
+    shouldKeepRecordingRef.current = false;
     recognitionRef.current?.stop();
     finishRecording();
   }, []);
 
   const stopRecording = (): void => {
+    shouldKeepRecordingRef.current = false;
     recognitionRef.current?.stop();
   };
 
@@ -83,14 +90,30 @@ const VoiceQuestion = (): React.JSX.Element => {
         ).filter(Boolean).join(' ');
       };
       recognition.onerror = (event) => {
+        if (event.error === 'no-speech') return;
         if (event.error !== 'aborted') {
           setErrorMessage('음성을 인식하지 못했어요. 다시 말씀하시거나 직접 입력해주세요.');
         }
         finishRecording();
       };
-      recognition.onend = finishRecording;
+      recognition.onend = () => {
+        if (!shouldKeepRecordingRef.current || recognitionRef.current !== recognition) {
+          finishRecording();
+          return;
+        }
+
+        restartTimerRef.current = window.setTimeout(() => {
+          if (!shouldKeepRecordingRef.current || recognitionRef.current !== recognition) return;
+          try {
+            recognition.start();
+          } catch {
+            finishRecording();
+          }
+        }, 250);
+      };
 
       recognitionRef.current = recognition;
+      shouldKeepRecordingRef.current = true;
       initialAnswerRef.current = answer.trim();
       recognizedTextRef.current = '';
       setErrorMessage(null);
