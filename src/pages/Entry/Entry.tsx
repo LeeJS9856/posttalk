@@ -30,8 +30,14 @@ const Entry = (): React.JSX.Element => {
     const checkQr = async (): Promise<void> => {
       try {
         const response = await getMerchantQr({ qrToken, signal: controller.signal });
-        if (response.data.qr.isAssigned && response.data.qr.store) {
-          window.location.replace(`/?qrToken=${encodeURIComponent(qrToken)}`);
+        if (response.data.qr.isAssigned) {
+          if (response.data.qr.store) {
+            window.location.replace(`/?qrToken=${encodeURIComponent(qrToken)}`);
+            return;
+          }
+
+          setStatus('error');
+          setMessage('이 QR은 이미 가게에 연결되어 있지만 가게 정보를 불러오지 못했어요. 관리자에게 QR 가게 정보 확인을 요청해주세요.');
           return;
         }
 
