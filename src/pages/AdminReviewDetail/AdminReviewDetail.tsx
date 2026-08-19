@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { getAdminReviewDetail, type AdminReviewDetail, updateAdminReviewStatus } from '@/apis/adminReviews';
 import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
+import AdminReviewDetailSkeleton from '@/components/admin/AdminReviewDetailSkeleton';
 import VideoPreview from '@/components/create/VideoPreview';
 import PageHeader from '@/components/layout/PageHeader';
 import { VIDEO_PREVIEW_SOURCE } from '@/constants/create';
@@ -61,7 +62,7 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
     <Page aria-label="광고 검토 상세">
       <PageHeader title="검토" showTitle={false} onBack={() => navigate(-1)} />
       <Content>
-        {isLoading ? <EmptyMessage>광고 내용을 불러오는 중이에요.</EmptyMessage> : hasError || !detail ? <EmptyMessage>광고 내용을 불러오지 못했어요.</EmptyMessage> : (
+        {isLoading ? <AdminReviewDetailSkeleton /> : hasError || !detail ? <EmptyMessage>광고 내용을 불러오지 못했어요.</EmptyMessage> : (
           <>
             <Meta>
               <Title>{detail.title}</Title>
