@@ -42,7 +42,7 @@ const Navigation = styled.nav<{ $fixed: boolean }>`
   left: 0;
   z-index: 20;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(${NAV_ITEMS.length}, 1fr);
   min-height: 80px;
   padding: 4px 0;
   border-top: 1px solid ${COLORS.black200};
