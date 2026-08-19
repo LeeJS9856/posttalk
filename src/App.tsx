@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import Archive from '@/pages/Archive/Archive';
+import ArchiveDetail from '@/pages/ArchiveDetail/ArchiveDetail';
 import AdminHome from '@/pages/AdminHome/AdminHome';
 import AdminArchive from '@/pages/AdminArchive/AdminArchive';
 import AdminReviews from '@/pages/AdminReviews/AdminReviews';
@@ -30,6 +31,7 @@ const App = (): React.JSX.Element => (
       <Route path="/create/complete" element={<GenerationComplete />} />
       <Route path="/create/requested" element={<PublishRequested />} />
       <Route path="/archive" element={<Archive />} />
+      <Route path="/archive/:submissionId" element={<ArchiveDetail />} />
     </Routes>
   </BrowserRouter>
 );

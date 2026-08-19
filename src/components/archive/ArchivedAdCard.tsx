@@ -14,28 +14,40 @@ type ArchivedAdCardProps = {
   status: AdStatus;
   title: string;
   thumbnailUrl?: string;
+  onClick?: () => void;
 };
 
-const ArchivedAdCard = ({ date, format, images, status, title, thumbnailUrl }: ArchivedAdCardProps): React.JSX.Element => (
-  <Card>
-    {format === 'photo' && images.length > 0 ? (
-      <PhotoPreviewCarousel images={images} />
-    ) : thumbnailUrl ? (
-      <Thumbnail src={thumbnailUrl} alt={`${title} 미리보기`} />
-    ) : (
-      <MissingPreview>미리보기를 준비 중이에요.</MissingPreview>
-    )}
-    <CardInfo>
-      <Title>{title}</Title>
-      <StatusBadge status={status} />
-      <Date>{date}</Date>
-    </CardInfo>
-  </Card>
-);
+const ArchivedAdCard = ({ date, format, images, status, title, thumbnailUrl, onClick }: ArchivedAdCardProps): React.JSX.Element => {
+  const content = (
+    <>
+      {format === 'photo' && images.length > 0 ? (
+        <PhotoPreviewCarousel images={images} />
+      ) : thumbnailUrl ? (
+        <Thumbnail src={thumbnailUrl} alt={`${title} 미리보기`} />
+      ) : (
+        <MissingPreview>미리보기를 준비 중이에요.</MissingPreview>
+      )}
+      <CardInfo>
+        <Title>{title}</Title>
+        <StatusBadge status={status} />
+        <Date>{date}</Date>
+      </CardInfo>
+    </>
+  );
+
+  return onClick ? <CardButton type="button" onClick={onClick}>{content}</CardButton> : <Card>{content}</Card>;
+};
 
 const Card = styled.article`
   overflow: hidden;
   background: ${COLORS.white};
+`;
+
+const CardButton = styled(Card).attrs({ as: 'button' })`
+  width: 100%;
+  border: 0;
+  padding: 0;
+  text-align: left;
 `;
 
 const Thumbnail = styled.img`
