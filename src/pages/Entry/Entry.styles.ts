@@ -67,6 +67,18 @@ export const Select = styled.select`
   line-height: 1.45;
 `;
 
+export const Textarea = styled.textarea`
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+  padding: 13px;
+  border: 1px solid ${COLORS.black200};
+  border-radius: 12px;
+  color: ${COLORS.black700};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.45;
+`;
+
 export const GuideList = styled.ol`
   display: grid;
   gap: 10px;
