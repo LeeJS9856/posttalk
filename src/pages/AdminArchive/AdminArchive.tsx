@@ -27,6 +27,12 @@ const UI_STATUS_BY_API_STATUS: Record<AdminArchiveItem['status'], ArchivedAd['st
   approved: 'posted',
 };
 
+const FILTERED_STATUS: Record<Exclude<StatusFilter, 'all'>, ArchivedAd['status']> = {
+  pending: 'pending',
+  supplement: 'supplement',
+  posted: 'posted',
+};
+
 const toArchivedAd = (item: AdminArchiveItem): ArchivedAd => ({
   id: item.submissionId,
   format: item.mediaType,
@@ -40,7 +46,7 @@ const toArchivedAd = (item: AdminArchiveItem): ArchivedAd => ({
 const AdminArchive = (): React.JSX.Element => {
   const [format, setFormat] = useState<ArchiveFormat>('photo');
   const [filter, setFilter] = useState<StatusFilter>('all');
-  const [ads, setAds] = useState<ArchivedAd[]>([]);
+  const [allAds, setAllAds] = useState<ArchivedAd[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -52,13 +58,15 @@ const AdminArchive = (): React.JSX.Element => {
       setHasError(false);
 
       try {
-        const response = await getAdminArchive({
-          marketName: ADMIN_MARKET_NAME,
-          mediaType: format,
-          status: API_STATUS_BY_FILTER[filter],
-          signal: controller.signal,
-        });
-        setAds(response.data.items.map(toArchivedAd));
+        const responses = await Promise.all(
+          (['photo', 'video'] as const).map((mediaType) => getAdminArchive({
+            marketName: ADMIN_MARKET_NAME,
+            mediaType,
+            status: API_STATUS_BY_FILTER.all,
+            signal: controller.signal,
+          })),
+        );
+        setAllAds(responses.flatMap((response) => response.data.items.map(toArchivedAd)));
       } catch (error) {
         if (!(error instanceof DOMException && error.name === 'AbortError')) setHasError(true);
       } finally {
@@ -68,7 +76,10 @@ const AdminArchive = (): React.JSX.Element => {
 
     void loadArchive();
     return () => controller.abort();
-  }, [filter, format]);
+  }, []);
+
+  const ads = allAds.filter((ad) =>
+    ad.format === format && (filter === 'all' || ad.status === FILTERED_STATUS[filter]));
 
   return (
     <Page aria-label="관리자 보관함 페이지">
