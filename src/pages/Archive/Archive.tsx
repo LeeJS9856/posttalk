@@ -8,6 +8,7 @@ import {
 } from '@/apis/archive';
 import ArchivedAdCard from '@/components/archive/ArchivedAdCard';
 import ArchivedAdCardSkeleton from '@/components/archive/ArchivedAdCardSkeleton';
+import QrLoginRequired from '@/components/auth/QrLoginRequired';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import PageHeader from '@/components/layout/PageHeader';
 import { ARCHIVE_FILTERS, type ArchivedAd, type ArchiveFormat, type StatusFilter } from '@/constants/archive';
@@ -45,7 +46,7 @@ const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => ({
 
 const Archive = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const { errorMessage: qrErrorMessage, isLoading: isQrLoading, session } = useMerchantSession();
+  const { isLoading: isQrLoading, session } = useMerchantSession();
   const [format, setFormat] = useState<ArchiveFormat>('photo');
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [allAds, setAllAds] = useState<ArchivedAd[]>([]);
@@ -103,6 +104,7 @@ const Archive = (): React.JSX.Element => {
         }
       />
 
+      {session && <>
       <FormatTabs aria-label="광고 형식">
         <FormatIndicator $format={format} aria-hidden="true" />
         <FormatTab type="button" $active={format === 'photo'} onClick={() => setFormat('photo')}>
@@ -126,6 +128,7 @@ const Archive = (): React.JSX.Element => {
           </FilterButton>
         ))}
       </FilterList>
+      </>}
 
       <Content>
         {isQrLoading || isLoading ? (
@@ -134,7 +137,7 @@ const Archive = (): React.JSX.Element => {
             <ArchivedAdCardSkeleton />
           </AdList>
         ) : !session ? (
-          <EmptyMessage>{qrErrorMessage ?? 'QR 링크로 접속해주세요.'}</EmptyMessage>
+          <QrLoginRequired />
         ) : hasError ? (
           <EmptyMessage>보관함을 불러오지 못했어요.</EmptyMessage>
         ) : ads.length > 0 ? (

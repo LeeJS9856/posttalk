@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { getMerchantHome, type MerchantAttentionItem, type MerchantHomeData } from '@/apis/home';
 import FloatingCreateButton from '@/components/common/FloatingCreateButton';
+import QrLoginRequired from '@/components/auth/QrLoginRequired';
 import HomeAdSkeleton from '@/components/home/HomeAdSkeleton';
 import PromotionCard from '@/components/home/PromotionCard';
 import ReviewAdCard from '@/components/home/ReviewAdCard';
@@ -18,7 +19,7 @@ const toReviewStatus = (item: MerchantAttentionItem): 'pending' | 'supplement' =
 
 const Home = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const { errorMessage: qrErrorMessage, isLoading: isQrLoading, session } = useMerchantSession();
+  const { isLoading: isQrLoading, session } = useMerchantSession();
   const [homeData, setHomeData] = useState<MerchantHomeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -65,7 +66,7 @@ const Home = (): React.JSX.Element => {
       <Hero>
         <HeroMessage>
           {isQrLoading ? 'QR 정보를 불러오고 있어요.' : !session ? (
-            qrErrorMessage ?? 'QR 링크로 접속해주세요.'
+            'QR 로그인을 해주세요.'
           ) : (
             <>
               <HeroStrong>{storeName}</HeroStrong> 사장님,
@@ -88,6 +89,9 @@ const Home = (): React.JSX.Element => {
         </HeroMessage>
       </Hero>
       <DraggableBottomSheet>
+        {!isQrLoading && !session ? (
+          <QrLoginRequired />
+        ) : <>
         <Section>
           <SectionHeader>
             <SectionTitle>확인이 필요한 광고</SectionTitle>
@@ -98,7 +102,7 @@ const Home = (): React.JSX.Element => {
               <HomeAdSkeleton variant="attention" />
               <HomeAdSkeleton variant="attention" />
             </ReviewList>
-          ) : !session ? <EmptyMessage>{qrErrorMessage ?? 'QR 링크로 접속해주세요.'}</EmptyMessage> : hasError ? <EmptyMessage>광고를 불러오지 못했어요.</EmptyMessage> : attentionItems.length > 0 ? (
+          ) : hasError ? <EmptyMessage>광고를 불러오지 못했어요.</EmptyMessage> : attentionItems.length > 0 ? (
             <ReviewList>
               {attentionItems.slice(0, 2).map((item) => (
                 <ReviewAdCard
@@ -125,7 +129,7 @@ const Home = (): React.JSX.Element => {
                 <HomeAdSkeleton variant="promotion" />
                 <HomeAdSkeleton variant="promotion" />
               </>
-            ) : !session ? <EmptyMessage>{qrErrorMessage ?? 'QR 링크로 접속해주세요.'}</EmptyMessage> : (
+            ) : (
               <>
                 <PromotionCard onClick={() => navigate('/create')} />
                 {myAds.map((ad) => (
@@ -140,10 +144,11 @@ const Home = (): React.JSX.Element => {
             )}
           </PromotionList>
         </Section>
+        </>}
       </DraggableBottomSheet>
-      <FloatingButtonArea>
+      {session && <FloatingButtonArea>
         <FloatingCreateButton onClick={() => navigate('/create')} />
-      </FloatingButtonArea>
+      </FloatingButtonArea>}
       <BottomNavigation />
     </AppFrame>
   );
