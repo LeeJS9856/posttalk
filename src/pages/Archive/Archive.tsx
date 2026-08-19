@@ -43,6 +43,7 @@ const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => {
 
   return {
     id: item.submissionId,
+    caption: item.publishCaption ?? undefined,
     format: item.mediaType,
     title: item.title,
     date: item.createdAt.slice(0, 10).replaceAll('-', '.'),

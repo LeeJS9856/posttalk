@@ -4,6 +4,7 @@ export type ArchiveFormat = 'photo' | 'video';
 export type StatusFilter = 'all' | AdStatus;
 
 export type ArchivedAd = {
+  caption?: string;
   date: string;
   format: ArchiveFormat;
   id: string;
