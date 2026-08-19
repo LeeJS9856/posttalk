@@ -31,6 +31,10 @@ type AdDraftContextValue = {
 
 const createInitialDraft = (format: AdFormat = 'photo'): AdDraft => ({ answers: {}, format });
 
+const revokePreviewUrl = (asset?: DraftAsset): void => {
+  if (asset?.previewUrl.startsWith('blob:')) URL.revokeObjectURL(asset.previewUrl);
+};
+
 const AdDraftContext = createContext<AdDraftContextValue | null>(null);
 
 export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
@@ -38,18 +42,27 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
 
   const value = useMemo<AdDraftContextValue>(() => ({
     draft,
-    resetDraft: (format = 'photo') => setDraft(createInitialDraft(format)),
+    resetDraft: (format = 'photo') => setDraft((current) => {
+      revokePreviewUrl(current.menuBoard);
+      revokePreviewUrl(current.foodPhoto);
+      return createInitialDraft(format);
+    }),
     setAnswer: (key, answer) => setDraft((current) => ({
       ...current,
       answers: { ...current.answers, [key]: answer },
     })),
-    setAsset: (assetType, file) => setDraft((current) => ({
-      ...current,
-      [assetType === 'menu_board' ? 'menuBoard' : 'foodPhoto']: {
-        file,
-        previewUrl: URL.createObjectURL(file),
-      },
-    })),
+    setAsset: (assetType, file) => setDraft((current) => {
+      const assetKey = assetType === 'menu_board' ? 'menuBoard' : 'foodPhoto';
+      revokePreviewUrl(current[assetKey]);
+
+      return {
+        ...current,
+        [assetKey]: {
+          file,
+          previewUrl: URL.createObjectURL(file),
+        },
+      };
+    }),
     setGeneration: ({ jobId, submissionId }) => setDraft((current) => ({ ...current, jobId, submissionId })),
     setGeneratedResultUrl: (generatedResultUrl) => setDraft((current) => ({ ...current, generatedResultUrl })),
   }), [draft]);

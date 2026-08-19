@@ -1,4 +1,4 @@
-const CACHE_NAME = 'posttalk-shell-v1';
+const CACHE_NAME = 'posttalk-shell-v2';
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/pwa-icon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -33,15 +33,4 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-
-      return fetch(request).then((response) => {
-        const responseCopy = response.clone();
-        void caches.open(CACHE_NAME).then((cache) => cache.put(request, responseCopy));
-        return response;
-      });
-    }),
-  );
 });
