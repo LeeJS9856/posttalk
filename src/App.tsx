@@ -27,7 +27,7 @@ const App = (): React.JSX.Element => (
   <AuthProvider>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LoginRequiredRoute><Home /></LoginRequiredRoute>} />
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={<AdminHome />} />
         <Route path="/admin/archive" element={<AdminArchive />} />
@@ -40,7 +40,7 @@ const App = (): React.JSX.Element => (
         <Route path="/create/generating" element={<LoginRequiredRoute><Generating /></LoginRequiredRoute>} />
         <Route path="/create/complete" element={<LoginRequiredRoute><GenerationComplete /></LoginRequiredRoute>} />
         <Route path="/create/requested" element={<LoginRequiredRoute><PublishRequested /></LoginRequiredRoute>} />
-        <Route path="/archive" element={<LoginRequiredRoute><Archive /></LoginRequiredRoute>} />
+        <Route path="/archive" element={<Archive />} />
       </Routes>
     </BrowserRouter>
   </AuthProvider>
