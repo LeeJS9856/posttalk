@@ -1,0 +1,18 @@
+{
+  "name": "포스톡",
+  "short_name": "포스톡",
+  "description": "시장 상인을 위한 광고 제작 서비스",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F2F3F8",
+  "theme_color": "#6664A8",
+  "lang": "ko-KR",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
