@@ -57,16 +57,61 @@ export const Input = styled.input`
   font-size: ${FONT_SIZE.body};
 `;
 
-export const Textarea = styled.textarea`
+export const Select = styled.select`
   width: 100%;
-  min-height: 90px;
-  resize: vertical;
   padding: 13px;
   border: 1px solid ${COLORS.black200};
   border-radius: 12px;
   color: ${COLORS.black700};
   font-size: ${FONT_SIZE.body};
   line-height: 1.45;
+`;
+
+export const LocationStatus = styled.p<{ $isError?: boolean }>`
+  color: ${({ $isError }) => ($isError ? COLORS.statusWarning : COLORS.statusPost)};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.45;
+`;
+
+export const GuideList = styled.ol`
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+  padding: 0;
+  list-style: none;
+  counter-reset: photo-guide;
+`;
+
+export const GuideItem = styled.li`
+  position: relative;
+  padding: 14px 14px 14px 46px;
+  border-radius: 12px;
+  background: ${COLORS.primary100};
+  color: ${COLORS.black700};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.45;
+
+  &::before {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: grid;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    border-radius: 50%;
+    color: ${COLORS.white};
+    background: ${COLORS.primary700};
+    content: counter(photo-guide);
+    counter-increment: photo-guide;
+    font-size: 12px;
+    font-weight: 700;
+  }
+`;
+
+export const GuideTitle = styled.strong`
+  display: block;
+  margin-bottom: 3px;
 `;
 
 export const SubmitButton = styled(Button)`
