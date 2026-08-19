@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { getAdminReviewDetail, type AdminReviewDetail, updateAdminReviewStatus } from '@/apis/adminReviews';
 import AdminRejectReasonModal from '@/components/admin/AdminRejectReasonModal';
@@ -8,10 +8,15 @@ import AdminReviewDetailSkeleton from '@/components/admin/AdminReviewDetailSkele
 import VideoPreview from '@/components/create/VideoPreview';
 import PageHeader from '@/components/layout/PageHeader';
 import { VIDEO_PREVIEW_SOURCE } from '@/constants/create';
-import { ActionArea, AdContent, ApproveButton, Content, Date, EmptyMessage, Format, Meta, Page, RejectButton, Title } from '@/pages/AdminReviewDetail/AdminReviewDetail.styles';
+import { ActionArea, AdContent, ApproveButton, Content, Date, EmptyMessage, Format, Meta, Page, RejectButton, RejectionReason, RejectionReasonArea, RejectionReasonLabel, Title } from '@/pages/AdminReviewDetail/AdminReviewDetail.styles';
+
+type ArchiveDetailState = {
+  archiveStatus?: 'pending' | 'supplement' | 'posted';
+};
 
 const AdminReviewDetailPage = (): React.JSX.Element => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { submissionId = '' } = useParams();
   const [detail, setDetail] = useState<AdminReviewDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,6 +65,11 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
   const assetUrls = detail?.assets?.flatMap((asset) => [asset.url, asset.publicUrl, asset.fileUrl].filter((url): url is string => Boolean(url))) ?? [];
   const photoImages = assetUrls.length > 0 ? assetUrls : detail?.primaryAssetUrl ? [detail.primaryAssetUrl] : [];
   const videoSrc = detail?.primaryAssetUrl ?? VIDEO_PREVIEW_SOURCE;
+  const archiveStatus = (location.state as ArchiveDetailState | null)?.archiveStatus;
+  const detailStatus = detail?.status === 'pending_review' ? 'pending' : detail?.status === 'rejected' ? 'supplement' : detail?.status === 'approved' ? 'posted' : archiveStatus;
+  const isPendingReview = detailStatus === undefined || detailStatus === 'pending';
+  const isRejected = detailStatus === 'supplement';
+  const rejectionReason = detail?.rejectionReason ?? detail?.rejection?.reason ?? '반려 사유가 등록되지 않았어요.';
 
   return (
     <Page aria-label="광고 검토 상세">
@@ -78,13 +88,21 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
           </>
         )}
       </Content>
-      <ActionArea>
-        <RejectButton type="button" disabled={isUpdating || !detail} onClick={() => setIsRejectModalOpen(true)}>반려</RejectButton>
-        <ApproveButton type="button" disabled={isUpdating || !detail} onClick={() => void updateStatus('approved')}>
-          {isUpdating ? '처리 중...' : '승인 및 게시'}
-        </ApproveButton>
-      </ActionArea>
-      {isRejectModalOpen && (
+      {!isLoading && detail && isPendingReview && (
+        <ActionArea>
+          <RejectButton type="button" disabled={isUpdating} onClick={() => setIsRejectModalOpen(true)}>반려</RejectButton>
+          <ApproveButton type="button" disabled={isUpdating} onClick={() => void updateStatus('approved')}>
+            {isUpdating ? '처리 중...' : '승인 및 게시'}
+          </ApproveButton>
+        </ActionArea>
+      )}
+      {!isLoading && detail && isRejected && (
+        <RejectionReasonArea>
+          <RejectionReasonLabel>반려 이유</RejectionReasonLabel>
+          <RejectionReason>{rejectionReason}</RejectionReason>
+        </RejectionReasonArea>
+      )}
+      {isPendingReview && isRejectModalOpen && (
         <AdminRejectReasonModal
           isSubmitting={isUpdating}
           onClose={() => setIsRejectModalOpen(false)}
