@@ -71,11 +71,15 @@ export const startAdSession = ({ adType, menuIntro, storeId, storeSpecialty }: {
 export const submitAdSessionPhoto = ({ asset, sessionId }: {
   asset: { bucket: string; fileName?: string; filePath: string; fileSize?: number; mimeType?: string };
   sessionId: string;
-}) => api<ApiSuccessResponse<AdSessionPhotoData>>({
-  path: `/api/ad-sessions/${encodeURIComponent(sessionId)}/photos`,
-  method: 'POST',
-  body: asset,
-});
+}) => {
+  const { bucket, fileName, filePath, fileSize, mimeType } = asset;
+
+  return api<ApiSuccessResponse<AdSessionPhotoData>>({
+    path: `/api/ad-sessions/${encodeURIComponent(sessionId)}/photos`,
+    method: 'POST',
+    body: { bucket, filePath, fileName, mimeType, fileSize },
+  });
+};
 
 export const getAdSession = ({ sessionId, signal }: { sessionId: string; signal?: AbortSignal }) =>
   api<ApiSuccessResponse<AdSessionData>>({
