@@ -6,18 +6,19 @@ import popo from '@/assets/popo.svg';
 import { FlowSubtitle, FlowTitle } from '@/components/common/FlowTitle';
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import PageHeader from '@/components/layout/PageHeader';
-import { VOICE_QUESTIONS } from '@/constants/questions';
+import { getVoiceQuestions } from '@/constants/questions';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { ActionArea, AnswerField, AnswerHint, Content, MicButton, Page, Popo, RecordStatus, TitleArea } from '@/pages/VoiceQuestion/VoiceQuestion.styles';
 
 const VoiceQuestion = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { questionIndex: questionIndexParam } = useParams();
-  const questionIndex = Math.min(Math.max(Number(questionIndexParam) || 0, 0), VOICE_QUESTIONS.length - 1);
-  const question = VOICE_QUESTIONS[questionIndex];
-  const isLastQuestion = questionIndex === VOICE_QUESTIONS.length - 1;
-  const isOptional = 'optional' in question && question.optional;
   const { draft, setAnswer } = useAdDraft();
+  const questions = getVoiceQuestions(draft.format);
+  const questionIndex = Math.min(Math.max(Number(questionIndexParam) || 0, 0), questions.length - 1);
+  const question = questions[questionIndex];
+  const isLastQuestion = questionIndex === questions.length - 1;
+  const isOptional = 'optional' in question && question.optional;
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const initialAnswerRef = useRef('');
   const recognizedTextRef = useRef('');
@@ -115,7 +116,7 @@ const VoiceQuestion = (): React.JSX.Element => {
 
     setAnswer(question.key, trimmedAnswer);
     if (isLastQuestion) {
-      navigate('/create/generating');
+      navigate(draft.format === 'photo' ? '/create/capture' : '/create/generating');
       return;
     }
 
@@ -124,7 +125,7 @@ const VoiceQuestion = (): React.JSX.Element => {
 
   return (
     <Page aria-label={`광고 제작 질문 ${questionIndex + 1}`}>
-      <PageHeader title="광고 제작" onBack={() => navigate(questionIndex === 0 ? '/create/capture/result?asset=food_photo' : `/create/questions/${questionIndex - 1}`)} />
+      <PageHeader title="광고 제작" onBack={() => navigate(questionIndex === 0 ? (draft.format === 'photo' ? '/create' : '/create/capture/result?asset=food_photo') : `/create/questions/${questionIndex - 1}`)} />
       <Content>
         <Popo src={popo} alt="" />
         <TitleArea>

@@ -3,6 +3,7 @@ import { ClipLoader } from 'react-spinners';
 import { useNavigate } from 'react-router-dom';
 
 import popo from '@/assets/popo.svg';
+import { getAdSession, type GeneratedAsset } from '@/apis/adSessions';
 import { checkPhoto, createSubmission, getGenerationResult, startGeneration, type UploadAssetType, uploadAsset } from '@/apis/creation';
 import { getServerHealth } from '@/apis/server';
 import { FlowTitleStrong } from '@/components/common/FlowTitle';
@@ -15,9 +16,20 @@ const Generating = (): React.JSX.Element => (
   <GeneratingContent />
 );
 
+const getGeneratedAssetUrl = (asset: GeneratedAsset | string): string | undefined => {
+  if (typeof asset === 'string') return asset;
+  return asset.url ?? asset.publicUrl ?? asset.resultUrl ?? asset.filePath;
+};
+
+const normalizeHashtags = (hashtags?: string[] | string): string[] | undefined => {
+  if (Array.isArray(hashtags)) return hashtags;
+  if (!hashtags) return undefined;
+  return hashtags.split(/[\n,]/).map((hashtag) => hashtag.trim()).filter(Boolean);
+};
+
 const GeneratingContent = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const { draft, setGeneratedResultUrl, setGeneration } = useAdDraft();
+  const { draft, setGeneratedResultUrl, setGeneration, setGenerationResult } = useAdDraft();
   const { errorMessage: qrErrorMessage, isLoading: isQrLoading, session } = useMerchantSession();
   const startedRef = useRef(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -32,6 +44,54 @@ const GeneratingContent = (): React.JSX.Element => {
 
       if (!session) {
         setErrorMessage(qrErrorMessage ?? 'QR로 가게 정보를 확인해주세요.');
+        return;
+      }
+
+      if (format === 'photo') {
+        if (!draft.sessionId) {
+          setErrorMessage('광고 생성 세션을 찾지 못했어요. 다시 만들어주세요.');
+          return;
+        }
+
+        try {
+          while (true) {
+            const response = await getAdSession({ sessionId: draft.sessionId });
+            const sessionData = response.data;
+            const isCompleted = sessionData.status === 'completed' || sessionData.generation?.status === 'completed';
+
+            if (isCompleted) {
+              const generatedAssets = (sessionData.generation?.generatedAssets ?? [])
+                .map(getGeneratedAssetUrl)
+                .filter((url): url is string => Boolean(url));
+              const resultUrl = sessionData.generation?.resultUrl ?? generatedAssets[0];
+              const previewImages = generatedAssets.length > 0
+                ? generatedAssets
+                : (resultUrl ? [resultUrl] : []);
+
+              if (previewImages.length === 0) {
+                throw new Error('생성된 광고 이미지를 받지 못했어요.');
+              }
+
+              setGenerationResult({
+                generatedAssets: previewImages,
+                resultUrl: resultUrl ?? previewImages[0],
+                submissionId: sessionData.submission?.id ?? sessionData.submission?.submissionId,
+                caption: sessionData.submission?.caption ?? sessionData.draft?.caption,
+                hashtags: normalizeHashtags(sessionData.submission?.hashtags ?? sessionData.draft?.hashtags),
+              });
+              navigate('/create/complete', { replace: true });
+              return;
+            }
+
+            if (sessionData.status === 'failed' || sessionData.generation?.status === 'failed') {
+              throw new Error('광고 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
+            }
+
+            await new Promise<void>((resolve) => window.setTimeout(resolve, 2000));
+          }
+        } catch (error) {
+          setErrorMessage(error instanceof Error ? error.message : '광고 생성 중 문제가 발생했어요.');
+        }
         return;
       }
 
@@ -98,7 +158,7 @@ const GeneratingContent = (): React.JSX.Element => {
     };
 
     void generateAdvertisement();
-  }, [draft, isQrLoading, navigate, qrErrorMessage, session, setGeneratedResultUrl, setGeneration]);
+  }, [draft, isQrLoading, navigate, qrErrorMessage, session, setGeneratedResultUrl, setGeneration, setGenerationResult]);
 
   return (
     <Page aria-label={retakeAssetType ? '사진 재촬영 안내' : '광고 생성 중'} aria-busy={!errorMessage}>
