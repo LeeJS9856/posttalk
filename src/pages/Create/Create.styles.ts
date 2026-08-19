@@ -10,7 +10,8 @@ export const Page = styled(PageFrame)`
   flex-direction: column;
   height: 100svh;
   padding-bottom: 80px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: ${COLORS.background.main};
 `;
 
