@@ -6,6 +6,7 @@ import {
   type AdminArchiveStatus,
 } from '@/apis/adminArchive';
 import ArchivedAdCard from '@/components/archive/ArchivedAdCard';
+import ArchivedAdCardSkeleton from '@/components/archive/ArchivedAdCardSkeleton';
 import AdminBottomNavigation from '@/components/admin/AdminBottomNavigation';
 import PageHeader from '@/components/layout/PageHeader';
 import { ARCHIVE_FILTERS, type ArchivedAd, type ArchiveFormat, type StatusFilter } from '@/constants/archive';
@@ -95,7 +96,12 @@ const AdminArchive = (): React.JSX.Element => {
       </FilterList>
 
       <Content>
-        {isLoading ? <EmptyMessage>보관함을 불러오는 중이에요.</EmptyMessage> : hasError ? <EmptyMessage>보관함을 불러오지 못했어요.</EmptyMessage> : ads.length > 0 ? (
+        {isLoading ? (
+          <AdList aria-label="보관함 광고를 불러오는 중">
+            <ArchivedAdCardSkeleton />
+            <ArchivedAdCardSkeleton />
+          </AdList>
+        ) : hasError ? <EmptyMessage>보관함을 불러오지 못했어요.</EmptyMessage> : ads.length > 0 ? (
           <AdList>{ads.map((ad) => <ArchivedAdCard key={ad.id} {...ad} />)}</AdList>
         ) : <EmptyMessage>해당 조건의 광고가 없어요.</EmptyMessage>}
       </Content>

@@ -6,6 +6,7 @@ import {
   type MerchantArchiveStatus,
 } from '@/apis/archive';
 import ArchivedAdCard from '@/components/archive/ArchivedAdCard';
+import ArchivedAdCardSkeleton from '@/components/archive/ArchivedAdCardSkeleton';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import PageHeader from '@/components/layout/PageHeader';
 import { ARCHIVE_FILTERS, type ArchivedAd, type ArchiveFormat, type StatusFilter } from '@/constants/archive';
@@ -109,7 +110,10 @@ const Archive = (): React.JSX.Element => {
 
       <Content>
         {isLoading ? (
-          <EmptyMessage>보관함을 불러오는 중이에요.</EmptyMessage>
+          <AdList aria-label="보관함 광고를 불러오는 중">
+            <ArchivedAdCardSkeleton />
+            <ArchivedAdCardSkeleton />
+          </AdList>
         ) : hasError ? (
           <EmptyMessage>보관함을 불러오지 못했어요.</EmptyMessage>
         ) : ads.length > 0 ? (
