@@ -74,3 +74,10 @@ export const RetakeButton = styled(Button)`
 export const CameraInput = styled.input`
   display: none;
 `;
+
+export const ErrorMessage = styled.p`
+  margin: 12px 24px 0;
+  color: #c24a3d;
+  font-size: ${FONT_SIZE.body};
+  text-align: center;
+`;

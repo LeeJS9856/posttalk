@@ -31,6 +31,13 @@ export const GuideCopy = styled(FlowTitle)`
   margin-top: 20px;
 `;
 
+export const HelperText = styled.p`
+  margin-top: 10px;
+  color: ${COLORS.black500};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.45;
+`;
+
 export const ExampleImage = styled.img`
   width: 100%;
   aspect-ratio: 1.2;
