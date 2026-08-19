@@ -1,4 +1,3 @@
-import { type ReactElement } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import Archive from '@/pages/Archive/Archive';
@@ -12,38 +11,27 @@ import Create from '@/pages/Create/Create';
 import GenerationComplete from '@/pages/GenerationComplete/GenerationComplete';
 import Generating from '@/pages/Generating/Generating';
 import Home from '@/pages/Home/Home';
-import Login from '@/pages/Login/Login';
 import PublishRequested from '@/pages/PublishRequested/PublishRequested';
 import VoiceQuestion from '@/pages/VoiceQuestion/VoiceQuestion';
-import { AuthProvider, useAuth } from '@/hooks/useAuth';
-import LoginRequired from '@/components/auth/LoginRequired';
-
-const LoginRequiredRoute = ({ children }: { children: ReactElement }): React.JSX.Element => {
-  const { isLoggedIn } = useAuth();
-  return isLoggedIn ? children : <LoginRequired />;
-};
 
 const App = (): React.JSX.Element => (
-  <AuthProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/admin" element={<AdminHome />} />
-        <Route path="/admin/archive" element={<AdminArchive />} />
-        <Route path="/admin/reviews" element={<AdminReviews />} />
-        <Route path="/admin/reviews/:submissionId" element={<AdminReviewDetailPage />} />
-        <Route path="/create" element={<LoginRequiredRoute><Create /></LoginRequiredRoute>} />
-        <Route path="/create/capture" element={<LoginRequiredRoute><Capture /></LoginRequiredRoute>} />
-        <Route path="/create/capture/result" element={<LoginRequiredRoute><CaptureResult /></LoginRequiredRoute>} />
-        <Route path="/create/questions/:questionIndex" element={<LoginRequiredRoute><VoiceQuestion /></LoginRequiredRoute>} />
-        <Route path="/create/generating" element={<LoginRequiredRoute><Generating /></LoginRequiredRoute>} />
-        <Route path="/create/complete" element={<LoginRequiredRoute><GenerationComplete /></LoginRequiredRoute>} />
-        <Route path="/create/requested" element={<LoginRequiredRoute><PublishRequested /></LoginRequiredRoute>} />
-        <Route path="/archive" element={<Archive />} />
-      </Routes>
-    </BrowserRouter>
-  </AuthProvider>
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/admin" element={<AdminHome />} />
+      <Route path="/admin/archive" element={<AdminArchive />} />
+      <Route path="/admin/reviews" element={<AdminReviews />} />
+      <Route path="/admin/reviews/:submissionId" element={<AdminReviewDetailPage />} />
+      <Route path="/create" element={<Create />} />
+      <Route path="/create/capture" element={<Capture />} />
+      <Route path="/create/capture/result" element={<CaptureResult />} />
+      <Route path="/create/questions/:questionIndex" element={<VoiceQuestion />} />
+      <Route path="/create/generating" element={<Generating />} />
+      <Route path="/create/complete" element={<GenerationComplete />} />
+      <Route path="/create/requested" element={<PublishRequested />} />
+      <Route path="/archive" element={<Archive />} />
+    </Routes>
+  </BrowserRouter>
 );
 
 export default App;
