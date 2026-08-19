@@ -30,6 +30,7 @@ type GenerationResultData = { status: string; resultUrl?: string | null };
 export const uploadAsset = async ({ assetType, file, session }: { assetType: UploadAssetType; file: File; session: MerchantSession }): Promise<UploadedAsset> => {
   const body = new FormData();
   body.append('assetType', assetType);
+  body.append('storeId', session.storeId);
   body.append('qrToken', session.qrToken);
   body.append('file', file);
 
