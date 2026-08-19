@@ -14,7 +14,6 @@ import GenerationComplete from '@/pages/GenerationComplete/GenerationComplete';
 import Generating from '@/pages/Generating/Generating';
 import Home from '@/pages/Home/Home';
 import PublishRequested from '@/pages/PublishRequested/PublishRequested';
-import QrLogin from '@/pages/QrLogin/QrLogin';
 import VoiceQuestion from '@/pages/VoiceQuestion/VoiceQuestion';
 import { MerchantSessionProvider } from '@/hooks/useMerchantSession';
 import { useMerchantSession } from '@/hooks/useMerchantSession';
@@ -36,7 +35,6 @@ const App = (): React.JSX.Element => (
       <Routes>
         <Route path="/" element={<Root />} />
         <Route path="/entry" element={<Entry />} />
-        <Route path="/qr-login" element={<QrLogin />} />
         <Route path="/admin" element={<AdminHome />} />
         <Route path="/admin/archive" element={<AdminArchive />} />
         <Route path="/admin/reviews" element={<AdminReviews />} />
