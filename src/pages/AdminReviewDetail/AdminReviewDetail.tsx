@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { getAdminReviewDetail, type AdminReviewDetail, updateAdminReviewStatus } from '@/apis/adminReviews';
+import AdminRejectReasonModal from '@/components/admin/AdminRejectReasonModal';
 import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
 import AdminReviewDetailSkeleton from '@/components/admin/AdminReviewDetailSkeleton';
 import VideoPreview from '@/components/create/VideoPreview';
@@ -17,6 +18,7 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
   const [hasError, setHasError] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -43,6 +45,7 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
     setUpdateError(null);
     try {
       await updateAdminReviewStatus({ submissionId, status });
+      setIsRejectModalOpen(false);
       navigate('/admin/reviews', { replace: true });
     } catch (error) {
       setUpdateError(error instanceof Error ? error.message : '검토 상태를 변경하지 못했어요.');
@@ -76,11 +79,18 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
         )}
       </Content>
       <ActionArea>
-        <RejectButton type="button" disabled={isUpdating || !detail} onClick={() => void updateStatus('rejected')}>반려</RejectButton>
+        <RejectButton type="button" disabled={isUpdating || !detail} onClick={() => setIsRejectModalOpen(true)}>반려</RejectButton>
         <ApproveButton type="button" disabled={isUpdating || !detail} onClick={() => void updateStatus('approved')}>
           {isUpdating ? '처리 중...' : '승인 및 게시'}
         </ApproveButton>
       </ActionArea>
+      {isRejectModalOpen && (
+        <AdminRejectReasonModal
+          isSubmitting={isUpdating}
+          onClose={() => setIsRejectModalOpen(false)}
+          onConfirm={() => void updateStatus('rejected')}
+        />
+      )}
     </Page>
   );
 };
