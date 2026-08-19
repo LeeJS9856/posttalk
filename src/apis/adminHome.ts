@@ -16,12 +16,9 @@ export interface AdminHomeData {
   recentItems: AdminHomeItem[];
 }
 
-export const getAdminHome = ({ marketName, signal }: { marketName: string; signal?: AbortSignal }) => {
-  const searchParams = new URLSearchParams({ marketName });
-
-  return api<ApiSuccessResponse<AdminHomeData>>({
+export const getAdminHome = ({ signal }: { signal?: AbortSignal } = {}) =>
+  api<ApiSuccessResponse<AdminHomeData>>({
     baseUrl: '',
-    path: `/api/admin/home?${searchParams.toString()}`,
+    path: '/api/admin/home',
     signal,
   });
-};
