@@ -26,6 +26,8 @@ export interface AdminReviewDetail extends AdminReviewItem {
   };
 }
 
+type AdminReviewDecision = 'approved' | 'rejected';
+
 export const getAdminReviews = ({ marketName, signal }: { marketName: string; signal?: AbortSignal }) => {
   const searchParams = new URLSearchParams({ marketName, status: 'pending_review', limit: '30' });
 
@@ -41,4 +43,12 @@ export const getAdminReviewDetail = ({ submissionId, signal }: { submissionId: s
     baseUrl: '',
     path: `/api/admin/reviews/${encodeURIComponent(submissionId)}`,
     signal,
+  });
+
+export const updateAdminReviewStatus = ({ submissionId, status }: { submissionId: string; status: AdminReviewDecision }) =>
+  api<ApiSuccessResponse<unknown>>({
+    baseUrl: '',
+    path: `/api/admin/submissions/${encodeURIComponent(submissionId)}`,
+    method: 'PATCH',
+    body: { status },
   });

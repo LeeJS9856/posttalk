@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { getAdminHome, type AdminHomeData } from '@/apis/adminHome';
 import AdminBottomNavigation from '@/components/admin/AdminBottomNavigation';
@@ -11,6 +12,7 @@ const FALLBACK_THUMBNAIL = 'https://images.unsplash.com/photo-1610057099431-d73a
 
 const AdminHome = (): React.JSX.Element => {
   const [homeData, setHomeData] = useState<AdminHomeData | null>(null);
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -19,7 +21,7 @@ const AdminHome = (): React.JSX.Element => {
 
     const loadAdminHome = async (): Promise<void> => {
       try {
-        const response = await getAdminHome({ marketName: ADMIN_MARKET_NAME, signal: controller.signal });
+        const response = await getAdminHome({ signal: controller.signal });
         setHomeData(response.data);
       } catch (error) {
         if (!(error instanceof DOMException && error.name === 'AbortError')) setHasError(true);
@@ -63,7 +65,7 @@ const AdminHome = (): React.JSX.Element => {
           ) : (
             <ReviewList>
               {pendingItems.map((ad) => (
-                <ReviewAdCard key={ad.submissionId} status="pending" storeName={ad.storeName} image={ad.thumbnailUrl ?? FALLBACK_THUMBNAIL} onClick={() => undefined} />
+                <ReviewAdCard key={ad.submissionId} status="pending" storeName={ad.storeName} image={ad.thumbnailUrl ?? FALLBACK_THUMBNAIL} onClick={() => navigate(`/admin/reviews/${ad.submissionId}`)} />
               ))}
             </ReviewList>
           )}
@@ -72,14 +74,14 @@ const AdminHome = (): React.JSX.Element => {
         <Section>
           <SectionHeader>
             <SectionTitle>최근 업로드 된 광고</SectionTitle>
-            <AllButton type="button" onClick={() => undefined}>전체 보기 ›</AllButton>
+            <AllButton type="button" onClick={() => navigate('/admin/reviews')}>전체 보기 ›</AllButton>
           </SectionHeader>
           {!isLoading && !hasError && recentItems.length === 0 ? (
             <EmptyMessage>최근 업로드 된 광고가 없어요.</EmptyMessage>
           ) : (
             <RecentList>
               {recentItems.map((ad) => (
-                <RecentCard key={ad.submissionId} type="button" onClick={() => undefined}>
+                <RecentCard key={ad.submissionId} type="button" onClick={() => navigate(`/admin/reviews/${ad.submissionId}`)}>
                   <img src={ad.thumbnailUrl ?? FALLBACK_THUMBNAIL} alt={`${ad.title} 광고 미리보기`} />
                   <strong>{ad.title}</strong>
                 </RecentCard>

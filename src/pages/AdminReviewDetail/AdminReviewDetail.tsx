@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { getAdminReviewDetail, type AdminReviewDetail } from '@/apis/adminReviews';
+import { getAdminReviewDetail, type AdminReviewDetail, updateAdminReviewStatus } from '@/apis/adminReviews';
 import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
 import VideoPreview from '@/components/create/VideoPreview';
 import PageHeader from '@/components/layout/PageHeader';
@@ -14,6 +14,8 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
   const [detail, setDetail] = useState<AdminReviewDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -32,6 +34,21 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
     if (submissionId) void loadDetail();
     return () => controller.abort();
   }, [submissionId]);
+
+  const updateStatus = async (status: 'approved' | 'rejected'): Promise<void> => {
+    if (!submissionId || isUpdating) return;
+
+    setIsUpdating(true);
+    setUpdateError(null);
+    try {
+      await updateAdminReviewStatus({ submissionId, status });
+      navigate('/admin/reviews', { replace: true });
+    } catch (error) {
+      setUpdateError(error instanceof Error ? error.message : '검토 상태를 변경하지 못했어요.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const formatLabel = detail?.mediaType === 'video' ? '영상 광고' : '사진 광고';
   const date = detail?.createdAt.slice(0, 10).replaceAll('-', '.') ?? '';
@@ -53,12 +70,15 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
             <Format>{formatLabel}</Format>
             {detail.mediaType === 'video' ? <VideoPreview videoSrc={videoSrc} /> : photoImages.length > 0 ? <PhotoPreviewCarousel images={photoImages} /> : <EmptyMessage>미리보기를 준비 중이에요.</EmptyMessage>}
             <AdContent>{content}</AdContent>
+            {updateError && <EmptyMessage>{updateError}</EmptyMessage>}
           </>
         )}
       </Content>
       <ActionArea>
-        <RejectButton type="button">반려</RejectButton>
-        <ApproveButton type="button">승인 및 게시</ApproveButton>
+        <RejectButton type="button" disabled={isUpdating || !detail} onClick={() => void updateStatus('rejected')}>반려</RejectButton>
+        <ApproveButton type="button" disabled={isUpdating || !detail} onClick={() => void updateStatus('approved')}>
+          {isUpdating ? '처리 중...' : '승인 및 게시'}
+        </ApproveButton>
       </ActionArea>
     </Page>
   );
