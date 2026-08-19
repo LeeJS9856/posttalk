@@ -10,11 +10,11 @@ const DraggableBottomSheet = ({ children }: DraggableBottomSheetProps): React.JS
   const [isExpanded, setIsExpanded] = useState(false);
   const touchStartY = useRef<number | null>(null);
 
-  const handleTouchStart = (event: TouchEvent<HTMLDivElement>): void => {
+  const handleTouchStart = (event: TouchEvent<HTMLElement>): void => {
     touchStartY.current = event.touches[0]?.clientY ?? null;
   };
 
-  const handleTouchMove = (event: TouchEvent<HTMLDivElement>): void => {
+  const handleTouchMove = (event: TouchEvent<HTMLElement>): void => {
     const startY = touchStartY.current;
     const currentY = event.touches[0]?.clientY;
     if (startY === null || currentY === undefined) return;
@@ -33,15 +33,15 @@ const DraggableBottomSheet = ({ children }: DraggableBottomSheetProps): React.JS
   };
 
   return (
-    <Sheet $expanded={isExpanded}>
-      <SheetHandle
-        aria-hidden="true"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={() => {
-          touchStartY.current = null;
-        }}
-      >
+    <Sheet
+      $expanded={isExpanded}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={() => {
+        touchStartY.current = null;
+      }}
+    >
+      <SheetHandle aria-hidden="true">
         <HandleBar />
       </SheetHandle>
       <SheetContent>{children}</SheetContent>
@@ -60,6 +60,7 @@ const Sheet = styled.section<{ $expanded: boolean }>`
   overflow: hidden;
   border-radius: 30px 30px 0 0;
   background: ${COLORS.background.main};
+  touch-action: none;
   transition: top 0.28s ease;
 `;
 
@@ -79,9 +80,8 @@ const HandleBar = styled.span`
 
 const SheetContent = styled.div`
   height: calc(100% - 34px);
-  overflow-y: auto;
+  overflow: hidden;
   padding: 10px 24px 132px;
-  touch-action: pan-y;
 `;
 
 export default DraggableBottomSheet;
