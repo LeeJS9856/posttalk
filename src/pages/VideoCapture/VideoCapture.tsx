@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import popo from '@/assets/popo.svg';
 import { startAdSession } from '@/apis/adSessions';
+import { FlowTitleStrong } from '@/components/common/FlowTitle';
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import PageHeader from '@/components/layout/PageHeader';
 import { getVideoCaptureSteps, MIN_VIDEO_DURATION_SECONDS, VIDEO_CAPTURE_DURATION_MS } from '@/constants/videoCapture';
@@ -64,6 +65,13 @@ const VideoCapture = (): React.JSX.Element => {
   const stepIndex = Math.min(Math.max(requestedStep, 0), steps.length - 1);
   const step = steps[stepIndex];
   const hasSessionRequest = Boolean(draft.currentRequest);
+  const requestCopy = draft.currentRequest?.prompt
+    .replace(/^\s*영상\s*요청\s*[:：]\s*/, '')
+    .replace(/영상\s*$/, '영상을 찍어주세요')
+    .trim();
+  const requestSubject = requestCopy?.match(/^(.+?)(?:이|가|을|를)(?=\s)/)?.[1];
+  const requestSuffix = requestSubject ? requestCopy?.slice(requestSubject.length) : requestCopy;
+  const durationHint = requestCopy?.includes('2초') ? '' : ' 2초 이상 촬영해주세요.';
 
   const closeCamera = (): void => {
     if (recordTimeoutRef.current !== null) window.clearTimeout(recordTimeoutRef.current);
@@ -181,8 +189,8 @@ const VideoCapture = (): React.JSX.Element => {
         {hasSessionRequest ? (
           <>
             <StepIndicator>{stepIndex + 1} / {steps.length}</StepIndicator>
-            <GuideCopy>{draft.currentRequest?.prompt}</GuideCopy>
-            <HelperText>{draft.currentRequest?.helperText ?? step.helperText} 2초 이상 촬영해주세요.</HelperText>
+            <GuideCopy>{requestSubject ? <><FlowTitleStrong>{requestSubject}</FlowTitleStrong>{requestSuffix}</> : requestCopy}</GuideCopy>
+            <HelperText>{draft.currentRequest?.helperText ?? step.helperText}{durationHint}</HelperText>
           </>
         ) : <GuideCopy>영상 촬영 요청을 준비하고 있어요.</GuideCopy>}
         {errorMessage && <HelperText role="alert">{errorMessage}</HelperText>}
