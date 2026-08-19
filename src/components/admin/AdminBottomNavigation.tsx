@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import archiveIcon from '@/assets/icons/archive.svg?raw';
 import campaignIcon from '@/assets/icons/campaign.svg?raw';
 import homeIcon from '@/assets/icons/home.svg?raw';
-import myIcon from '@/assets/icons/my.svg?raw';
+// import myIcon from '@/assets/icons/my.svg?raw';
 import { COLORS } from '@/constants/colors';
 import { FONT_SIZE } from '@/constants/typography';
 
@@ -12,7 +12,8 @@ const ADMIN_NAV_ITEMS: ReadonlyArray<{ label: string; icon: string; path?: strin
   { label: '홈', icon: homeIcon, path: '/admin' },
   { label: '검토', icon: campaignIcon, path: '/admin/reviews' },
   { label: '보관함', icon: archiveIcon, path: '/admin/archive' },
-  { label: '마이', icon: myIcon },
+  // 나중에 관리자 마이 페이지를 추가할 때 다시 활성화합니다.
+  // { label: '마이', icon: myIcon },
 ];
 
 const AdminBottomNavigation = (): React.JSX.Element => {
@@ -48,7 +49,7 @@ const Navigation = styled.nav`
   left: 0;
   z-index: 20;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(${ADMIN_NAV_ITEMS.length}, 1fr);
   min-height: 80px;
   padding: 4px 0;
   border-top: 1px solid ${COLORS.black200};
