@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import {
   getMerchantArchive,
@@ -43,6 +44,7 @@ const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => ({
 });
 
 const Archive = (): React.JSX.Element => {
+  const navigate = useNavigate();
   const [format, setFormat] = useState<ArchiveFormat>('photo');
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [allAds, setAllAds] = useState<ArchivedAd[]>([]);
@@ -130,7 +132,7 @@ const Archive = (): React.JSX.Element => {
         ) : ads.length > 0 ? (
           <AdList>
             {ads.map((ad) => (
-              <ArchivedAdCard key={ad.id} {...ad} />
+              <ArchivedAdCard key={ad.id} {...ad} onClick={() => navigate(`/archive/${ad.id}`, { state: { ad } })} />
             ))}
           </AdList>
         ) : (
