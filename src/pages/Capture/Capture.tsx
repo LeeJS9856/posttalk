@@ -126,11 +126,13 @@ const Capture = (): React.JSX.Element => {
         )}
       </Guide>
 
-      <ActionArea>
-        <PrimaryActionButton type="button" onClick={() => setIsSourceModalOpen(true)} disabled={isSessionFlow && (!draft.currentRequest || Boolean(startError))}>
-          촬영하기
-        </PrimaryActionButton>
-      </ActionArea>
+      {(!isSessionFlow || hasSessionRequest) && (
+        <ActionArea>
+          <PrimaryActionButton type="button" onClick={() => setIsSourceModalOpen(true)} disabled={Boolean(startError)}>
+            촬영하기
+          </PrimaryActionButton>
+        </ActionArea>
+      )}
       <CameraInput ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} />
       <CameraInput ref={galleryInputRef} type="file" accept="image/*" onChange={handlePhotoChange} />
 
