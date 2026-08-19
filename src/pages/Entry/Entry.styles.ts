@@ -67,12 +67,6 @@ export const Select = styled.select`
   line-height: 1.45;
 `;
 
-export const LocationStatus = styled.p<{ $isError?: boolean }>`
-  color: ${({ $isError }) => ($isError ? COLORS.statusWarning : COLORS.statusPost)};
-  font-size: ${FONT_SIZE.body};
-  line-height: 1.45;
-`;
-
 export const GuideList = styled.ol`
   display: grid;
   gap: 10px;
