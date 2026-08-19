@@ -37,6 +37,7 @@ const AdminHome = (): React.JSX.Element => {
 
   const marketName = homeData?.summary.marketName ?? ADMIN_MARKET_NAME;
   const pendingItems = homeData?.pendingItems ?? [];
+  const visiblePendingItems = pendingItems.slice(0, 2);
   const recentItems = homeData?.recentItems ?? [];
   const pendingCount = homeData?.summary.pendingReviewCount ?? pendingItems.length;
   const isHomeReady = !isLoading && !hasError && homeData !== null;
@@ -61,6 +62,7 @@ const AdminHome = (): React.JSX.Element => {
         <Section>
           <SectionHeader>
             <SectionTitle>검수가 필요한 광고</SectionTitle>
+            <AllButton type="button" onClick={() => navigate('/admin/reviews')}>전체 보기 ›</AllButton>
           </SectionHeader>
           {isLoading ? (
             <ReviewList>
@@ -71,7 +73,7 @@ const AdminHome = (): React.JSX.Element => {
             <EmptyMessage>검수가 필요한 광고가 없어요.</EmptyMessage>
           ) : (
             <ReviewList>
-              {pendingItems.map((ad) => (
+              {visiblePendingItems.map((ad) => (
                 <ReviewAdCard key={ad.submissionId} status="pending" storeName={ad.storeName} image={ad.thumbnailUrl ?? FALLBACK_THUMBNAIL} onClick={() => navigate(`/admin/reviews/${ad.submissionId}`)} />
               ))}
             </ReviewList>
