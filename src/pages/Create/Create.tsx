@@ -61,7 +61,7 @@ const Create = (): React.JSX.Element => {
         </ActionArea>
       </Guide>
 
-      <BottomNavigation />
+      <BottomNavigation fixed />
         </>
       )}
     </Page>
