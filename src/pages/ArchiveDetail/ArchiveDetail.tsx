@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
 import PageHeader from '@/components/layout/PageHeader';
 import type { ArchivedAd } from '@/constants/archive';
-import { ActionArea, AdContent, Content, Date, EmptyMessage, Format, Meta, Page, PreviewImage, PrimaryButton, SecondaryButton, Title } from '@/pages/ArchiveDetail/ArchiveDetail.styles';
+import { AdContent, Content, Date, EmptyMessage, Format, Meta, Page, PreviewImage, Title } from '@/pages/ArchiveDetail/ArchiveDetail.styles';
 
 type ArchiveDetailLocationState = {
   ad?: ArchivedAd;
@@ -34,10 +34,6 @@ const ArchiveDetail = (): React.JSX.Element => {
           </>
         )}
       </Content>
-      <ActionArea>
-        <SecondaryButton type="button">수정하기</SecondaryButton>
-        <PrimaryButton type="button">게시 요청</PrimaryButton>
-      </ActionArea>
     </Page>
   );
 };
