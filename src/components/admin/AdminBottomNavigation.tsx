@@ -95,10 +95,10 @@ const NavigationItem = styled.button<{ $active: boolean }>`
 
 const PendingDot = styled.span`
   position: absolute;
-  top: 15px;
-  right: calc(50% - 19px);
-  width: 7px;
-  height: 7px;
+  top: 13px;
+  right: calc(50% - 16px);
+  width: 9px;
+  height: 9px;
   border: 1px solid ${COLORS.white};
   border-radius: 50%;
   background: #ef6c53;
