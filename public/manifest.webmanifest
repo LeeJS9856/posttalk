@@ -1,6 +1,6 @@
 {
-  "name": "포스톡",
-  "short_name": "포스톡",
+  "name": "포스트톡",
+  "short_name": "포스트톡",
   "description": "시장 상인을 위한 광고 제작 서비스",
   "start_url": "/",
   "display": "standalone",
