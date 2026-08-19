@@ -13,7 +13,7 @@ export const Page = styled(PageFrame)`
   background: ${COLORS.background.main};
 `;
 
-export const Card = styled.section`
+export const Card = styled.main`
   width: 100%;
   padding: 28px 22px;
   border-radius: 20px;
@@ -34,24 +34,50 @@ export const Description = styled.p`
   line-height: 1.5;
 `;
 
-export const TokenInput = styled.input`
+export const Form = styled.form`
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+`;
+
+export const Field = styled.label`
+  display: grid;
+  gap: 7px;
+  color: ${COLORS.black700};
+  font-size: ${FONT_SIZE.label};
+  font-weight: 700;
+`;
+
+export const Input = styled.input`
   width: 100%;
-  margin-top: 22px;
-  padding: 14px;
+  padding: 13px;
   border: 1px solid ${COLORS.black200};
   border-radius: 12px;
   color: ${COLORS.black700};
   font-size: ${FONT_SIZE.body};
 `;
 
-export const ActivateButton = styled(Button)`
+export const Textarea = styled.textarea`
   width: 100%;
-  margin-top: 14px;
+  min-height: 90px;
+  resize: vertical;
+  padding: 13px;
+  border: 1px solid ${COLORS.black200};
+  border-radius: 12px;
+  color: ${COLORS.black700};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.45;
 `;
 
-export const Result = styled.p<{ $isError: boolean }>`
-  margin-top: 16px;
-  color: ${({ $isError }) => ($isError ? COLORS.statusWarning : COLORS.statusPost)};
+export const SubmitButton = styled(Button)`
+  width: 100%;
+  margin-top: 8px;
+`;
+
+export const Message = styled.p<{ $isError?: boolean }>`
+  margin-top: 18px;
+  color: ${({ $isError }) => ($isError ? COLORS.statusWarning : COLORS.black500)};
   font-size: ${FONT_SIZE.body};
   line-height: 1.5;
+  text-align: center;
 `;
