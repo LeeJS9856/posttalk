@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import popo from '@/assets/popo.svg';
-import { FlowTitleStrong } from '@/components/common/FlowTitle';
+import { startAdSession } from '@/apis/adSessions';
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import PageHeader from '@/components/layout/PageHeader';
 import { getVideoCaptureSteps, MIN_VIDEO_DURATION_SECONDS, VIDEO_CAPTURE_DURATION_MS } from '@/constants/videoCapture';
 import { useAdDraft } from '@/hooks/useAdDraft';
+import { useMerchantSession } from '@/hooks/useMerchantSession';
 import {
   ActionArea,
   CameraInput,
@@ -46,7 +47,8 @@ const getVideoDuration = (file: File): Promise<number> => new Promise((resolve, 
 const VideoCapture = (): React.JSX.Element => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { draft, setVideoClip } = useAdDraft();
+  const { draft, setSession, setVideoClip } = useAdDraft();
+  const { session } = useMerchantSession();
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -61,6 +63,7 @@ const VideoCapture = (): React.JSX.Element => {
   const requestedStep = Number(searchParams.get('step')) || 0;
   const stepIndex = Math.min(Math.max(requestedStep, 0), steps.length - 1);
   const step = steps[stepIndex];
+  const hasSessionRequest = Boolean(draft.currentRequest);
 
   const closeCamera = (): void => {
     if (recordTimeoutRef.current !== null) window.clearTimeout(recordTimeoutRef.current);
@@ -73,6 +76,35 @@ const VideoCapture = (): React.JSX.Element => {
   };
 
   useEffect(() => () => closeCamera(), []);
+
+  useEffect(() => {
+    if (draft.sessionId || errorMessage) return;
+    const menuIntro = draft.answers.menuIntro?.trim();
+    const storeSpecialty = draft.answers.storeSpecialty?.trim();
+    if (!session || !menuIntro || !storeSpecialty) {
+      setErrorMessage('광고 소개 정보가 없어요. 처음부터 다시 입력해주세요.');
+      return;
+    }
+
+    const startSession = async (): Promise<void> => {
+      try {
+        const response = await startAdSession({
+          storeId: session.storeId,
+          adType: 'video',
+          menuIntro,
+          storeSpecialty,
+        });
+        const sessionId = response.data.sessionId ?? response.data.session?.id ?? response.data.session?.sessionId;
+        const request = response.data.currentRequest ?? response.data.request;
+        if (!sessionId || !request) throw new Error('첫 영상 촬영 요청을 받지 못했어요. 다시 시도해주세요.');
+        setSession({ sessionId, request });
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : '영상 촬영 요청을 준비하지 못했어요.');
+      }
+    };
+
+    void startSession();
+  }, [draft.answers.menuIntro, draft.answers.storeSpecialty, draft.sessionId, errorMessage, session, setSession]);
 
   useEffect(() => {
     if (!isCameraOpen || !streamRef.current || !cameraVideoRef.current) return;
@@ -147,13 +179,13 @@ const VideoCapture = (): React.JSX.Element => {
       <Guide>
         <Popo src={popo} alt="" />
         <StepIndicator>{stepIndex + 1} / {steps.length}</StepIndicator>
-        <GuideCopy><FlowTitleStrong>{step.title}</FlowTitleStrong>을 찍어주세요</GuideCopy>
-        <HelperText>{step.helperText}</HelperText>
+        <GuideCopy>{hasSessionRequest ? draft.currentRequest?.prompt : '영상 촬영 요청을 준비하고 있어요.'}</GuideCopy>
+        <HelperText>{draft.currentRequest?.helperText ?? step.helperText} 2초 이상 촬영해주세요.</HelperText>
         {errorMessage && <HelperText role="alert">{errorMessage}</HelperText>}
       </Guide>
-      <ActionArea>
+      {hasSessionRequest && <ActionArea>
         <PrimaryActionButton type="button" onClick={() => setIsSourceModalOpen(true)}>2초 영상 촬영하기</PrimaryActionButton>
-      </ActionArea>
+      </ActionArea>}
       <CameraInput ref={galleryInputRef} type="file" accept="video/*" onChange={(event) => void handleGalleryChange(event)} />
 
       {isSourceModalOpen && (

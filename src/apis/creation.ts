@@ -2,10 +2,10 @@ import { api, type ApiSuccessResponse } from '@/apis/api';
 import type { MerchantSession } from '@/apis/merchantQr';
 import type { AdFormat } from '@/constants/create';
 
-export type UploadAssetType = 'menu_board' | 'food_photo';
+export type UploadAssetType = 'menu_board' | 'food_photo' | string;
 
 export type UploadedAsset = {
-  assetType: UploadAssetType;
+  assetType: string;
   bucket: string;
   fileName: string;
   filePath: string;
