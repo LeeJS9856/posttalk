@@ -41,6 +41,8 @@ const Capture = (): React.JSX.Element => {
   const sessionAssetType = draft.currentRequest?.assetType === 'menu_board' ? 'menu_board' : 'food_photo';
   const displayedAssetType = isSessionFlow ? sessionAssetType : assetType;
   const isMenuBoard = displayedAssetType === 'menu_board';
+  const photoRequestSubject = draft.currentRequest?.prompt.match(/^\s*사진\s*요청\s*[:：]\s*(.+?)\s*$/)?.[1];
+  const hasSessionRequest = Boolean(draft.currentRequest);
 
   useEffect(() => {
     if (!isSessionFlow || draft.sessionId || startError) return;
@@ -104,7 +106,13 @@ const Capture = (): React.JSX.Element => {
       <Guide>
         <Popo src={popo} alt="" />
         <GuideCopy>
-          {isSessionFlow ? (draft.currentRequest?.prompt ?? '촬영 요청을 준비하고 있어요.') : (
+          {isSessionFlow ? (photoRequestSubject ? (
+            <>
+              아래 사진과 같이
+              <br />
+              <FlowTitleStrong>{photoRequestSubject}</FlowTitleStrong>을 찍어주세요
+            </>
+          ) : (draft.currentRequest?.prompt ?? '촬영 요청을 준비하고 있어요.')) : (
             <>
               아래 사진과 같이
               <br />
@@ -113,7 +121,9 @@ const Capture = (): React.JSX.Element => {
           )}
         </GuideCopy>
         {isSessionFlow && <HelperText>{startError ?? draft.retryMessage ?? draft.currentRequest?.helperText ?? '사진 촬영 안내를 불러오고 있어요.'}</HelperText>}
-        <ExampleImage src={isMenuBoard ? menuExampleImage : foodExampleImage} alt={isMenuBoard ? '메뉴판 촬영 예시' : '음식 사진 촬영 예시'} />
+        {(!isSessionFlow || hasSessionRequest) && (
+          <ExampleImage src={isMenuBoard ? menuExampleImage : foodExampleImage} alt={isMenuBoard ? '메뉴판 촬영 예시' : '음식 사진 촬영 예시'} />
+        )}
       </Guide>
 
       <ActionArea>
