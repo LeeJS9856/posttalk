@@ -1,14 +1,23 @@
 import { useState, type FormEvent } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import popo from '@/assets/popo.svg';
+import { useAuth } from '@/hooks/useAuth';
 import { Form, HelperText, IdInput, InputField, InputLabel, Logo, Page, PasswordInput, SubmitButton, Subtitle, Title, Welcome } from '@/pages/Login/Login.styles';
 
 const Login = (): React.JSX.Element => {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
+    if (!id || !password) return;
+
+    login(id);
+    navigate((location.state as { from?: string } | null)?.from ?? '/', { replace: true });
   };
 
   return (
