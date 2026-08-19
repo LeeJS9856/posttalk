@@ -178,9 +178,13 @@ const VideoCapture = (): React.JSX.Element => {
       <PageHeader title="영상 광고 제작" onBack={() => navigate(stepIndex === 0 ? '/create/questions/1' : `/create/video-capture/result?step=${stepIndex - 1}`)} />
       <Guide>
         <Popo src={popo} alt="" />
-        <StepIndicator>{stepIndex + 1} / {steps.length}</StepIndicator>
-        <GuideCopy>{hasSessionRequest ? draft.currentRequest?.prompt : '영상 촬영 요청을 준비하고 있어요.'}</GuideCopy>
-        <HelperText>{draft.currentRequest?.helperText ?? step.helperText} 2초 이상 촬영해주세요.</HelperText>
+        {hasSessionRequest ? (
+          <>
+            <StepIndicator>{stepIndex + 1} / {steps.length}</StepIndicator>
+            <GuideCopy>{draft.currentRequest?.prompt}</GuideCopy>
+            <HelperText>{draft.currentRequest?.helperText ?? step.helperText} 2초 이상 촬영해주세요.</HelperText>
+          </>
+        ) : <GuideCopy>영상 촬영 요청을 준비하고 있어요.</GuideCopy>}
         {errorMessage && <HelperText role="alert">{errorMessage}</HelperText>}
       </Guide>
       {hasSessionRequest && <ActionArea>
