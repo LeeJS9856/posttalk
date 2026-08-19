@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { getMerchantHome, type MerchantAttentionItem, type MerchantHomeData } from '@/apis/home';
+import { getMerchantHome, type MerchantHomeData } from '@/apis/home';
 import FloatingCreateButton from '@/components/common/FloatingCreateButton';
 import QrLoginRequired from '@/components/auth/QrLoginRequired';
 import HomeAdSkeleton from '@/components/home/HomeAdSkeleton';
@@ -13,9 +13,6 @@ import { useMerchantSession } from '@/hooks/useMerchantSession';
 import { AllButton, AppFrame, EmptyMessage, FloatingButtonArea, Hero, HeroMessage, HeroStrong, PromotionList, ReviewList, Section, SectionHeader, SectionTitle } from '@/pages/Home/Home.styles';
 
 const FALLBACK_THUMBNAIL = 'https://images.unsplash.com/photo-1610057099431-d73a1c9d2f2f?auto=format&fit=crop&w=360&q=85';
-
-const toReviewStatus = (item: MerchantAttentionItem): 'pending' | 'supplement' =>
-  item.status === 'rejected' ? 'supplement' : 'pending';
 
 const Home = (): React.JSX.Element => {
   const navigate = useNavigate();
@@ -57,8 +54,8 @@ const Home = (): React.JSX.Element => {
   }, [isQrLoading, session]);
 
   const storeName = homeData?.summary.storeName ?? session?.storeName;
-  const pendingCount = homeData?.summary.totalAttentionCount ?? 0;
-  const attentionItems = homeData?.attentionItems ?? [];
+  const needsFixCount = homeData?.summary.needsFixCount ?? 0;
+  const needsFixItems = (homeData?.attentionItems ?? []).filter((item) => item.status === 'rejected');
   const myAds = homeData?.myAds ?? [];
 
   return (
@@ -75,11 +72,11 @@ const Home = (): React.JSX.Element => {
                 '홈 정보를 불러오고 있어요.'
               ) : hasError ? (
                 '홈 정보를 불러오지 못했어요.'
-              ) : pendingCount > 0 ? (
+              ) : needsFixCount > 0 ? (
                 <>
-                  확인이 필요한 광고가
+                  수정이 필요한 광고가
                   <br />
-                  <HeroStrong>{pendingCount}건</HeroStrong> 있어요!
+                  <HeroStrong>{needsFixCount}건</HeroStrong> 있어요!
                 </>
               ) : (
                 '안녕하세요!'
@@ -94,30 +91,30 @@ const Home = (): React.JSX.Element => {
         ) : <>
         <Section>
           <SectionHeader>
-            <SectionTitle>확인이 필요한 광고</SectionTitle>
+            <SectionTitle>수정이 필요한 광고</SectionTitle>
             <AllButton type="button" onClick={() => navigate('/archive')}>전체 보기</AllButton>
           </SectionHeader>
           {isQrLoading || isLoading ? (
-            <ReviewList aria-label="확인이 필요한 광고를 불러오는 중">
+            <ReviewList aria-label="수정이 필요한 광고를 불러오는 중">
               <HomeAdSkeleton variant="attention" />
               <HomeAdSkeleton variant="attention" />
             </ReviewList>
-          ) : hasError ? <EmptyMessage>광고를 불러오지 못했어요.</EmptyMessage> : attentionItems.length > 0 ? (
+          ) : hasError ? <EmptyMessage>광고를 불러오지 못했어요.</EmptyMessage> : needsFixItems.length > 0 ? (
             <ReviewList>
-              {attentionItems.slice(0, 2).map((item) => (
+              {needsFixItems.slice(0, 2).map((item) => (
                 <ReviewAdCard
                   key={item.submissionId}
-                  status={toReviewStatus(item)}
+                  status="supplement"
                   storeName={item.title}
                   image={item.thumbnailUrl ?? FALLBACK_THUMBNAIL}
                   onClick={() => navigate('/archive')}
                 />
               ))}
             </ReviewList>
-          ) : <EmptyMessage>확인이 필요한 광고가 없어요.</EmptyMessage>}
+          ) : <EmptyMessage>수정이 필요한 광고가 없어요.</EmptyMessage>}
         </Section>
 
-        <Section $withTopBorder={pendingCount === 0}>
+        <Section $withTopBorder={needsFixCount === 0}>
           <SectionHeader>
             <SectionTitle>내가 만든 광고</SectionTitle>
             <AllButton type="button" onClick={() => navigate('/archive')}>전체 보기</AllButton>
