@@ -7,14 +7,19 @@ import { FlowTitleStrong } from '@/components/common/FlowTitle';
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
 import VideoPreview from '@/components/create/VideoPreview';
-import { PHOTO_PREVIEW_IMAGES } from '@/constants/create';
 import { useAdDraft } from '@/hooks/useAdDraft';
-import { ActionArea, Description, Feedback, FeedbackArea, Page, Popo, RemakeButton, Title, TitleArea } from '@/pages/GenerationComplete/GenerationComplete.styles';
+import { ActionArea, Description, EmptyPreview, Feedback, FeedbackArea, Page, Popo, RemakeButton, ScrollableContent, Title, TitleArea } from '@/pages/GenerationComplete/GenerationComplete.styles';
 
 const GenerationComplete = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { draft } = useAdDraft();
-  const previewImages = draft.generatedResultUrl ? [draft.generatedResultUrl] : PHOTO_PREVIEW_IMAGES;
+  const previewImages = draft.generatedAssets?.length
+    ? draft.generatedAssets
+    : (draft.generatedResultUrl ? [draft.generatedResultUrl] : []);
+  const captionAndHashtags = [
+    draft.submissionCaption,
+    draft.submissionHashtags?.join(' '),
+  ].filter(Boolean).join('\n\n');
   const [isRequesting, setIsRequesting] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
   const handleRemake = (): void => {
@@ -41,23 +46,27 @@ const GenerationComplete = (): React.JSX.Element => {
 
   return (
     <Page aria-label="광고 생성 완료">
-      <TitleArea>
-        <Title>
-          광고가 <FlowTitleStrong>완성</FlowTitleStrong>됐어요
-        </Title>
-        <Description>좌우로 넘겨 내용을 확인해보세요</Description>
-      </TitleArea>
+      <ScrollableContent>
+        <TitleArea>
+          <Title>
+            광고가 <FlowTitleStrong>완성</FlowTitleStrong>됐어요
+          </Title>
+          <Description>좌우로 넘겨 내용을 확인해보세요</Description>
+        </TitleArea>
 
-      {draft.format === 'video' && draft.generatedResultUrl ? (
-        <VideoPreview videoSrc={draft.generatedResultUrl} />
-      ) : (
-        <PhotoPreviewCarousel images={previewImages} />
-      )}
+        {draft.format === 'video' && draft.generatedResultUrl ? (
+          <VideoPreview videoSrc={draft.generatedResultUrl} />
+        ) : previewImages.length > 0 ? (
+          <PhotoPreviewCarousel images={previewImages} />
+        ) : (
+          <EmptyPreview>생성된 광고 이미지를 불러오지 못했어요.</EmptyPreview>
+        )}
 
-      <FeedbackArea>
-        <Feedback>{requestError ?? '상품이 눈에 잘 띄도록 사진을 크게 쓰고, 가게 이름은 위쪽에 넣었어요!'}</Feedback>
-        <Popo src={popo} alt="" />
-      </FeedbackArea>
+        <FeedbackArea>
+          <Feedback>{requestError ?? (captionAndHashtags || '생성된 광고 문구를 준비하고 있어요.')}</Feedback>
+          <Popo src={popo} alt="" />
+        </FeedbackArea>
+      </ScrollableContent>
 
       <ActionArea>
         <RemakeButton type="button" onClick={handleRemake}>

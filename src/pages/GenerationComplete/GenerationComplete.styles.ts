@@ -8,10 +8,17 @@ import { FONT_SIZE } from '@/constants/typography';
 
 export const Page = styled(PageFrame)`
   display: flex;
-  min-height: 100svh;
+  height: 100svh;
   flex-direction: column;
   overflow: hidden;
   background: ${COLORS.background.main};
+`;
+
+export const ScrollableContent = styled.main`
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 94px;
 `;
 
 export const TitleArea = styled.header`
@@ -44,6 +51,7 @@ export const Feedback = styled.p`
   box-shadow: 0 3px 8px rgba(33, 33, 33, 0.06);
   font-size: ${FONT_SIZE.body};
   line-height: 1.45;
+  white-space: pre-wrap;
 `;
 
 export const Popo = styled.img`
@@ -55,10 +63,23 @@ export const Popo = styled.img`
 `;
 
 export const ActionArea = styled.div`
+  position: fixed;
+  z-index: 2;
+  bottom: 0;
+  width: min(100%, 480px);
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 8px;
-  padding: 0 14px 14px;
+  padding: 12px 14px 14px;
+  background: ${COLORS.background.main};
+`;
+
+export const EmptyPreview = styled.p`
+  margin: 24px;
+  padding: 40px 20px;
+  color: ${COLORS.black500};
+  background: ${COLORS.primary100};
+  text-align: center;
 `;
 
 export const RemakeButton = styled(Button)`
