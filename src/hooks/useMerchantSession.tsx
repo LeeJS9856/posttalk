@@ -31,7 +31,7 @@ const getStoredSession = (): MerchantSession | null => {
 };
 
 export const MerchantSessionProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
-  const [session, setSession] = useState<MerchantSession | null>(getStoredSession);
+  const [session, setSession] = useState<MerchantSession | null>(() => getQrToken() ? null : getStoredSession());
   const [isLoading, setIsLoading] = useState(() => Boolean(getQrToken()) && !isEntryPage());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
