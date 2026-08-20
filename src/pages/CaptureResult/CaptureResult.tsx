@@ -22,6 +22,8 @@ const CaptureResult = (): React.JSX.Element => {
   const assetType = searchParams.get('asset') === 'food_photo' ? 'food_photo' : 'menu_board';
   const isSessionFlow = draft.format === 'photo';
   const isMenuBoard = assetType === 'menu_board';
+  const photoRequestSubject = draft.currentRequest?.prompt.match(/^\s*사진\s*요청\s*[:：]\s*(.+?)\s*$/)?.[1];
+  const requestTarget = photoRequestSubject ?? draft.currentRequest?.prompt ?? (isMenuBoard ? '메뉴판' : '주력 메뉴');
   const photoUrl = isSessionFlow
     ? draft.sessionPhoto?.previewUrl
     : (isMenuBoard ? draft.menuBoard?.previewUrl : draft.foodPhoto?.previewUrl);
@@ -93,15 +95,7 @@ const CaptureResult = (): React.JSX.Element => {
       <Content>
         <Popo src={popo} alt="" />
         <GuideCopy>
-          {isSessionFlow ? (
-            <>이 사진으로<br />진행할까요?</>
-          ) : isMenuBoard ? (
-            <><FlowTitleStrong>메뉴판</FlowTitleStrong> 사진을</>
-          ) : (
-            <><FlowTitleStrong>주력 메뉴</FlowTitleStrong>의 사진을</>
-          )}
-          <br />
-          이걸로 하실래요?
+          <FlowTitleStrong>{requestTarget}</FlowTitleStrong> 사진을<br />이걸로 하실래요?
         </GuideCopy>
         {photoUrl ? <PhotoPreview src={photoUrl} alt="방금 촬영한 사진" /> : <EmptyPhoto>촬영한 사진이 없어요.</EmptyPhoto>}
       </Content>
