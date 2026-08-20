@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import foodExampleImage from '@/assets/food.webp';
-import menuExampleImage from '@/assets/menu.png';
 import popo from '@/assets/popo.svg';
 import { startAdSession } from '@/apis/adSessions';
 import { FlowTitleStrong } from '@/components/common/FlowTitle';
@@ -14,7 +12,6 @@ import {
   ActionArea,
   CameraInput,
   ChoiceButton,
-  ExampleImage,
   Guide,
   GuideCopy,
   HelperText,
@@ -124,22 +121,15 @@ const Capture = (): React.JSX.Element => {
         <GuideCopy>
           {isSessionFlow ? (photoRequestSubject ? (
             <>
-              아래 사진과 같이
-              <br />
               <FlowTitleStrong>{photoRequestSubject}</FlowTitleStrong>을 찍어주세요
             </>
           ) : (draft.currentRequest?.prompt ?? '촬영 요청을 준비하고 있어요.')) : (
             <>
-              아래 사진과 같이
-              <br />
               <FlowTitleStrong>{isMenuBoard ? '메뉴판' : '주력 메뉴'}</FlowTitleStrong>을 찍어주세요
             </>
           )}
         </GuideCopy>
         {isSessionFlow && <HelperText>{startError ?? selectionError ?? draft.retryMessage ?? draft.currentRequest?.helperText ?? '사진 촬영 안내를 불러오고 있어요.'}</HelperText>}
-        {(!isSessionFlow || hasSessionRequest) && (
-          <ExampleImage src={isMenuBoard ? menuExampleImage : foodExampleImage} alt={isMenuBoard ? '메뉴판 촬영 예시' : '음식 사진 촬영 예시'} />
-        )}
       </Guide>
 
       {(!isSessionFlow || hasSessionRequest) && (

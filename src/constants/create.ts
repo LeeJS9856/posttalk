@@ -4,16 +4,3 @@ export const AD_FORMAT_OPTIONS = [
 ] as const;
 
 export type AdFormat = (typeof AD_FORMAT_OPTIONS)[number]['value'];
-
-export const PHOTO_PREVIEW_IMAGES = [
-  photoExample1,
-  photoExample2,
-  photoExample3,
-  photoExample4,
-] as const;
-
-export const VIDEO_PREVIEW_SOURCE = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
-import photoExample1 from '@/assets/photo-ex1.jpg';
-import photoExample2 from '@/assets/photo-ex2.jpg';
-import photoExample3 from '@/assets/photo-ex3.jpg';
-import photoExample4 from '@/assets/photo-ex4.jpg';

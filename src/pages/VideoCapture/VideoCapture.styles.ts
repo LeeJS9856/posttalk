@@ -28,14 +28,6 @@ export const HelperText = styled.p`
   font-size: ${FONT_SIZE.body};
   line-height: 1.5;
 `;
-export const ExampleVideo = styled.video`
-  width: min(100%, 180px);
-  aspect-ratio: 9 / 16;
-  margin-top: 18px;
-  border-radius: 12px;
-  background: ${COLORS.black200};
-  object-fit: cover;
-`;
 export const ActionArea = styled.div`margin: auto 24px 0;`;
 export const CameraInput = styled.input`display: none;`;
 export const ModalBackdrop = styled.div`
