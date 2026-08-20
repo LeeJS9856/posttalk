@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import signboardExampleVideo from '@/assets/간판.mp4';
 import popo from '@/assets/popo.svg';
 import { startAdSession } from '@/apis/adSessions';
 import { FlowTitleStrong } from '@/components/common/FlowTitle';
@@ -17,6 +18,7 @@ import {
   ChoiceButton,
   Guide,
   GuideCopy,
+  ExampleVideo,
   HelperText,
   ModalBackdrop,
   ModalCancelButton,
@@ -69,6 +71,7 @@ const VideoCapture = (): React.JSX.Element => {
   const step = steps[stepIndex];
   const hasSessionRequest = Boolean(draft.currentRequest);
   const requestTarget = draft.currentRequest?.prompt.trim() || step.title;
+  const isSignboardRequest = /가게\s*간판/.test(requestTarget);
 
   const closeCamera = (): void => {
     if (recordTimeoutRef.current !== null) window.clearTimeout(recordTimeoutRef.current);
@@ -231,6 +234,7 @@ const VideoCapture = (): React.JSX.Element => {
           <>
             <GuideCopy>아래 영상처럼<br /><FlowTitleStrong>{requestTarget}</FlowTitleStrong>을 2초간 찍어주세요</GuideCopy>
             <HelperText>{draft.currentRequest?.helperText ?? step.helperText}</HelperText>
+            {isSignboardRequest && <ExampleVideo src={signboardExampleVideo} muted autoPlay loop playsInline aria-label="가게 간판 촬영 예시" />}
           </>
         ) : <GuideCopy>영상 촬영 요청을 준비하고 있어요.</GuideCopy>}
         {errorMessage && <HelperText role="alert">{errorMessage}</HelperText>}
