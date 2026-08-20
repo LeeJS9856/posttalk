@@ -9,7 +9,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import { SearchButton, SearchIcon } from '@/pages/Archive/Archive.styles';
 import { CardText, Chevron, Content, Description, EmptyMessage, Page, ReviewCard, ReviewList, Thumbnail, Title } from '@/pages/AdminReviews/AdminReviews.styles';
 
-const ADMIN_MARKET_NAME = '말바우시장';
+const ADMIN_MARKET_NAME = '양동시장';
 const FALLBACK_THUMBNAIL = 'https://images.unsplash.com/photo-1610057099431-d73a1c9d2f2f?auto=format&fit=crop&w=360&q=85';
 
 const getDescription = (item: AdminReviewItem): string => {
