@@ -36,7 +36,9 @@ const AdminHome = (): React.JSX.Element => {
   }, []);
 
   const pendingItems = homeData?.pendingItems ?? [];
-  const visiblePendingItems = pendingItems.slice(0, 2);
+  const visiblePendingItems = [...pendingItems]
+    .sort((first, second) => new Date(second.updatedAt).getTime() - new Date(first.updatedAt).getTime())
+    .slice(0, 2);
   const recentItems = homeData?.recentItems ?? [];
   const pendingCount = homeData?.summary.pendingReviewCount ?? pendingItems.length;
   const isHomeReady = !isLoading && !hasError && homeData !== null;
