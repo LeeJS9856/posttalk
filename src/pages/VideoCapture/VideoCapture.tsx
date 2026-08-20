@@ -72,8 +72,8 @@ const VideoCapture = (): React.JSX.Element => {
   const step = steps[stepIndex];
   const hasSessionRequest = Boolean(draft.currentRequest);
   const requestTarget = draft.currentRequest?.prompt.trim() || step.title;
-  const isSignboardRequest = /가게\s*간판/.test(requestTarget);
-  const isEntranceRequest = /가게\s*입구.*안으로.*들어가는\s*모습/.test(requestTarget);
+  const isSignboardRequest = stepIndex === 0 || /간판/.test(requestTarget);
+  const isEntranceRequest = stepIndex === 1 || /입구.*안으로.*들어가는/.test(requestTarget);
   const exampleVideoSrc = isSignboardRequest ? signboardExampleVideo : isEntranceRequest ? entranceExampleVideo : null;
 
   const closeCamera = (): void => {
