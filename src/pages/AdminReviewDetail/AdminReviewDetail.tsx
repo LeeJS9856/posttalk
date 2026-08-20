@@ -59,7 +59,11 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
     }
   };
 
-  const formatLabel = detail?.mediaType === 'video' ? '영상 광고' : '사진 광고';
+  const hasVideoAsset = detail?.assets?.some((asset) =>
+    asset.assetType === 'generated_video' || asset.mimeType?.startsWith('video/') || Boolean(asset.fileName?.match(/\.(mp4|webm|mov)$/i)),
+  ) ?? false;
+  const isVideoAd = detail?.mediaType === 'video' || hasVideoAsset || Boolean(detail?.primaryAssetUrl?.split('?')[0].match(/\.(mp4|webm|mov)$/i));
+  const formatLabel = isVideoAd ? '영상 광고' : '사진 광고';
   const date = detail?.createdAt.slice(0, 10).replaceAll('-', '.') ?? '';
   const content = [detail?.content.caption, detail?.content.hashtags?.join(' ')].filter(Boolean).join('\n\n');
   const assetUrls = detail?.assets?.flatMap((asset) => [asset.url, asset.publicUrl, asset.fileUrl].filter((url): url is string => Boolean(url))) ?? [];
@@ -82,7 +86,7 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
               <Date>{date}</Date>
             </Meta>
             <Format>{formatLabel}</Format>
-            {detail.mediaType === 'video' ? <VideoPreview videoSrc={videoSrc} /> : photoImages.length > 0 ? <PhotoPreviewCarousel images={photoImages} /> : <EmptyMessage>미리보기를 준비 중이에요.</EmptyMessage>}
+            {isVideoAd ? <VideoPreview videoSrc={videoSrc} /> : photoImages.length > 0 ? <PhotoPreviewCarousel images={photoImages} /> : <EmptyMessage>미리보기를 준비 중이에요.</EmptyMessage>}
             <AdContent>{content}</AdContent>
             {updateError && <EmptyMessage>{updateError}</EmptyMessage>}
           </>

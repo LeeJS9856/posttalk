@@ -40,6 +40,15 @@ export const Thumbnail = styled.img`
   object-fit: cover;
 `;
 
+export const VideoThumbnail = styled.video`
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  object-fit: cover;
+  background: ${COLORS.black200};
+`;
+
 export const CardText = styled.div`
   display: flex;
   min-width: 0;
