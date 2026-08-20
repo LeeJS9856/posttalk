@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import popo from '@/assets/popo.svg';
-import { submitAdSessionVideo } from '@/apis/adSessions';
+import { submitAdSessionVideo, type AdSessionRequest } from '@/apis/adSessions';
 import { uploadAsset } from '@/apis/creation';
 import { FlowTitleStrong } from '@/components/common/FlowTitle';
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
@@ -11,6 +11,13 @@ import { getVideoCaptureSteps } from '@/constants/videoCapture';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useMerchantSession } from '@/hooks/useMerchantSession';
 import { ActionArea, Content, EmptyVideo, ErrorMessage, GuideCopy, Page, PreviewVideo, Popo, RetakeButton } from '@/pages/VideoCaptureResult/VideoCaptureResult.styles';
+
+const getFrontendVideoRequest = (step: { helperText: string; title: string }, stepIndex: number, assetType = 'video_clip'): AdSessionRequest => ({
+  assetType,
+  helperText: step.helperText,
+  prompt: step.title,
+  shotKey: `video_step_${stepIndex + 1}`,
+});
 
 const VideoCaptureResult = (): React.JSX.Element => {
   const navigate = useNavigate();
@@ -22,7 +29,7 @@ const VideoCaptureResult = (): React.JSX.Element => {
   const steps = getVideoCaptureSteps(draft.answers.menuIntro?.trim() || '대표 메뉴');
   const stepIndex = Math.min(Math.max(Number(searchParams.get('step')) || 0, 0), steps.length - 1);
   const clip = draft.videoClips.find((item) => item.stepIndex === stepIndex);
-  const requestTarget = draft.currentRequest?.prompt.trim() || steps[stepIndex].title;
+  const requestTarget = steps[stepIndex].title;
 
   const next = async (): Promise<void> => {
     if (!clip || !session || !draft.sessionId) {
@@ -34,7 +41,7 @@ const VideoCaptureResult = (): React.JSX.Element => {
     setErrorMessage(null);
     try {
       const asset = await uploadAsset({
-        assetType: draft.currentRequest?.assetType ?? 'video',
+        assetType: draft.currentRequest?.assetType ?? 'video_clip',
         file: clip.file,
         session,
       });
@@ -50,8 +57,9 @@ const VideoCaptureResult = (): React.JSX.Element => {
         return;
       }
 
-      if (response.data.status === 'collecting' && response.data.request) {
-        setCurrentRequest(response.data.request);
+      if (response.data.status === 'collecting') {
+        const nextStep = steps[Math.min(stepIndex + 1, steps.length - 1)];
+        setCurrentRequest(getFrontendVideoRequest(nextStep, stepIndex + 1, response.data.request?.assetType ?? 'video_clip'));
         navigate(`/create/video-capture?step=${stepIndex + 1}`, { replace: true });
         return;
       }
