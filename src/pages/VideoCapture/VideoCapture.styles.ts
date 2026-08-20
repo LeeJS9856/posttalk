@@ -1,4 +1,4 @@
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 
 import { FlowTitle } from '@/components/common/FlowTitle';
 import PageFrame from '@/components/layout/PageFrame';
@@ -27,22 +27,6 @@ export const HelperText = styled.p`
   color: ${COLORS.black500};
   font-size: ${FONT_SIZE.body};
   line-height: 1.5;
-`;
-
-const guideMotion = keyframes`
-  from { transform: scale(1); }
-  to { transform: scale(1.045); }
-`;
-
-export const ExampleMotionImage = styled.img`
-  width: auto;
-  max-width: 100%;
-  height: min(32svh, 280px);
-  aspect-ratio: 9 / 16;
-  margin-top: 16px;
-  border-radius: 14px;
-  object-fit: cover;
-  animation: ${guideMotion} 2s ease-in-out infinite alternate;
 `;
 
 export const ActionArea = styled.div`margin: auto 24px 0;`;
