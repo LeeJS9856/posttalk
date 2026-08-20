@@ -69,7 +69,8 @@ export const CameraModal = styled.section`
   background: ${COLORS.black700};
 `;
 export const CameraPreview = styled.video`
-  width: 100%;
+  width: min(100%, calc(70svh * 9 / 16));
+  aspect-ratio: 9 / 16;
   max-height: 70svh;
   border-radius: 16px;
   background: ${COLORS.black500};
