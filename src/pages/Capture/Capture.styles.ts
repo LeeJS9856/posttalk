@@ -38,16 +38,6 @@ export const HelperText = styled.p`
   line-height: 1.45;
 `;
 
-export const ExampleImage = styled.img`
-  width: auto;
-  max-width: 100%;
-  height: min(34svh, 300px);
-  aspect-ratio: 9 / 16;
-  margin-top: 16px;
-  border-radius: 14px;
-  object-fit: cover;
-`;
-
 export const ActionArea = styled.div`
   margin: auto 24px 0;
 `;

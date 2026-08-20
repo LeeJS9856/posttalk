@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import cookingGuide from '@/assets/capture-guides/cooking.jpg';
-import menuBoardGuide from '@/assets/capture-guides/menu-board.jpg';
-import signatureMenuGuide from '@/assets/capture-guides/signature-menu.jpg';
-import storefrontGuide from '@/assets/capture-guides/storefront.jpg';
 import popo from '@/assets/popo.svg';
 import { startAdSession, type AdSessionRequest } from '@/apis/adSessions';
 import { FlowTitleStrong } from '@/components/common/FlowTitle';
@@ -19,7 +15,6 @@ import {
   CameraModal,
   CameraPreview,
   ChoiceButton,
-  ExampleMotionImage,
   Guide,
   GuideCopy,
   HelperText,
@@ -81,13 +76,6 @@ const VideoCapture = (): React.JSX.Element => {
   const step = steps[stepIndex];
   const isSessionReady = Boolean(draft.sessionId);
   const requestTarget = step.title;
-  const exampleImage = stepIndex <= 1
-    ? storefrontGuide
-    : stepIndex === 2
-      ? menuBoardGuide
-      : stepIndex === 5
-        ? cookingGuide
-        : signatureMenuGuide;
 
   const closeCamera = (): void => {
     if (recordTimeoutRef.current !== null) window.clearTimeout(recordTimeoutRef.current);
@@ -252,7 +240,6 @@ const VideoCapture = (): React.JSX.Element => {
           <>
             <GuideCopy><FlowTitleStrong>{requestTarget}</FlowTitleStrong>을 2초간 찍어주세요</GuideCopy>
             <HelperText>{step.helperText}</HelperText>
-            <ExampleMotionImage src={exampleImage} alt={`${requestTarget} 영상 촬영 예시`} />
           </>
         ) : <GuideCopy>영상 촬영 요청을 준비하고 있어요.</GuideCopy>}
         {errorMessage && <HelperText role="alert">{errorMessage}</HelperText>}
