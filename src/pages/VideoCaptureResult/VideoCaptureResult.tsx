@@ -55,7 +55,7 @@ const VideoCaptureResult = (): React.JSX.Element => {
         return;
       }
 
-      if (response.data.status === 'ready_for_generation') {
+      if (response.data.status === 'generating') {
         navigate('/create/video-capture/complete', { replace: true });
         return;
       }
