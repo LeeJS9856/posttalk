@@ -56,6 +56,21 @@ export const EmptyMessage = styled.p`
   text-align: center;
 `;
 
+export const PublishMessage = styled.p`
+  margin-top: 18px;
+  color: ${COLORS.black500};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.45;
+`;
+
+export const InstagramLink = styled.a`
+  display: inline-block;
+  margin-top: 10px;
+  color: ${COLORS.primary700};
+  font-size: ${FONT_SIZE.body};
+  font-weight: 700;
+`;
+
 export const ActionArea = styled.footer`
   display: grid;
   grid-template-columns: 1fr 2fr;
