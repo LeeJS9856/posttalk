@@ -124,7 +124,10 @@ const VideoCapture = (): React.JSX.Element => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
-        video: { facingMode: { ideal: 'environment' } },
+        video: {
+          aspectRatio: { ideal: 9 / 16 },
+          facingMode: { ideal: 'environment' },
+        },
       });
       streamRef.current = stream;
       setIsCameraOpen(true);
