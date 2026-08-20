@@ -13,10 +13,13 @@ const ADMIN_MARKET_NAME = '말바우시장';
 const FALLBACK_THUMBNAIL = 'https://images.unsplash.com/photo-1610057099431-d73a1c9d2f2f?auto=format&fit=crop&w=360&q=85';
 
 const getDescription = (item: AdminReviewItem): string => {
-  const mediaType = item.mediaType === 'video' ? '동영상 광고' : '사진 광고';
+  const mediaType = isVideoItem(item) ? '동영상 광고' : '사진 광고';
   const date = item.createdAt ? item.createdAt.slice(0, 10).replaceAll('-', '.') : '';
   return date ? `${mediaType} · ${date}` : mediaType;
 };
+
+const isVideoItem = (item: AdminReviewItem): boolean =>
+  item.mediaType === 'video' || Boolean(item.thumbnailUrl?.split('?')[0].match(/\.(mp4|webm|mov)$/i));
 
 const AdminReviews = (): React.JSX.Element => {
   const navigate = useNavigate();
@@ -63,7 +66,9 @@ const AdminReviews = (): React.JSX.Element => {
           <ReviewList>
             {items.map((item) => (
               <ReviewCard key={item.submissionId} type="button" onClick={() => navigate(`/admin/reviews/${item.submissionId}`, { state: { review: item } })}>
-                <Thumbnail src={item.thumbnailUrl ?? FALLBACK_THUMBNAIL} alt="" />
+                {isVideoItem(item) && item.thumbnailUrl ? (
+                  <Thumbnail as="video" src={item.thumbnailUrl} muted playsInline preload="metadata" aria-label="영상 광고 미리보기" />
+                ) : <Thumbnail src={item.thumbnailUrl ?? FALLBACK_THUMBNAIL} alt="" />}
                 <CardText>
                   <Title>{item.title}</Title>
                   <Description>{getDescription(item)}</Description>
