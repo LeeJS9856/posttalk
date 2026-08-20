@@ -27,6 +27,9 @@ import {
   Popo,
 } from '@/pages/Capture/Capture.styles';
 
+const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024;
+const SUPPORTED_PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
 const Capture = (): React.JSX.Element => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -34,6 +37,7 @@ const Capture = (): React.JSX.Element => {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
   const { draft, setAsset, setSession, setSessionPhoto } = useAdDraft();
   const { session } = useMerchantSession();
   const assetType = searchParams.get('asset') === 'food_photo' ? 'food_photo' : 'menu_board';
@@ -79,6 +83,18 @@ const Capture = (): React.JSX.Element => {
     const [photo] = Array.from(event.target.files ?? []);
     if (!photo) return;
 
+    if (!SUPPORTED_PHOTO_TYPES.has(photo.type)) {
+      setSelectionError('JPG, PNG, WebP 형식의 사진만 사용할 수 있어요. 사진을 변환한 뒤 다시 선택해주세요.');
+      return;
+    }
+
+    if (photo.size > MAX_PHOTO_SIZE_BYTES) {
+      setSelectionError('사진은 10MB 이하 파일만 사용할 수 있어요. 용량을 줄인 뒤 다시 선택해주세요.');
+      return;
+    }
+
+    setSelectionError(null);
+
     if (isSessionFlow) {
       setSessionPhoto(sessionAssetType, photo);
       navigate('/create/capture/result');
@@ -120,7 +136,7 @@ const Capture = (): React.JSX.Element => {
             </>
           )}
         </GuideCopy>
-        {isSessionFlow && <HelperText>{startError ?? draft.retryMessage ?? draft.currentRequest?.helperText ?? '사진 촬영 안내를 불러오고 있어요.'}</HelperText>}
+        {isSessionFlow && <HelperText>{startError ?? selectionError ?? draft.retryMessage ?? draft.currentRequest?.helperText ?? '사진 촬영 안내를 불러오고 있어요.'}</HelperText>}
         {(!isSessionFlow || hasSessionRequest) && (
           <ExampleImage src={isMenuBoard ? menuExampleImage : foodExampleImage} alt={isMenuBoard ? '메뉴판 촬영 예시' : '음식 사진 촬영 예시'} />
         )}
