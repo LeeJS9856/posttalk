@@ -35,6 +35,16 @@ export interface AdminReviewDetail extends AdminReviewItem {
 
 type AdminReviewDecision = 'approved' | 'rejected';
 
+export type InstagramPublishStatus = 'processing' | 'published' | 'failed';
+
+export interface InstagramPublishData {
+  caption?: string | null;
+  lastError?: string | null;
+  mediaType: 'photo' | 'video';
+  permalink?: string | null;
+  status: InstagramPublishStatus;
+}
+
 export const getAdminReviews = ({ marketName, signal }: { marketName: string; signal?: AbortSignal }) => {
   const searchParams = new URLSearchParams({ marketName, status: 'pending_review', limit: '30' });
 
@@ -58,4 +68,22 @@ export const updateAdminReviewStatus = ({ submissionId, status }: { submissionId
     path: `/api/admin/submission-status?${new URLSearchParams({ submissionId }).toString()}`,
     method: 'PATCH',
     body: { status },
+  });
+
+const getInstagramPublishPath = (submissionId: string): string =>
+  `/api/admin/instagram-publish?${new URLSearchParams({ submissionId }).toString()}`;
+
+export const startInstagramPublish = ({ submissionId, mediaType }: { submissionId: string; mediaType: 'photo' | 'video' }) =>
+  api<ApiSuccessResponse<InstagramPublishData>>({
+    baseUrl: '',
+    path: getInstagramPublishPath(submissionId),
+    method: 'POST',
+    body: { mediaType },
+  });
+
+export const getInstagramPublishStatus = ({ submissionId, signal }: { submissionId: string; signal?: AbortSignal }) =>
+  api<ApiSuccessResponse<InstagramPublishData>>({
+    baseUrl: '',
+    path: getInstagramPublishPath(submissionId),
+    signal,
   });

@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { getAdminReviewDetail, type AdminReviewDetail, updateAdminReviewStatus } from '@/apis/adminReviews';
+import { getAdminReviewDetail, getInstagramPublishStatus, type AdminReviewDetail, type InstagramPublishData, startInstagramPublish, updateAdminReviewStatus } from '@/apis/adminReviews';
 import AdminRejectReasonModal from '@/components/admin/AdminRejectReasonModal';
 import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
 import AdminReviewDetailSkeleton from '@/components/admin/AdminReviewDetailSkeleton';
 import VideoPreview from '@/components/create/VideoPreview';
 import PageHeader from '@/components/layout/PageHeader';
-import { ActionArea, AdContent, ApproveButton, Content, Date, EmptyMessage, Format, Meta, Page, RejectButton, RejectionReason, RejectionReasonArea, RejectionReasonLabel, Title } from '@/pages/AdminReviewDetail/AdminReviewDetail.styles';
+import { ActionArea, AdContent, ApproveButton, Content, Date, EmptyMessage, Format, InstagramLink, Meta, Page, PublishMessage, RejectButton, RejectionReason, RejectionReasonArea, RejectionReasonLabel, Title } from '@/pages/AdminReviewDetail/AdminReviewDetail.styles';
 
 type ArchiveDetailState = {
   archiveStatus?: 'pending' | 'supplement' | 'posted';
@@ -26,6 +26,7 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [instagramPublish, setInstagramPublish] = useState<InstagramPublishData | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -45,6 +46,26 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
     return () => controller.abort();
   }, [submissionId]);
 
+  useEffect(() => {
+    if (!submissionId || instagramPublish?.status !== 'processing') return;
+
+    const controller = new AbortController();
+    const timer = window.setInterval(() => {
+      void getInstagramPublishStatus({ submissionId, signal: controller.signal })
+        .then((response) => setInstagramPublish(response.data))
+        .catch((error) => {
+          if (!(error instanceof DOMException && error.name === 'AbortError')) {
+            setUpdateError(error instanceof Error ? error.message : '인스타그램 게시 상태를 확인하지 못했어요.');
+          }
+        });
+    }, 2500);
+
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+    };
+  }, [instagramPublish?.status, submissionId]);
+
   const updateStatus = async (status: 'approved' | 'rejected'): Promise<void> => {
     if (!submissionId || isUpdating) return;
 
@@ -53,7 +74,17 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
     try {
       await updateAdminReviewStatus({ submissionId, status });
       setIsRejectModalOpen(false);
-      navigate('/admin/reviews', { replace: true });
+      if (status === 'rejected') {
+        navigate('/admin/reviews', { replace: true });
+        return;
+      }
+
+      const publishResponse = await startInstagramPublish({
+        submissionId,
+        mediaType: isVideoAd ? 'video' : 'photo',
+      });
+      setDetail((current) => current ? { ...current, status: 'approved' } : current);
+      setInstagramPublish(publishResponse.data);
     } catch (error) {
       setUpdateError(error instanceof Error ? error.message : '검토 상태를 변경하지 못했어요.');
     } finally {
@@ -90,6 +121,14 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
             <Format>{formatLabel}</Format>
             {isVideoAd && videoAssetUrl ? <VideoPreview videoSrc={videoAssetUrl} /> : !isVideoAd && photoImages.length > 0 ? <PhotoPreviewCarousel images={photoImages} /> : <EmptyMessage>미리보기를 준비 중이에요.</EmptyMessage>}
             <AdContent>{content}</AdContent>
+            {instagramPublish?.status === 'processing' && <PublishMessage>인스타그램에 광고를 게시하고 있어요.</PublishMessage>}
+            {instagramPublish?.status === 'published' && (
+              <PublishMessage>
+                인스타그램 게시가 완료됐어요.
+                {instagramPublish.permalink && <InstagramLink href={instagramPublish.permalink} target="_blank" rel="noreferrer">인스타그램에서 보기</InstagramLink>}
+              </PublishMessage>
+            )}
+            {instagramPublish?.status === 'failed' && <PublishMessage>{instagramPublish.lastError ?? '인스타그램 게시에 실패했어요.'}</PublishMessage>}
             {updateError && <EmptyMessage>{updateError}</EmptyMessage>}
           </>
         )}
