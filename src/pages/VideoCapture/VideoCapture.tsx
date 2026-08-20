@@ -127,6 +127,10 @@ const VideoCapture = (): React.JSX.Element => {
         video: {
           aspectRatio: { ideal: 9 / 16 },
           facingMode: { ideal: 'environment' },
+          // Keep the source compact for mobile upload and server-side rendering.
+          width: { ideal: 480, max: 720 },
+          height: { ideal: 854, max: 1280 },
+          frameRate: { ideal: 24, max: 30 },
         },
       });
       streamRef.current = stream;
@@ -140,7 +144,11 @@ const VideoCapture = (): React.JSX.Element => {
     if (!streamRef.current || isRecording) return;
 
     try {
-      const recorder = new MediaRecorder(streamRef.current, { mimeType: 'video/webm' });
+      const recorder = new MediaRecorder(streamRef.current, {
+        mimeType: 'video/webm',
+        videoBitsPerSecond: 750_000,
+        audioBitsPerSecond: 64_000,
+      });
       recordedChunksRef.current = [];
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) recordedChunksRef.current.push(event.data);
