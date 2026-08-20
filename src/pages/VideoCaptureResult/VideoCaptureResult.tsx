@@ -22,6 +22,7 @@ const VideoCaptureResult = (): React.JSX.Element => {
   const steps = getVideoCaptureSteps(draft.answers.menuIntro?.trim() || '대표 메뉴');
   const stepIndex = Math.min(Math.max(Number(searchParams.get('step')) || 0, 0), steps.length - 1);
   const clip = draft.videoClips.find((item) => item.stepIndex === stepIndex);
+  const requestTarget = draft.currentRequest?.prompt.trim() || steps[stepIndex].title;
 
   const next = async (): Promise<void> => {
     if (!clip || !session || !draft.sessionId) {
@@ -80,7 +81,7 @@ const VideoCaptureResult = (): React.JSX.Element => {
       <PageHeader title="영상 광고 제작" onBack={() => navigate(`/create/video-capture?step=${stepIndex}`)} />
       <Content>
         <Popo src={popo} alt="" />
-        <GuideCopy><FlowTitleStrong>{steps[stepIndex].title}</FlowTitleStrong> 영상을<br />이걸로 하실래요?</GuideCopy>
+        <GuideCopy><FlowTitleStrong>{requestTarget}</FlowTitleStrong> 영상을<br />이걸로 하실래요?</GuideCopy>
         {clip ? <PreviewVideo src={clip.previewUrl} controls playsInline /> : <EmptyVideo>촬영한 영상이 없어요.</EmptyVideo>}
         {errorMessage && <ErrorMessage role="alert">{errorMessage}</ErrorMessage>}
       </Content>
