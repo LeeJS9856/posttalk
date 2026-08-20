@@ -88,8 +88,11 @@ const Archive = (): React.JSX.Element => {
         const videoSubmissionIds = new Set(videoResponse.data.items.map((item) => item.submissionId));
         const photoAds = photoResponse.data.items
           .filter((item) => !videoSubmissionIds.has(item.submissionId))
+          .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())
           .map((item) => toArchivedAd(item, 'photo'));
-        const videoAds = videoResponse.data.items.map((item) => toArchivedAd(item, 'video'));
+        const videoAds = [...videoResponse.data.items]
+          .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())
+          .map((item) => toArchivedAd(item, 'video'));
 
         setAllAds([...photoAds, ...videoAds]);
       } catch (error) {
