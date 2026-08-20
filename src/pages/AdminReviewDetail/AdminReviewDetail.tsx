@@ -7,12 +7,14 @@ import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
 import AdminReviewDetailSkeleton from '@/components/admin/AdminReviewDetailSkeleton';
 import VideoPreview from '@/components/create/VideoPreview';
 import PageHeader from '@/components/layout/PageHeader';
-import { VIDEO_PREVIEW_SOURCE } from '@/constants/create';
 import { ActionArea, AdContent, ApproveButton, Content, Date, EmptyMessage, Format, Meta, Page, RejectButton, RejectionReason, RejectionReasonArea, RejectionReasonLabel, Title } from '@/pages/AdminReviewDetail/AdminReviewDetail.styles';
 
 type ArchiveDetailState = {
   archiveStatus?: 'pending' | 'supplement' | 'posted';
 };
+
+const isVideoUrl = (url?: string | null): url is string =>
+  Boolean(url?.split('?')[0].match(/\.(mp4|webm|mov)$/i));
 
 const AdminReviewDetailPage = (): React.JSX.Element => {
   const navigate = useNavigate();
@@ -59,16 +61,16 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
     }
   };
 
-  const hasVideoAsset = detail?.assets?.some((asset) =>
-    asset.assetType === 'generated_video' || asset.mimeType?.startsWith('video/') || Boolean(asset.fileName?.match(/\.(mp4|webm|mov)$/i)),
-  ) ?? false;
-  const isVideoAd = detail?.mediaType === 'video' || hasVideoAsset || Boolean(detail?.primaryAssetUrl?.split('?')[0].match(/\.(mp4|webm|mov)$/i));
-  const formatLabel = isVideoAd ? '영상 광고' : '사진 광고';
   const date = detail?.createdAt.slice(0, 10).replaceAll('-', '.') ?? '';
   const content = [detail?.content.caption, detail?.content.hashtags?.join(' ')].filter(Boolean).join('\n\n');
   const assetUrls = detail?.assets?.flatMap((asset) => [asset.url, asset.publicUrl, asset.fileUrl].filter((url): url is string => Boolean(url))) ?? [];
+  const videoAssetUrl = detail?.assets
+    ?.filter((asset) => asset.assetType === 'generated_video' || asset.mimeType?.startsWith('video/') || Boolean(asset.fileName?.match(/\.(mp4|webm|mov)$/i)))
+    .flatMap((asset) => [asset.url, asset.publicUrl, asset.fileUrl])
+    .find(isVideoUrl) ?? (isVideoUrl(detail?.primaryAssetUrl) ? detail.primaryAssetUrl : undefined);
+  const isVideoAd = detail?.mediaType === 'video' || Boolean(videoAssetUrl);
+  const formatLabel = isVideoAd ? '영상 광고' : '사진 광고';
   const photoImages = assetUrls.length > 0 ? assetUrls : detail?.primaryAssetUrl ? [detail.primaryAssetUrl] : [];
-  const videoSrc = detail?.primaryAssetUrl ?? VIDEO_PREVIEW_SOURCE;
   const archiveStatus = (location.state as ArchiveDetailState | null)?.archiveStatus;
   const detailStatus = detail?.status === 'pending_review' ? 'pending' : detail?.status === 'rejected' ? 'supplement' : detail?.status === 'approved' ? 'posted' : archiveStatus;
   const isPendingReview = detailStatus === undefined || detailStatus === 'pending';
@@ -86,7 +88,7 @@ const AdminReviewDetailPage = (): React.JSX.Element => {
               <Date>{date}</Date>
             </Meta>
             <Format>{formatLabel}</Format>
-            {isVideoAd ? <VideoPreview videoSrc={videoSrc} /> : photoImages.length > 0 ? <PhotoPreviewCarousel images={photoImages} /> : <EmptyMessage>미리보기를 준비 중이에요.</EmptyMessage>}
+            {isVideoAd && videoAssetUrl ? <VideoPreview videoSrc={videoAssetUrl} /> : !isVideoAd && photoImages.length > 0 ? <PhotoPreviewCarousel images={photoImages} /> : <EmptyMessage>미리보기를 준비 중이에요.</EmptyMessage>}
             <AdContent>{content}</AdContent>
             {updateError && <EmptyMessage>{updateError}</EmptyMessage>}
           </>
