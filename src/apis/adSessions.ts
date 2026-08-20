@@ -28,7 +28,7 @@ export type AdSessionVideoData = {
   response: 'fail' | 'success';
   retryMessage?: string;
   state?: string;
-  status: 'collecting' | 'ready_for_generation' | string;
+  status: 'collecting' | 'generating' | string;
 };
 
 export type GeneratedAsset = {
