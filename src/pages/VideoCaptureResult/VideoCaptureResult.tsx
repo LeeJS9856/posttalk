@@ -15,7 +15,7 @@ import { ActionArea, Content, EmptyVideo, ErrorMessage, GuideCopy, Page, Preview
 const VideoCaptureResult = (): React.JSX.Element => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { draft, setCurrentRequest, setRetryMessage } = useAdDraft();
+  const { draft, setCurrentRequest, setGeneration, setRetryMessage } = useAdDraft();
   const { session } = useMerchantSession();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,8 +55,11 @@ const VideoCaptureResult = (): React.JSX.Element => {
         return;
       }
 
-      if (response.data.status === 'generating') {
-        navigate('/create/video-capture/complete', { replace: true });
+      if (response.data.status === 'generating' || response.data.state === '끝') {
+        if (response.data.generationJobId && response.data.submissionId) {
+          setGeneration({ jobId: response.data.generationJobId, submissionId: response.data.submissionId });
+        }
+        navigate('/create/generating', { replace: true });
         return;
       }
 

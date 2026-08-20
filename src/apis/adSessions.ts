@@ -24,11 +24,13 @@ export type AdSessionPhotoData = {
 };
 
 export type AdSessionVideoData = {
+  generationJobId?: string;
   request?: AdSessionRequest;
   response: 'fail' | 'success';
   retryMessage?: string;
   state?: string;
   status: 'collecting' | 'generating' | string;
+  submissionId?: string;
 };
 
 export type GeneratedAsset = {
