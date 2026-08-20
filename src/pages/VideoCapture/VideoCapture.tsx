@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import signboardExampleVideo from '@/assets/간판.mp4';
 import entranceExampleVideo from '@/assets/입구.mp4';
 import popo from '@/assets/popo.svg';
-import { startAdSession } from '@/apis/adSessions';
+import { startAdSession, type AdSessionRequest } from '@/apis/adSessions';
 import { FlowTitleStrong } from '@/components/common/FlowTitle';
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import PageHeader from '@/components/layout/PageHeader';
@@ -33,6 +33,13 @@ import {
 } from '@/pages/VideoCapture/VideoCapture.styles';
 
 const MAX_GALLERY_VIDEO_SIZE_BYTES = 10 * 1024 * 1024;
+
+const getFrontendVideoRequest = (step: { helperText: string; title: string }, stepIndex: number, assetType = 'video_clip'): AdSessionRequest => ({
+  assetType,
+  helperText: step.helperText,
+  prompt: step.title,
+  shotKey: `video_step_${stepIndex + 1}`,
+});
 
 const getVideoDuration = (file: File): Promise<number> => new Promise((resolve, reject) => {
   const video = document.createElement('video');
@@ -66,14 +73,14 @@ const VideoCapture = (): React.JSX.Element => {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const steps = getVideoCaptureSteps(draft.answers.menuIntro?.trim() || '대표 메뉴');
+  const steps = useMemo(() => getVideoCaptureSteps(draft.answers.menuIntro?.trim() || '대표 메뉴'), [draft.answers.menuIntro]);
   const requestedStep = Number(searchParams.get('step')) || 0;
   const stepIndex = Math.min(Math.max(requestedStep, 0), steps.length - 1);
   const step = steps[stepIndex];
-  const hasSessionRequest = Boolean(draft.currentRequest);
-  const requestTarget = draft.currentRequest?.prompt.trim() || step.title;
-  const isSignboardRequest = stepIndex === 0 || /간판/.test(requestTarget);
-  const isEntranceRequest = stepIndex === 1 || /입구.*안으로.*들어가는/.test(requestTarget);
+  const isSessionReady = Boolean(draft.sessionId);
+  const requestTarget = step.title;
+  const isSignboardRequest = stepIndex === 0;
+  const isEntranceRequest = stepIndex === 1;
   const exampleVideoSrc = isSignboardRequest ? signboardExampleVideo : isEntranceRequest ? entranceExampleVideo : null;
 
   const closeCamera = (): void => {
@@ -110,16 +117,18 @@ const VideoCapture = (): React.JSX.Element => {
           storeSpecialty,
         });
         const sessionId = response.data.sessionId ?? response.data.session?.id ?? response.data.session?.sessionId;
-        const request = response.data.currentRequest ?? response.data.request;
-        if (!sessionId || !request) throw new Error('첫 영상 촬영 요청을 받지 못했어요. 다시 시도해주세요.');
-        setSession({ sessionId, request });
+        if (!sessionId) throw new Error('영상 촬영 세션을 시작하지 못했어요. 다시 시도해주세요.');
+        setSession({
+          sessionId,
+          request: getFrontendVideoRequest(step, stepIndex, response.data.currentRequest?.assetType ?? response.data.request?.assetType),
+        });
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : '영상 촬영 요청을 준비하지 못했어요.');
       }
     };
 
     void startSession();
-  }, [draft.answers.menuIntro, draft.answers.storeSpecialty, draft.sessionId, errorMessage, session, setSession]);
+  }, [draft.answers.menuIntro, draft.answers.storeSpecialty, draft.sessionId, errorMessage, session, setSession, step, stepIndex]);
 
   useEffect(() => {
     if (!isCameraOpen || !streamRef.current || !cameraVideoRef.current) return;
@@ -233,16 +242,16 @@ const VideoCapture = (): React.JSX.Element => {
       <PageHeader title="영상 광고 제작" onBack={() => navigate(stepIndex === 0 ? '/create/questions/1' : `/create/video-capture/result?step=${stepIndex - 1}`)} />
       <Guide>
         <Popo src={popo} alt="" />
-        {hasSessionRequest ? (
+        {isSessionReady ? (
           <>
             <GuideCopy>아래 영상처럼<br /><FlowTitleStrong>{requestTarget}</FlowTitleStrong>을 2초간 찍어주세요</GuideCopy>
-            <HelperText>{draft.currentRequest?.helperText ?? step.helperText}</HelperText>
+            <HelperText>{step.helperText}</HelperText>
             {exampleVideoSrc && <ExampleVideo src={exampleVideoSrc} muted autoPlay loop playsInline aria-label={`${requestTarget} 촬영 예시`} />}
           </>
         ) : <GuideCopy>영상 촬영 요청을 준비하고 있어요.</GuideCopy>}
         {errorMessage && <HelperText role="alert">{errorMessage}</HelperText>}
       </Guide>
-      {hasSessionRequest && <ActionArea>
+      {isSessionReady && <ActionArea>
         <PrimaryActionButton type="button" onClick={() => setIsSourceModalOpen(true)}>촬영하기</PrimaryActionButton>
       </ActionArea>}
       <CameraInput ref={galleryInputRef} type="file" accept="video/*" onChange={(event) => void handleGalleryChange(event)} />
