@@ -5,10 +5,11 @@ import playIcon from '@/assets/icons/play.svg?raw';
 import { COLORS } from '@/constants/colors';
 
 type VideoPreviewProps = {
+  objectFit?: 'contain' | 'cover';
   videoSrc: string;
 };
 
-const VideoPreview = ({ videoSrc }: VideoPreviewProps): React.JSX.Element => {
+const VideoPreview = ({ objectFit = 'cover', videoSrc }: VideoPreviewProps): React.JSX.Element => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -29,6 +30,7 @@ const VideoPreview = ({ videoSrc }: VideoPreviewProps): React.JSX.Element => {
     <Preview aria-label="동영상 광고 미리보기" onClick={handlePreviewClick}>
       <Video
         ref={videoRef}
+        $objectFit={objectFit}
         playsInline
         preload="auto"
         onPlay={() => setIsPlaying(true)}
@@ -63,10 +65,10 @@ const Preview = styled.div`
   cursor: pointer;
 `;
 
-const Video = styled.video`
+const Video = styled.video<{ $objectFit: 'contain' | 'cover' }>`
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: ${({ $objectFit }) => $objectFit};
 `;
 
 const PlayButton = styled.button`

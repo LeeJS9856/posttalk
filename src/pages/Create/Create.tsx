@@ -46,7 +46,7 @@ const Create = (): React.JSX.Element => {
       {selectedFormat === 'photo' ? (
         <PhotoPreviewCarousel images={PHOTO_PREVIEW_IMAGES} />
       ) : (
-        <VideoPreview videoSrc={VIDEO_PREVIEW_SOURCE} />
+        <VideoPreview videoSrc={VIDEO_PREVIEW_SOURCE} objectFit="contain" />
       )}
 
       <Guide>
