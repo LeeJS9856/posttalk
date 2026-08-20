@@ -38,13 +38,6 @@ export const HelperText = styled.p`
   line-height: 1.45;
 `;
 
-export const ExampleImage = styled.img`
-  width: 100%;
-  aspect-ratio: 1.2;
-  margin-top: 16px;
-  object-fit: cover;
-`;
-
 export const ActionArea = styled.div`
   margin: auto 24px 0;
 `;

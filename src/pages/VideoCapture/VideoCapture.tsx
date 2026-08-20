@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import signboardExampleVideo from '@/assets/간판.mp4';
-import entranceExampleVideo from '@/assets/입구.mp4';
 import popo from '@/assets/popo.svg';
 import { startAdSession, type AdSessionRequest } from '@/apis/adSessions';
 import { FlowTitleStrong } from '@/components/common/FlowTitle';
@@ -19,7 +17,6 @@ import {
   ChoiceButton,
   Guide,
   GuideCopy,
-  ExampleVideo,
   HelperText,
   ModalBackdrop,
   ModalCancelButton,
@@ -79,9 +76,6 @@ const VideoCapture = (): React.JSX.Element => {
   const step = steps[stepIndex];
   const isSessionReady = Boolean(draft.sessionId);
   const requestTarget = step.title;
-  const isSignboardRequest = stepIndex === 0;
-  const isEntranceRequest = stepIndex === 1;
-  const exampleVideoSrc = isSignboardRequest ? signboardExampleVideo : isEntranceRequest ? entranceExampleVideo : null;
 
   const closeCamera = (): void => {
     if (recordTimeoutRef.current !== null) window.clearTimeout(recordTimeoutRef.current);
@@ -244,9 +238,8 @@ const VideoCapture = (): React.JSX.Element => {
         <Popo src={popo} alt="" />
         {isSessionReady ? (
           <>
-            <GuideCopy>아래 영상처럼<br /><FlowTitleStrong>{requestTarget}</FlowTitleStrong>을 2초간 찍어주세요</GuideCopy>
+            <GuideCopy><FlowTitleStrong>{requestTarget}</FlowTitleStrong>을 2초간 찍어주세요</GuideCopy>
             <HelperText>{step.helperText}</HelperText>
-            {exampleVideoSrc && <ExampleVideo src={exampleVideoSrc} muted autoPlay loop playsInline aria-label={`${requestTarget} 촬영 예시`} />}
           </>
         ) : <GuideCopy>영상 촬영 요청을 준비하고 있어요.</GuideCopy>}
         {errorMessage && <HelperText role="alert">{errorMessage}</HelperText>}
