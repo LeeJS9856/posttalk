@@ -65,7 +65,11 @@ const VideoCaptureResult = (): React.JSX.Element => {
 
       throw new Error('다음 영상 촬영 요청을 받지 못했어요. 다시 시도해주세요.');
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '영상 검수에 실패했어요. 다시 시도해주세요.');
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        setErrorMessage('영상 업로드에 연결하지 못했어요. 10MB 이하의 MP4 또는 WebM 영상인지 확인한 뒤 다시 시도해주세요.');
+      } else {
+        setErrorMessage(error instanceof Error ? error.message : '영상 검수에 실패했어요. 다시 시도해주세요.');
+      }
     } finally {
       setIsSubmitting(false);
     }

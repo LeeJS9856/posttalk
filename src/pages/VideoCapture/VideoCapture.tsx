@@ -29,6 +29,8 @@ import {
   RecordStatus,
 } from '@/pages/VideoCapture/VideoCapture.styles';
 
+const MAX_GALLERY_VIDEO_SIZE_BYTES = 10 * 1024 * 1024;
+
 const getVideoDuration = (file: File): Promise<number> => new Promise((resolve, reject) => {
   const video = document.createElement('video');
   const url = URL.createObjectURL(file);
@@ -174,6 +176,11 @@ const VideoCapture = (): React.JSX.Element => {
     if (!video) return;
 
     try {
+      if (video.size > MAX_GALLERY_VIDEO_SIZE_BYTES) {
+        setErrorMessage('갤러리 영상은 10MB 이하 파일만 선택할 수 있어요. 2~3초 영상으로 잘라서 다시 선택해주세요.');
+        return;
+      }
+
       const duration = await getVideoDuration(video);
       if (duration < MIN_VIDEO_DURATION_SECONDS) {
         setErrorMessage(`영상은 최소 ${MIN_VIDEO_DURATION_SECONDS}초 이상이어야 해요. 다시 선택해주세요.`);
