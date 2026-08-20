@@ -13,7 +13,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import { ARCHIVE_FILTERS, type ArchivedAd, type ArchiveFormat, type StatusFilter } from '@/constants/archive';
 import { AdList, Content, EmptyMessage, FilterButton, FilterList, FormatIndicator, FormatTab, FormatTabs, Page, SearchButton, SearchIcon } from '@/pages/Archive/Archive.styles';
 
-const ADMIN_MARKET_NAME = '말바우시장';
+const ADMIN_MARKET_NAME = '양동시장';
 
 const API_STATUS_BY_FILTER: Record<StatusFilter, AdminArchiveStatus> = {
   all: 'all',
