@@ -5,6 +5,7 @@ export interface AdminHomeItem {
   thumbnailUrl: string | null;
   title: string;
   storeName: string;
+  updatedAt: string;
 }
 
 export interface AdminHomeData {
