@@ -4,8 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import SegmentedToggle from '@/components/common/SegmentedToggle';
 import QrLoginRequired from '@/components/auth/QrLoginRequired';
+import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
+import VideoPreview from '@/components/create/VideoPreview';
 import BottomNavigation from '@/components/layout/BottomNavigation';
-import { AD_FORMAT_OPTIONS, type AdFormat } from '@/constants/create';
+import { AD_FORMAT_OPTIONS, PHOTO_PREVIEW_IMAGES, VIDEO_PREVIEW_SOURCE, type AdFormat } from '@/constants/create';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useMerchantSession } from '@/hooks/useMerchantSession';
 import { ActionArea, Guide, GuideDescription, GuideTitle, Page, Title, TopContent } from '@/pages/Create/Create.styles';
@@ -40,6 +42,12 @@ const Create = (): React.JSX.Element => {
           onChange={setSelectedFormat}
         />
       </TopContent>
+
+      {selectedFormat === 'photo' ? (
+        <PhotoPreviewCarousel images={PHOTO_PREVIEW_IMAGES} />
+      ) : (
+        <VideoPreview videoSrc={VIDEO_PREVIEW_SOURCE} />
+      )}
 
       <Guide>
         <GuideTitle>{selectedFormat === 'photo' ? '사진과 글로 한눈에 보여줘요.' : '영상으로 생생하게 보여줘요.'}</GuideTitle>
