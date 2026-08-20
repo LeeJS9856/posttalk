@@ -54,8 +54,10 @@ const VideoCapture = (): React.JSX.Element => {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const recordingStreamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordTimeoutRef = useRef<number | null>(null);
+  const renderFrameRef = useRef<number | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -71,6 +73,10 @@ const VideoCapture = (): React.JSX.Element => {
   const closeCamera = (): void => {
     if (recordTimeoutRef.current !== null) window.clearTimeout(recordTimeoutRef.current);
     recordTimeoutRef.current = null;
+    if (renderFrameRef.current !== null) window.cancelAnimationFrame(renderFrameRef.current);
+    renderFrameRef.current = null;
+    recordingStreamRef.current?.getVideoTracks().forEach((track) => track.stop());
+    recordingStreamRef.current = null;
     recorderRef.current = null;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
@@ -146,7 +152,31 @@ const VideoCapture = (): React.JSX.Element => {
     if (!streamRef.current || isRecording) return;
 
     try {
-      const recorder = new MediaRecorder(streamRef.current, {
+      const cameraPreview = cameraVideoRef.current;
+      const canvas = document.createElement('canvas');
+      canvas.width = 480;
+      canvas.height = 854;
+      const context = canvas.getContext('2d');
+      const recordingStream = canvas.captureStream(24);
+
+      streamRef.current.getAudioTracks().forEach((track) => recordingStream.addTrack(track));
+      recordingStreamRef.current = recordingStream;
+
+      const renderPortraitFrame = (): void => {
+        if (!cameraPreview || !context) return;
+
+        const sourceWidth = cameraPreview.videoWidth || 16;
+        const sourceHeight = cameraPreview.videoHeight || 9;
+        const scale = Math.max(canvas.width / sourceWidth, canvas.height / sourceHeight);
+        const drawWidth = sourceWidth * scale;
+        const drawHeight = sourceHeight * scale;
+
+        context.drawImage(cameraPreview, (canvas.width - drawWidth) / 2, (canvas.height - drawHeight) / 2, drawWidth, drawHeight);
+        renderFrameRef.current = window.requestAnimationFrame(renderPortraitFrame);
+      };
+
+      renderPortraitFrame();
+      const recorder = new MediaRecorder(recordingStream, {
         mimeType: 'video/webm',
         videoBitsPerSecond: 750_000,
         audioBitsPerSecond: 64_000,
