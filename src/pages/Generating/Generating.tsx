@@ -47,7 +47,7 @@ const GeneratingContent = (): React.JSX.Element => {
         return;
       }
 
-      if (format === 'photo') {
+      if (draft.sessionId) {
         if (!draft.sessionId) {
           setErrorMessage('광고 생성 세션을 찾지 못했어요. 다시 만들어주세요.');
           return;
