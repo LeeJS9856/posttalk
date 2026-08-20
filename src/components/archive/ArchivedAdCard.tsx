@@ -22,6 +22,8 @@ const ArchivedAdCard = ({ date, format, images, status, title, thumbnailUrl, onC
     <>
       {format === 'photo' && images.length > 0 ? (
         <PhotoPreviewCarousel images={images} />
+      ) : format === 'video' && thumbnailUrl ? (
+        <VideoThumbnail src={thumbnailUrl} muted playsInline preload="metadata" aria-label={`${title} 영상 미리보기`} />
       ) : thumbnailUrl ? (
         <Thumbnail src={thumbnailUrl} alt={`${title} 미리보기`} />
       ) : (
@@ -55,6 +57,14 @@ const Thumbnail = styled.img`
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
+`;
+
+const VideoThumbnail = styled.video`
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: ${COLORS.black200};
 `;
 
 const MissingPreview = styled.div`
