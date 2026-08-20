@@ -5,7 +5,7 @@ export interface AdminReviewItem {
   thumbnailUrl: string | null;
   title: string;
   createdAt: string;
-  mediaType: 'photo' | 'video';
+  mediaType?: 'photo' | 'video';
 }
 
 export interface AdminReviewsData {
@@ -21,7 +21,9 @@ export interface AdminReviewDetail extends AdminReviewItem {
   primaryAssetUrl: string | null;
   assets?: Array<{
     assetType?: string;
+    fileName?: string | null;
     fileUrl?: string | null;
+    mimeType?: string | null;
     publicUrl?: string | null;
     url?: string | null;
   }>;
@@ -46,14 +48,14 @@ export const getAdminReviews = ({ marketName, signal }: { marketName: string; si
 export const getAdminReviewDetail = ({ submissionId, signal }: { submissionId: string; signal?: AbortSignal }) =>
   api<ApiSuccessResponse<AdminReviewDetail>>({
     baseUrl: '',
-    path: `/api/admin/reviews/${encodeURIComponent(submissionId)}`,
+    path: `/api/admin/review-detail?${new URLSearchParams({ submissionId }).toString()}`,
     signal,
   });
 
 export const updateAdminReviewStatus = ({ submissionId, status }: { submissionId: string; status: AdminReviewDecision }) =>
   api<ApiSuccessResponse<unknown>>({
     baseUrl: '',
-    path: `/api/admin/submissions/${encodeURIComponent(submissionId)}`,
+    path: `/api/admin/submission-status?${new URLSearchParams({ submissionId }).toString()}`,
     method: 'PATCH',
     body: { status },
   });
