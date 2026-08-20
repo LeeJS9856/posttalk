@@ -8,7 +8,7 @@ import ReviewAdCard from '@/components/home/ReviewAdCard';
 import DraggableBottomSheet from '@/components/layout/DraggableBottomSheet';
 import { AllButton, AppFrame, EmptyMessage, Hero, HeroMessage, HeroStrong, RecentCard, RecentList, ReviewList, Section, SectionHeader, SectionTitle } from '@/pages/AdminHome/AdminHome.styles';
 
-const ADMIN_MARKET_NAME = '말바우시장';
+const ADMIN_MARKET_NAME = '양동시장';
 const FALLBACK_THUMBNAIL = 'https://images.unsplash.com/photo-1610057099431-d73a1c9d2f2f?auto=format&fit=crop&w=360&q=85';
 
 const AdminHome = (): React.JSX.Element => {
@@ -35,7 +35,6 @@ const AdminHome = (): React.JSX.Element => {
     return () => controller.abort();
   }, []);
 
-  const marketName = homeData?.summary.marketName ?? ADMIN_MARKET_NAME;
   const pendingItems = homeData?.pendingItems ?? [];
   const visiblePendingItems = pendingItems.slice(0, 2);
   const recentItems = homeData?.recentItems ?? [];
@@ -46,7 +45,7 @@ const AdminHome = (): React.JSX.Element => {
     <AppFrame>
       <Hero>
         <HeroMessage>
-          <HeroStrong>{marketName}</HeroStrong> 사장님,
+          <HeroStrong>{ADMIN_MARKET_NAME}</HeroStrong> 사장님,
           <br />
           {!isHomeReady ? hasError ? '관리자 홈 정보를 불러오지 못했어요.' : '관리자 홈 정보를 불러오고 있어요.' : (
             <>
