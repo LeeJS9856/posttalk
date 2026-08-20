@@ -11,6 +11,9 @@ import { useAdDraft } from '@/hooks/useAdDraft';
 import { useMerchantSession } from '@/hooks/useMerchantSession';
 import { ActionArea, CameraInput, Content, EmptyPhoto, ErrorMessage, GuideCopy, Page, PhotoPreview, Popo, RetakeButton } from '@/pages/CaptureResult/CaptureResult.styles';
 
+const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024;
+const SUPPORTED_PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
 const CaptureResult = (): React.JSX.Element => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -31,6 +34,16 @@ const CaptureResult = (): React.JSX.Element => {
   const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const [photo] = Array.from(event.target.files ?? []);
     if (!photo) return;
+    if (!SUPPORTED_PHOTO_TYPES.has(photo.type)) {
+      setErrorMessage('JPG, PNG, WebP 형식의 사진만 사용할 수 있어요. 사진을 변환한 뒤 다시 선택해주세요.');
+      return;
+    }
+    if (photo.size > MAX_PHOTO_SIZE_BYTES) {
+      setErrorMessage('사진은 10MB 이하 파일만 사용할 수 있어요. 용량을 줄인 뒤 다시 선택해주세요.');
+      return;
+    }
+
+    setErrorMessage(null);
     if (isSessionFlow) {
       setSessionPhoto(draft.currentRequest?.assetType ?? 'food_photo', photo);
       return;
@@ -74,7 +87,11 @@ const CaptureResult = (): React.JSX.Element => {
 
         throw new Error('다음 촬영 요청을 받지 못했어요. 다시 시도해주세요.');
       } catch (error) {
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        setErrorMessage('사진 업로드에 연결하지 못했어요. 10MB 이하의 JPG, PNG, WebP 사진인지 확인한 뒤 다시 시도해주세요.');
+      } else {
         setErrorMessage(error instanceof Error ? error.message : '사진을 확인하지 못했어요. 다시 시도해주세요.');
+      }
       } finally {
         setIsSubmitting(false);
       }
