@@ -34,7 +34,7 @@ const FILTERED_STATUS: Record<Exclude<StatusFilter, 'all'>, ArchivedAd['status']
   posted: 'posted',
 };
 
-const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => {
+const toArchivedAd = (item: MerchantArchiveItem, format: ArchiveFormat = item.mediaType): ArchivedAd => {
   const previewImages = [...(item.previewAssets ?? [])]
     .sort((first, second) => first.sortOrder - second.sortOrder)
     .map((asset) => asset.url)
@@ -44,11 +44,11 @@ const toArchivedAd = (item: MerchantArchiveItem): ArchivedAd => {
   return {
     id: item.submissionId,
     caption: item.publishCaption ?? undefined,
-    format: item.mediaType,
+    format,
     title: item.title,
     date: item.createdAt.slice(0, 10).replaceAll('-', '.'),
     status: UI_STATUS_BY_API_STATUS[item.status],
-    images: item.mediaType === 'photo' ? (previewImages.length > 0 ? previewImages : (fallbackImage ? [fallbackImage] : [])) : [],
+    images: format === 'photo' ? (previewImages.length > 0 ? previewImages : (fallbackImage ? [fallbackImage] : [])) : [],
     thumbnailUrl: fallbackImage,
   };
 };
@@ -84,7 +84,14 @@ const Archive = (): React.JSX.Element => {
           })),
         );
 
-        setAllAds(responses.flatMap((response) => response.data.items.map(toArchivedAd)));
+        const [photoResponse, videoResponse] = responses;
+        const videoSubmissionIds = new Set(videoResponse.data.items.map((item) => item.submissionId));
+        const photoAds = photoResponse.data.items
+          .filter((item) => !videoSubmissionIds.has(item.submissionId))
+          .map((item) => toArchivedAd(item, 'photo'));
+        const videoAds = videoResponse.data.items.map((item) => toArchivedAd(item, 'video'));
+
+        setAllAds([...photoAds, ...videoAds]);
       } catch (error) {
         if (!(error instanceof DOMException && error.name === 'AbortError')) {
           setHasError(true);
