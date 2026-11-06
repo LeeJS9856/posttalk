@@ -1,62 +1,122 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { useState } from 'react'
+import heroImg from './assets/hero.png'
+import reactLogo from './assets/react.svg'
+import viteLogo from './assets/vite.svg'
+import './App.css'
 
-import Archive from '@/pages/Archive/Archive';
-import ArchiveDetail from '@/pages/ArchiveDetail/ArchiveDetail';
-import AdminHome from '@/pages/AdminHome/AdminHome';
-import AdminArchive from '@/pages/AdminArchive/AdminArchive';
-import AdminReviews from '@/pages/AdminReviews/AdminReviews';
-import AdminReviewDetailPage from '@/pages/AdminReviewDetail/AdminReviewDetail';
-import Capture from '@/pages/Capture/Capture';
-import CaptureResult from '@/pages/CaptureResult/CaptureResult';
-import Create from '@/pages/Create/Create';
-import Entry from '@/pages/Entry/Entry';
-import GenerationComplete from '@/pages/GenerationComplete/GenerationComplete';
-import Generating from '@/pages/Generating/Generating';
-import Home from '@/pages/Home/Home';
-import PublishRequested from '@/pages/PublishRequested/PublishRequested';
-import VoiceQuestion from '@/pages/VoiceQuestion/VoiceQuestion';
-import VideoCapture from '@/pages/VideoCapture/VideoCapture';
-import VideoCaptureResult from '@/pages/VideoCaptureResult/VideoCaptureResult';
-import VideoCaptureComplete from '@/pages/VideoCaptureComplete/VideoCaptureComplete';
-import { MerchantSessionProvider } from '@/hooks/useMerchantSession';
-import { useMerchantSession } from '@/hooks/useMerchantSession';
+function App() {
+  const [count, setCount] = useState(0)
 
-const Root = (): React.JSX.Element => {
-  const { isLoading, session } = useMerchantSession();
-  const qrToken = new URLSearchParams(window.location.search).get('qrToken');
+  return (
+    <>
+      <section id="center">
+        <div className="hero">
+          <img src={heroImg} className="base" width="170" height="179" alt="" />
+          <img src={reactLogo} className="framework" alt="React logo" />
+          <img src={viteLogo} className="vite" alt="Vite logo" />
+        </div>
+        <div>
+          <h1>Get started</h1>
+          <p>
+            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+          </p>
+        </div>
+        <button
+          type="button"
+          className="counter"
+          onClick={() => setCount((count) => count + 1)}
+        >
+          Count is {count}
+        </button>
+      </section>
 
-  if (qrToken && !isLoading && !session) {
-    return <Navigate to={`/entry${window.location.search}`} replace />;
-  }
+      <div className="ticks"></div>
 
-  return <Home />;
-};
+      <section id="next-steps">
+        <div id="docs">
+          <svg className="icon" role="presentation" aria-hidden="true">
+            <use href="/icons.svg#documentation-icon"></use>
+          </svg>
+          <h2>Documentation</h2>
+          <p>Your questions, answered</p>
+          <ul>
+            <li>
+              <a href="https://vite.dev/" target="_blank">
+                <img className="logo" src={viteLogo} alt="" />
+                Explore Vite
+              </a>
+            </li>
+            <li>
+              <a href="https://react.dev/" target="_blank">
+                <img className="button-icon" src={reactLogo} alt="" />
+                Learn more
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div id="social">
+          <svg className="icon" role="presentation" aria-hidden="true">
+            <use href="/icons.svg#social-icon"></use>
+          </svg>
+          <h2>Connect with us</h2>
+          <p>Join the Vite community</p>
+          <ul>
+            <li>
+              <a href="https://github.com/vitejs/vite" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#github-icon"></use>
+                </svg>
+                GitHub
+              </a>
+            </li>
+            <li>
+              <a href="https://chat.vite.dev/" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#discord-icon"></use>
+                </svg>
+                Discord
+              </a>
+            </li>
+            <li>
+              <a href="https://x.com/vite_js" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#x-icon"></use>
+                </svg>
+                X.com
+              </a>
+            </li>
+            <li>
+              <a href="https://bsky.app/profile/vite.dev" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#bluesky-icon"></use>
+                </svg>
+                Bluesky
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
 
-const App = (): React.JSX.Element => (
-  <MerchantSessionProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Root />} />
-        <Route path="/entry" element={<Entry />} />
-        <Route path="/admin" element={<AdminHome />} />
-        <Route path="/admin/archive" element={<AdminArchive />} />
-        <Route path="/admin/reviews" element={<AdminReviews />} />
-        <Route path="/admin/reviews/:submissionId" element={<AdminReviewDetailPage />} />
-        <Route path="/create" element={<Create />} />
-        <Route path="/create/capture" element={<Capture />} />
-        <Route path="/create/capture/result" element={<CaptureResult />} />
-        <Route path="/create/questions/:questionIndex" element={<VoiceQuestion />} />
-        <Route path="/create/video-capture" element={<VideoCapture />} />
-        <Route path="/create/video-capture/result" element={<VideoCaptureResult />} />
-        <Route path="/create/video-capture/complete" element={<VideoCaptureComplete />} />
-        <Route path="/create/generating" element={<Generating />} />
-        <Route path="/create/complete" element={<GenerationComplete />} />
-        <Route path="/create/requested" element={<PublishRequested />} />
-        <Route path="/archive" element={<Archive />} />
-        <Route path="/archive/:submissionId" element={<ArchiveDetail />} />
-      </Routes>
-    </BrowserRouter>
-  </MerchantSessionProvider>
-);
+      <div className="ticks"></div>
+      <section id="spacer"></section>
+    </>
+  )
+}
 
-export default App;
+export default App
