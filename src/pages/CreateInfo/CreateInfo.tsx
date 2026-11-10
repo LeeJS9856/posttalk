@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import PageHeader from '@/components/layout/PageHeader';
+import { useAdDraft } from '@/hooks/useAdDraft';
 import {
   MAX_MENU_COUNT,
   SAMPLE_TEMPLATES,
@@ -74,7 +75,7 @@ const CheckIcon = (): React.JSX.Element => (
 
 const CreateInfo = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { setStoreInfo } = useAdDraft();
 
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [storeDescription, setStoreDescription] = useState('');
@@ -112,9 +113,14 @@ const CreateInfo = (): React.JSX.Element => {
   const canProceed = storeDescription.trim().length > 0 && filledMenus.length > 0;
 
   const goNext = (): void => {
-    const format = searchParams.get('format') ?? 'card_news';
-    const theme = searchParams.get('theme') ?? 'christmas';
-    navigate(`/create/capture/0?format=${format}&theme=${theme}`);
+    setStoreInfo({
+      storeDescription: storeDescription.trim(),
+      menus: filledMenus.map(({ name, description }) => ({
+        name: name.trim(),
+        description: description.trim(),
+      })),
+    });
+    navigate('/create/capture');
   };
 
   return (

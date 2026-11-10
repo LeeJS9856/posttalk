@@ -6,6 +6,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import { AD_FORMAT_OPTIONS, DEFAULT_AD_FORMAT } from '@/constants/create';
 import type { AdFormat } from '@/constants/home';
 import { SUGGESTION_THEMES } from '@/constants/themes';
+import { useAdDraft } from '@/hooks/useAdDraft';
 import {
   ConceptCaption,
   ConceptCard,
@@ -31,6 +32,7 @@ const Create = (): React.JSX.Element => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const railRef = useRef<HTMLUListElement>(null);
+  const { setConcept } = useAdDraft();
 
   const requestedTheme = searchParams.get('theme');
   const initialIndex = Math.max(
@@ -73,7 +75,8 @@ const Create = (): React.JSX.Element => {
   const concept = SUGGESTION_THEMES[index];
 
   const goNext = (): void => {
-    navigate(`/create/info?format=${format}&theme=${concept.id}`);
+    setConcept({ format, theme: concept.id });
+    navigate('/create/info');
   };
 
   return (
