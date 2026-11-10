@@ -97,7 +97,7 @@ const Generating = (): React.JSX.Element => {
 
   useEffect(() => {
     if (stepIndex < steps.length) return;
-    navigate(`/ads/${SAMPLE_GENERATED_AD_ID}`, { replace: true });
+    navigate(`/ads/${SAMPLE_GENERATED_AD_ID}?from=create`, { replace: true });
   }, [stepIndex, steps.length, navigate]);
 
   if (!hasAssets) {

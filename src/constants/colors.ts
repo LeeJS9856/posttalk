@@ -34,4 +34,10 @@ export const COLORS = {
     published: '#4e7a5e',
     failed: '#a3503f',
   },
+  /** 상태 뱃지 바탕. 글씨는 같은 이름의 status 색을 쓴다. */
+  statusSoft: {
+    unpublished: '#f5efe6',
+    published: '#e8f0ea',
+    failed: '#f7eceb',
+  },
 } as const;

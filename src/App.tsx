@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+import AdDetail from '@/pages/AdDetail/AdDetail';
 import Create from '@/pages/Create/Create';
 import CaptureCamera from '@/pages/Capture/CaptureCamera';
 import CaptureList from '@/pages/Capture/CaptureList';
@@ -19,6 +20,7 @@ const App = (): React.JSX.Element => {
         <Route path="/create/capture/:sceneIndex" element={<CaptureCamera />} />
         <Route path="/create/script" element={<CreateScript />} />
         <Route path="/create/generating" element={<Generating />} />
+        <Route path="/ads/:adId" element={<AdDetail />} />
         {/* 정보 입력 이후 화면은 다음 작업에서 붙인다. */}
       </Routes>
     </Router>

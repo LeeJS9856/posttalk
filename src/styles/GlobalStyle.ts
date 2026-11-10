@@ -38,6 +38,11 @@ const GlobalStyle = createGlobalStyle`
     background: none;
   }
 
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
   img, video {
     display: block;
     max-width: 100%;
