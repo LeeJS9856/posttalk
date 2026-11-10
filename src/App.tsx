@@ -7,6 +7,7 @@ const App = (): React.JSX.Element => {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
+        {/* 제작 흐름과 보관함은 다음 작업에서 붙인다. */}
       </Routes>
     </Router>
   );

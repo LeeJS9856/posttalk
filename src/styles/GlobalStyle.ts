@@ -10,6 +10,9 @@ const GlobalStyle = createGlobalStyle`
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* 폰트 파일 수급 전까지는 시스템 스택을 쓴다. 확정되면 @font-face 로 교체한다. */
+    font-family: 'Pretendard', system-ui, -apple-system, 'Apple SD Gothic Neo',
+      'Noto Sans KR', 'Malgun Gothic', sans-serif;
   }
 
   html, body, #root {
