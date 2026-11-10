@@ -1,17 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { buildScenes } from '@/constants/scenes';
+import { GALLERY_HINT, buildScenes, type CaptureSource } from '@/constants/scenes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import {
   BottomBar,
   CloseButton,
   ConfirmRow,
   Counter,
+  FallbackButton,
   Hint,
   HiddenInput,
   Instruction,
   Notice,
+  NoticeWrap,
+  PickArea,
+  PickHint,
+  PickText,
   Preview,
   RetakeButton,
   SampleFrame,
@@ -36,7 +41,12 @@ const CloseIcon = (): React.JSX.Element => (
 const PhotoIcon = (): React.JSX.Element => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <rect x="3.5" y="5" width="17" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.7" />
-    <path d="M4 16l4.5-4 4 3.5L16 12l4 4" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+    <path
+      d="M4 16l4.5-4 4 3.5L16 12l4 4"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -55,11 +65,14 @@ const FlipIcon = (): React.JSX.Element => (
 const CaptureCamera = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { sceneIndex } = useParams();
+  const [params] = useSearchParams();
   const { draft, setCapture } = useAdDraft();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  /** 갤러리 선택은 한 번만 자동으로 띄운다. 취소한 뒤 다시 열리면 빠져나갈 수 없다. */
+  const autoOpened = useRef(false);
 
   const [facing, setFacing] = useState<'environment' | 'user'>('environment');
   const [shot, setShot] = useState<{ file: File; url: string } | null>(null);
@@ -69,7 +82,13 @@ const CaptureCamera = (): React.JSX.Element => {
   const index = Number(sceneIndex ?? 0);
   const scene = scenes[index];
 
-  const isGallery = scene?.source === 'gallery';
+  // 앞 화면 바텀시트에서 고른 경로. 직접 들어온 경우에는 장면이 권하는 쪽을 쓴다.
+  const requested = params.get('source');
+  const source: CaptureSource =
+    requested === 'camera' || requested === 'gallery' ? requested : (scene?.recommended ?? 'camera');
+  const isGallery = source === 'gallery';
+
+  const openPicker = (): void => fileInputRef.current?.click();
 
   // 촬영물은 기기에 저장하지 않는다. getUserMedia 로 앱 안에서 직접 찍는다.
   useEffect(() => {
@@ -95,7 +114,7 @@ const CaptureCamera = (): React.JSX.Element => {
         setError(
           cause instanceof DOMException && cause.name === 'NotAllowedError'
             ? '카메라 권한이 필요해요. 브라우저에서 허용해주세요.'
-            : '카메라를 열지 못했어요. 갤러리에서 골라주세요.',
+            : '카메라를 열지 못했어요.',
         );
       }
     };
@@ -110,7 +129,9 @@ const CaptureCamera = (): React.JSX.Element => {
   }, [scene, isGallery, shot, facing]);
 
   useEffect(() => {
-    if (isGallery && !shot) fileInputRef.current?.click();
+    if (!isGallery || shot || autoOpened.current) return;
+    autoOpened.current = true;
+    openPicker();
   }, [isGallery, shot]);
 
   useEffect(() => () => {
@@ -120,7 +141,9 @@ const CaptureCamera = (): React.JSX.Element => {
   if (!scene) {
     return (
       <Stage>
-        <Notice>촬영할 장면이 없어요. 앞 화면에서 메뉴를 먼저 입력해주세요.</Notice>
+        <NoticeWrap>
+          <Notice>촬영할 장면이 없어요. 앞 화면에서 메뉴를 먼저 입력해주세요.</Notice>
+        </NoticeWrap>
         <BottomBar>
           <UseButton type="button" onClick={() => navigate('/create/info')}>
             정보 입력으로
@@ -139,15 +162,15 @@ const CaptureCamera = (): React.JSX.Element => {
     canvas.height = video.videoHeight;
     canvas.getContext('2d')?.drawImage(video, 0, 0);
 
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const file = new File([blob], `scene-${scene.index}.jpg`, { type: 'image/jpeg' });
-      setShot({ file, url: URL.createObjectURL(file) });
-    }, 'image/jpeg', 0.92);
-  };
-
-  const pickFromGallery = (file: File): void => {
-    setShot({ file, url: URL.createObjectURL(file) });
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `scene-${scene.index}.jpg`, { type: 'image/jpeg' });
+        setShot({ file, url: URL.createObjectURL(file) });
+      },
+      'image/jpeg',
+      0.92,
+    );
   };
 
   const confirm = (): void => {
@@ -158,9 +181,26 @@ const CaptureCamera = (): React.JSX.Element => {
 
   return (
     <Stage>
-      {shot ? <Shot src={shot.url} alt="방금 찍은 사진" /> : <Preview ref={videoRef} autoPlay playsInline muted />}
+      {shot ? (
+        <Shot src={shot.url} alt="고른 사진" />
+      ) : isGallery ? (
+        <PickArea type="button" onClick={openPicker}>
+          <PhotoIcon />
+          <PickText>탭해서 사진 고르기</PickText>
+          <PickHint>jpg 또는 png</PickHint>
+        </PickArea>
+      ) : (
+        <Preview ref={videoRef} autoPlay playsInline muted />
+      )}
 
-      {error && !shot && <Notice>{error}</Notice>}
+      {error && !shot && !isGallery && (
+        <NoticeWrap>
+          <Notice>{error}</Notice>
+          <FallbackButton type="button" onClick={openPicker}>
+            갤러리에서 고르기
+          </FallbackButton>
+        </NoticeWrap>
+      )}
 
       <TopBar>
         <TopRow>
@@ -176,18 +216,20 @@ const CaptureCamera = (): React.JSX.Element => {
         </TopRow>
         {!shot && (
           <>
-            <Instruction>{scene.title}</Instruction>
-            <Hint>{scene.hint}</Hint>
+            <Instruction>{isGallery ? scene.pickTitle : scene.title}</Instruction>
+            <Hint>{isGallery ? GALLERY_HINT : scene.hint}</Hint>
           </>
         )}
       </TopBar>
 
-      <SampleWrap>
-        <SampleFrame>
-          <PhotoIcon />
-        </SampleFrame>
-        <SampleLabel>이렇게</SampleLabel>
-      </SampleWrap>
+      {!shot && !isGallery && (
+        <SampleWrap>
+          <SampleFrame>
+            <PhotoIcon />
+          </SampleFrame>
+          <SampleLabel>이렇게</SampleLabel>
+        </SampleWrap>
+      )}
 
       <BottomBar>
         {shot ? (
@@ -197,28 +239,31 @@ const CaptureCamera = (): React.JSX.Element => {
               onClick={() => {
                 URL.revokeObjectURL(shot.url);
                 setShot(null);
+                if (isGallery) openPicker();
               }}
             >
-              다시 찍기
+              {isGallery ? '다시 고르기' : '다시 찍기'}
             </RetakeButton>
             <UseButton type="button" onClick={confirm}>
               이걸로 할게요
             </UseButton>
           </ConfirmRow>
+        ) : isGallery ? (
+          <UseButton type="button" onClick={openPicker}>
+            갤러리 열기
+          </UseButton>
         ) : (
           <ShutterRow>
-            <SideButton
-              type="button"
-              aria-label="갤러리에서 고르기"
-              onClick={() => fileInputRef.current?.click()}
-            >
+            <SideButton type="button" aria-label="갤러리에서 고르기" onClick={openPicker}>
               <PhotoIcon />
             </SideButton>
             <Shutter type="button" aria-label="사진 찍기" onClick={takeShot} />
             <SideButton
               type="button"
               aria-label="앞뒤 카메라 전환"
-              onClick={() => setFacing((current) => (current === 'environment' ? 'user' : 'environment'))}
+              onClick={() =>
+                setFacing((current) => (current === 'environment' ? 'user' : 'environment'))
+              }
             >
               <FlipIcon />
             </SideButton>
@@ -232,7 +277,9 @@ const CaptureCamera = (): React.JSX.Element => {
         accept="image/*"
         onChange={(event) => {
           const [file] = Array.from(event.target.files ?? []);
-          if (file) pickFromGallery(file);
+          if (file) setShot({ file, url: URL.createObjectURL(file) });
+          // 같은 사진을 다시 고를 수 있게 값을 비운다.
+          event.target.value = '';
         }}
       />
     </Stage>

@@ -170,7 +170,9 @@ export const RetakeButton = styled.button`
 `;
 
 export const UseButton = styled.button`
+  /* 확인 줄 안에서는 남는 폭을, 혼자 쓰일 때는 전체 폭을 차지한다. */
   flex: 1;
+  width: 100%;
   min-height: 50px;
   border-radius: 13px;
   background-color: ${COLORS.white};
@@ -179,16 +181,80 @@ export const UseButton = styled.button`
   font-weight: ${FONT_WEIGHT.medium};
 `;
 
-export const Notice = styled.div`
+export const NoticeWrap = styled.div`
   position: absolute;
   top: 50%;
   right: 24px;
   left: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
   transform: translateY(-50%);
+`;
+
+export const Notice = styled.p`
   color: rgba(255, 255, 255, 0.82);
   font-size: ${FONT_SIZE.body};
   line-height: 1.7;
   text-align: center;
+`;
+
+/** 카메라를 열지 못했을 때의 탈출구. 묻힌 아이콘만 두면 길을 못 찾는다. */
+export const FallbackButton = styled.button`
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  border-radius: 13px;
+  color: ${COLORS.white};
+  font-size: ${FONT_SIZE.bodyLarge};
+  font-weight: ${FONT_WEIGHT.medium};
+`;
+
+/**
+ * 갤러리 경로의 본 화면. 자동으로 뜬 선택창을 취소해도 여기가 남아 있어야 한다.
+ */
+export const PickArea = styled.button`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  height: 100%;
+  padding: 0 24px;
+  color: rgba(255, 255, 255, 0.78);
+  transition: opacity 0.16s ease;
+
+  &:active {
+    opacity: 0.7;
+  }
+
+  /* 상단 지시문과 하단 버튼 사이만 비워 둔다. */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 134px 24px 118px;
+    border: 1.5px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+  }
+
+  svg {
+    width: 30px;
+    height: 30px;
+  }
+`;
+
+export const PickText = styled.span`
+  color: ${COLORS.white};
+  font-size: ${FONT_SIZE.titleSmall};
+  font-weight: ${FONT_WEIGHT.medium};
+`;
+
+export const PickHint = styled.span`
+  color: rgba(255, 255, 255, 0.6);
+  font-size: ${FONT_SIZE.label};
 `;
 
 export const HiddenInput = styled.input`

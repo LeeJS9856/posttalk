@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import ActionSheet, { type ActionSheetItem } from '@/components/common/ActionSheet';
 import PageHeader from '@/components/layout/PageHeader';
-import { buildScenes } from '@/constants/scenes';
+import { buildScenes, type CaptureSource, type Scene } from '@/constants/scenes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import {
   Bar,
@@ -35,6 +36,18 @@ const CameraIcon = (): React.JSX.Element => (
   </svg>
 );
 
+const PhotoIcon = (): React.JSX.Element => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="3.5" y="5" width="17" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.7" />
+    <path
+      d="M4 16l4.5-4 4 3.5L16 12l4 4"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const CheckIcon = (): React.JSX.Element => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path
@@ -56,13 +69,48 @@ const CaptureList = (): React.JSX.Element => {
   const nextScene = scenes.find((scene) => !draft.captures[scene.index]);
   const remaining = scenes.length - doneCount;
 
+  /** 어떤 장면의 경로를 묻고 있는지. 닫는 동안에도 내용이 남아 있어야 해서 따로 둔다. */
+  const [asking, setAsking] = useState<Scene | null>(null);
+  const [isAsking, setIsAsking] = useState(false);
+
+  const openSheet = (scene: Scene): void => {
+    setAsking(scene);
+    setIsAsking(true);
+  };
+
+  const go = (scene: Scene, source: CaptureSource): void => {
+    setIsAsking(false);
+    navigate(`/create/capture/${scene.index}?source=${source}`);
+  };
+
+  const items: ActionSheetItem[] = asking
+    ? [
+        {
+          key: 'camera',
+          icon: <CameraIcon />,
+          label: '지금 찍기',
+          description: '카메라가 열려요',
+          recommended: asking.recommended === 'camera',
+          onSelect: () => go(asking, 'camera'),
+        },
+        {
+          key: 'gallery',
+          icon: <PhotoIcon />,
+          label: '갤러리에서 고르기',
+          description: '기기에 있는 사진 중에서',
+          recommended: asking.recommended === 'gallery',
+          onSelect: () => go(asking, 'gallery'),
+        },
+      ]
+    : [];
+
   return (
     <Page aria-label="촬영 목록">
       <PageHeader title="광고 제작" onBack={() => navigate(-1)} />
 
       <Content>
         <TitleRow>
-          <Title>사진을 찍어주세요</Title>
+          <Title>사진을 올려주세요</Title>
           <Progress>
             {doneCount} / {scenes.length}
           </Progress>
@@ -80,8 +128,9 @@ const CaptureList = (): React.JSX.Element => {
               <li key={scene.index}>
                 <SlotButton
                   type="button"
-                  aria-label={`${scene.label} ${captured ? '다시 찍기' : '찍기'}`}
-                  onClick={() => navigate(`/create/capture/${scene.index}`)}
+                  aria-label={`${scene.label} 사진 ${captured ? '다시 올리기' : '올리기'}`}
+                  aria-haspopup="dialog"
+                  onClick={() => openSheet(scene)}
                 >
                   <SlotFrame $next={isNext} $filled={Boolean(captured)}>
                     {captured ? (
@@ -93,8 +142,8 @@ const CaptureList = (): React.JSX.Element => {
                       </>
                     ) : (
                       <>
-                        <CameraIcon />
-                        {isNext && <SlotAction>지금 찍기</SlotAction>}
+                        {scene.recommended === 'gallery' ? <PhotoIcon /> : <CameraIcon />}
+                        {isNext && <SlotAction>지금 올리기</SlotAction>}
                       </>
                     )}
                   </SlotFrame>
@@ -112,9 +161,19 @@ const CaptureList = (): React.JSX.Element => {
           disabled={remaining > 0}
           onClick={() => navigate('/create/generating')}
         >
-          {remaining > 0 ? `${remaining}장 더 찍어주세요` : '다음'}
+          {remaining > 0 ? `${remaining}장 더 올려주세요` : '다음'}
         </NextButton>
       </Footer>
+
+      <ActionSheet
+        open={isAsking}
+        title={asking?.label ?? ''}
+        description={
+          asking && draft.captures[asking.index] ? '다시 올릴까요?' : '어떻게 올릴까요?'
+        }
+        items={items}
+        onClose={() => setIsAsking(false)}
+      />
     </Page>
   );
 };

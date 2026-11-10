@@ -21,6 +21,8 @@ export const COLORS = {
     muted: '#9a9ba2',
     inverse: '#ffffff',
   },
+  /** 바텀시트·모달 뒤를 덮는 막 */
+  scrim: 'rgba(10, 10, 12, 0.32)',
   border: {
     main: '#ececef',
     strong: '#dcdce0',

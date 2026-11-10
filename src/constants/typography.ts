@@ -3,6 +3,7 @@ export const FONT_SIZE = {
   label: '11px',
   body: '12px',
   bodyLarge: '13px',
+  titleSmall: '14.5px',
   title: '16.5px',
   titleLarge: '17px',
   display: '19px',
