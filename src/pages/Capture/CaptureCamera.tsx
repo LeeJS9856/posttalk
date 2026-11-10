@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
+import {
+  MIN_CLIP_SECONDS,
+  VIDEO_ASPECT_RATIO,
+  extensionForMimeType,
+  pickVideoMimeType,
+} from '@/constants/media';
 import { GALLERY_HINT, buildScenes, type CaptureSource } from '@/constants/scenes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import {
@@ -18,7 +24,11 @@ import {
   PickHint,
   PickText,
   Preview,
+  RecChip,
+  RecordButton,
   RetakeButton,
+  ReviewVideo,
+  Ring,
   SampleFrame,
   SampleLabel,
   SampleWrap,
@@ -27,10 +37,14 @@ import {
   ShutterRow,
   SideButton,
   Stage,
+  StopButton,
+  StopWrap,
   TopBar,
   TopRow,
   UseButton,
 } from '@/pages/Capture/CaptureCamera.styles';
+
+type Taken = { file: File; url: string; kind: 'photo' | 'video' };
 
 const CloseIcon = (): React.JSX.Element => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -73,12 +87,19 @@ const CaptureCamera = (): React.JSX.Element => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** 갤러리 선택은 한 번만 자동으로 띄운다. 취소한 뒤 다시 열리면 빠져나갈 수 없다. */
   const autoOpened = useRef(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const stopTimerRef = useRef<number | undefined>(undefined);
+  const startedAtRef = useRef(0);
 
   const [facing, setFacing] = useState<'environment' | 'user'>('environment');
-  const [shot, setShot] = useState<{ file: File; url: string } | null>(null);
+  const [shot, setShot] = useState<Taken | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
 
-  const scenes = useMemo(() => buildScenes(draft.menus), [draft.menus]);
+  const scenes = useMemo(
+    () => buildScenes(draft.menus, draft.format),
+    [draft.menus, draft.format],
+  );
   const index = Number(sceneIndex ?? 0);
   const scene = scenes[index];
 
@@ -87,6 +108,7 @@ const CaptureCamera = (): React.JSX.Element => {
   const source: CaptureSource =
     requested === 'camera' || requested === 'gallery' ? requested : (scene?.recommended ?? 'camera');
   const isGallery = source === 'gallery';
+  const isVideo = scene?.kind === 'video';
 
   const openPicker = (): void => fileInputRef.current?.click();
 
@@ -99,7 +121,10 @@ const CaptureCamera = (): React.JSX.Element => {
     const open = async (): Promise<void> => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: facing },
+          video: isVideo
+            ? { facingMode: facing, aspectRatio: VIDEO_ASPECT_RATIO }
+            : { facingMode: facing },
+          // 릴스는 소리를 쓰지 않는다. 마이크를 잡으면 권한을 한 번 더 물어본다.
           audio: false,
         });
         if (!run.alive) {
@@ -126,7 +151,7 @@ const CaptureCamera = (): React.JSX.Element => {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     };
-  }, [scene, isGallery, shot, facing]);
+  }, [scene, isGallery, isVideo, shot, facing]);
 
   useEffect(() => {
     if (!isGallery || shot || autoOpened.current) return;
@@ -137,6 +162,15 @@ const CaptureCamera = (): React.JSX.Element => {
   useEffect(() => () => {
     if (shot) URL.revokeObjectURL(shot.url);
   }, [shot]);
+
+  // 화면을 벗어나는 순간 녹화를 끊는다. 두고 나가면 스트림이 살아남는다.
+  useEffect(
+    () => () => {
+      window.clearTimeout(stopTimerRef.current);
+      if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+    },
+    [],
+  );
 
   if (!scene) {
     return (
@@ -166,11 +200,52 @@ const CaptureCamera = (): React.JSX.Element => {
       (blob) => {
         if (!blob) return;
         const file = new File([blob], `scene-${scene.index}.jpg`, { type: 'image/jpeg' });
-        setShot({ file, url: URL.createObjectURL(file) });
+        setShot({ file, url: URL.createObjectURL(file), kind: 'photo' });
       },
       'image/jpeg',
       0.92,
     );
+  };
+
+  const stopRecording = (): void => {
+    window.clearTimeout(stopTimerRef.current);
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+  };
+
+  const startRecording = (): void => {
+    const stream = streamRef.current;
+    if (!stream) return;
+
+    const preferred = pickVideoMimeType();
+    const recorder = new MediaRecorder(stream, preferred ? { mimeType: preferred } : undefined);
+    const chunks: Blob[] = [];
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) chunks.push(event.data);
+    };
+
+    recorder.onstop = () => {
+      setIsRecording(false);
+      const seconds = (Date.now() - startedAtRef.current) / 1000;
+      const type = recorder.mimeType || preferred || 'video/webm';
+
+      // 너무 짧은 영상은 생성 단계에서 실패한다. 그 자리에서 다시 찍게 한다.
+      if (seconds < MIN_CLIP_SECONDS || chunks.length === 0) {
+        setError('너무 짧아요. 다시 찍어주세요.');
+        return;
+      }
+
+      const blob = new Blob(chunks, { type });
+      const file = new File([blob], `scene-${scene.index}.${extensionForMimeType(type)}`, { type });
+      setShot({ file, url: URL.createObjectURL(file), kind: 'video' });
+    };
+
+    recorderRef.current = recorder;
+    startedAtRef.current = Date.now();
+    setError(null);
+    setIsRecording(true);
+    recorder.start();
+    stopTimerRef.current = window.setTimeout(stopRecording, scene.clipSeconds * 1000);
   };
 
   const confirm = (): void => {
@@ -179,21 +254,27 @@ const CaptureCamera = (): React.JSX.Element => {
     navigate('/create/capture');
   };
 
+  const retakeLabel = isGallery ? '다시 고르기' : '다시 찍기';
+
   return (
     <Stage>
       {shot ? (
-        <Shot src={shot.url} alt="고른 사진" />
+        shot.kind === 'video' ? (
+          <ReviewVideo src={shot.url} autoPlay loop muted playsInline />
+        ) : (
+          <Shot src={shot.url} alt="고른 사진" />
+        )
       ) : isGallery ? (
         <PickArea type="button" onClick={openPicker}>
           <PhotoIcon />
-          <PickText>탭해서 사진 고르기</PickText>
-          <PickHint>jpg 또는 png</PickHint>
+          <PickText>탭해서 {isVideo ? '영상' : '사진'} 고르기</PickText>
+          <PickHint>{isVideo ? `${scene.clipSeconds}초 안팎이면 좋아요` : 'jpg 또는 png'}</PickHint>
         </PickArea>
       ) : (
         <Preview ref={videoRef} autoPlay playsInline muted />
       )}
 
-      {error && !shot && !isGallery && (
+      {error && !shot && !isGallery && !isRecording && (
         <NoticeWrap>
           <Notice>{error}</Notice>
           <FallbackButton type="button" onClick={openPicker}>
@@ -204,25 +285,33 @@ const CaptureCamera = (): React.JSX.Element => {
 
       <TopBar>
         <TopRow>
-          {!shot && (
+          {!shot && !isRecording && (
             <CloseButton type="button" aria-label="닫기" onClick={() => navigate('/create/capture')}>
               <CloseIcon />
             </CloseButton>
           )}
-          <Counter style={{ marginLeft: shot ? 0 : 'auto' }}>
-            {scene.index + 1} / {scenes.length}
-          </Counter>
-          {shot && <Counter>{scene.label}</Counter>}
+          {isRecording ? (
+            <RecChip>녹화 중</RecChip>
+          ) : (
+            <>
+              <Counter style={{ marginLeft: shot ? 0 : 'auto' }}>
+                {scene.index + 1} / {scenes.length}
+              </Counter>
+              {shot && <Counter>{scene.label}</Counter>}
+            </>
+          )}
         </TopRow>
         {!shot && (
           <>
-            <Instruction>{isGallery ? scene.pickTitle : scene.title}</Instruction>
-            <Hint>{isGallery ? GALLERY_HINT : scene.hint}</Hint>
+            <Instruction>
+              {isRecording ? '그대로 들고 계세요' : isGallery ? scene.pickTitle : scene.title}
+            </Instruction>
+            {!isRecording && <Hint>{isGallery ? GALLERY_HINT : scene.hint}</Hint>}
           </>
         )}
       </TopBar>
 
-      {!shot && !isGallery && (
+      {!shot && !isGallery && !isRecording && (
         <SampleWrap>
           <SampleFrame>
             <PhotoIcon />
@@ -242,12 +331,20 @@ const CaptureCamera = (): React.JSX.Element => {
                 if (isGallery) openPicker();
               }}
             >
-              {isGallery ? '다시 고르기' : '다시 찍기'}
+              {retakeLabel}
             </RetakeButton>
             <UseButton type="button" onClick={confirm}>
               이걸로 할게요
             </UseButton>
           </ConfirmRow>
+        ) : isRecording ? (
+          <StopWrap>
+            <Ring viewBox="0 0 68 68" $seconds={scene.clipSeconds} aria-hidden="true">
+              <circle cx="34" cy="34" r="31" />
+              <circle cx="34" cy="34" r="31" />
+            </Ring>
+            <StopButton type="button" aria-label="녹화 멈추기" onClick={stopRecording} />
+          </StopWrap>
         ) : isGallery ? (
           <UseButton type="button" onClick={openPicker}>
             갤러리 열기
@@ -257,7 +354,15 @@ const CaptureCamera = (): React.JSX.Element => {
             <SideButton type="button" aria-label="갤러리에서 고르기" onClick={openPicker}>
               <PhotoIcon />
             </SideButton>
-            <Shutter type="button" aria-label="사진 찍기" onClick={takeShot} />
+            {isVideo ? (
+              <RecordButton
+                type="button"
+                aria-label={`${scene.clipSeconds}초 녹화하기`}
+                onClick={startRecording}
+              />
+            ) : (
+              <Shutter type="button" aria-label="사진 찍기" onClick={takeShot} />
+            )}
             <SideButton
               type="button"
               aria-label="앞뒤 카메라 전환"
@@ -274,11 +379,17 @@ const CaptureCamera = (): React.JSX.Element => {
       <HiddenInput
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={isVideo ? 'video/*' : 'image/*'}
         onChange={(event) => {
           const [file] = Array.from(event.target.files ?? []);
-          if (file) setShot({ file, url: URL.createObjectURL(file) });
-          // 같은 사진을 다시 고를 수 있게 값을 비운다.
+          if (file) {
+            setShot({
+              file,
+              url: URL.createObjectURL(file),
+              kind: file.type.startsWith('video/') ? 'video' : 'photo',
+            });
+          }
+          // 같은 것을 다시 고를 수 있게 값을 비운다.
           event.target.value = '';
         }}
       />

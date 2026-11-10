@@ -21,6 +21,8 @@ export const COLORS = {
     muted: '#9a9ba2',
     inverse: '#ffffff',
   },
+  /** 녹화 표시. 다른 곳에 쓰지 않는다. */
+  record: '#e2503f',
   /** 바텀시트·모달 뒤를 덮는 막 */
   scrim: 'rgba(10, 10, 12, 0.32)',
   border: {

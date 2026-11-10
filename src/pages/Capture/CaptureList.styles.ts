@@ -94,6 +94,12 @@ export const SlotImage = styled.img`
   object-fit: cover;
 `;
 
+export const SlotVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 export const SlotBadge = styled.span`
   position: absolute;
   top: 6px;

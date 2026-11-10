@@ -11,6 +11,8 @@ export type DraftMenu = {
 export type CapturedAsset = {
   file: File;
   previewUrl: string;
+  /** 사진인지 영상인지. 목록 썸네일과 확인 화면이 갈린다. */
+  kind: 'photo' | 'video';
 };
 
 type AdDraft = {
@@ -66,7 +68,11 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
         ...current,
         captures: {
           ...current.captures,
-          [sceneIndex]: { file, previewUrl: URL.createObjectURL(file) },
+          [sceneIndex]: {
+            file,
+            previewUrl: URL.createObjectURL(file),
+            kind: file.type.startsWith('video/') ? 'video' : 'photo',
+          },
         },
       };
     });

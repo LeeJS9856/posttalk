@@ -19,6 +19,7 @@ import {
   SlotFrame,
   SlotImage,
   SlotLabel,
+  SlotVideo,
   Title,
   TitleRow,
   Track,
@@ -33,6 +34,18 @@ const CameraIcon = (): React.JSX.Element => (
       strokeLinejoin="round"
     />
     <circle cx="12" cy="13" r="3.2" stroke="currentColor" strokeWidth="1.7" />
+  </svg>
+);
+
+const VideoIcon = (): React.JSX.Element => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="3" y="6.5" width="12.5" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.7" />
+    <path
+      d="M15.5 11.2l4-2.4v6.4l-4-2.4v-1.6Z"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -64,32 +77,32 @@ const CaptureList = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { draft } = useAdDraft();
 
-  const scenes = useMemo(() => buildScenes(draft.menus), [draft.menus]);
+  const scenes = useMemo(
+    () => buildScenes(draft.menus, draft.format),
+    [draft.menus, draft.format],
+  );
   const doneCount = scenes.filter((scene) => draft.captures[scene.index]).length;
   const nextScene = scenes.find((scene) => !draft.captures[scene.index]);
   const remaining = scenes.length - doneCount;
+  const hasVideo = scenes.some((scene) => scene.kind === 'video');
 
   /** 어떤 장면의 경로를 묻고 있는지. 닫는 동안에도 내용이 남아 있어야 해서 따로 둔다. */
   const [asking, setAsking] = useState<Scene | null>(null);
   const [isAsking, setIsAsking] = useState(false);
-
-  const openSheet = (scene: Scene): void => {
-    setAsking(scene);
-    setIsAsking(true);
-  };
 
   const go = (scene: Scene, source: CaptureSource): void => {
     setIsAsking(false);
     navigate(`/create/capture/${scene.index}?source=${source}`);
   };
 
+  const isVideo = asking?.kind === 'video';
   const items: ActionSheetItem[] = asking
     ? [
         {
           key: 'camera',
-          icon: <CameraIcon />,
-          label: '지금 찍기',
-          description: '카메라가 열려요',
+          icon: isVideo ? <VideoIcon /> : <CameraIcon />,
+          label: isVideo ? '지금 녹화하기' : '지금 찍기',
+          description: isVideo ? `${asking.clipSeconds}초만 찍으면 돼요` : '카메라가 열려요',
           recommended: asking.recommended === 'camera',
           onSelect: () => go(asking, 'camera'),
         },
@@ -97,7 +110,7 @@ const CaptureList = (): React.JSX.Element => {
           key: 'gallery',
           icon: <PhotoIcon />,
           label: '갤러리에서 고르기',
-          description: '기기에 있는 사진 중에서',
+          description: isVideo ? '기기에 있는 영상 중에서' : '기기에 있는 사진 중에서',
           recommended: asking.recommended === 'gallery',
           onSelect: () => go(asking, 'gallery'),
         },
@@ -110,7 +123,7 @@ const CaptureList = (): React.JSX.Element => {
 
       <Content>
         <TitleRow>
-          <Title>사진을 올려주세요</Title>
+          <Title>{hasVideo ? '사진과 영상을 올려주세요' : '사진을 올려주세요'}</Title>
           <Progress>
             {doneCount} / {scenes.length}
           </Progress>
@@ -128,21 +141,34 @@ const CaptureList = (): React.JSX.Element => {
               <li key={scene.index}>
                 <SlotButton
                   type="button"
-                  aria-label={`${scene.label} 사진 ${captured ? '다시 올리기' : '올리기'}`}
+                  aria-label={`${scene.label} ${captured ? '다시 올리기' : '올리기'}`}
                   aria-haspopup="dialog"
-                  onClick={() => openSheet(scene)}
+                  onClick={() => {
+                    setAsking(scene);
+                    setIsAsking(true);
+                  }}
                 >
                   <SlotFrame $next={isNext} $filled={Boolean(captured)}>
                     {captured ? (
                       <>
-                        <SlotImage src={captured.previewUrl} alt="" />
+                        {captured.kind === 'video' ? (
+                          <SlotVideo src={captured.previewUrl} muted playsInline preload="metadata" />
+                        ) : (
+                          <SlotImage src={captured.previewUrl} alt="" />
+                        )}
                         <SlotBadge aria-hidden="true">
                           <CheckIcon />
                         </SlotBadge>
                       </>
                     ) : (
                       <>
-                        {scene.recommended === 'gallery' ? <PhotoIcon /> : <CameraIcon />}
+                        {scene.kind === 'video' ? (
+                          <VideoIcon />
+                        ) : scene.recommended === 'gallery' ? (
+                          <PhotoIcon />
+                        ) : (
+                          <CameraIcon />
+                        )}
                         {isNext && <SlotAction>지금 올리기</SlotAction>}
                       </>
                     )}
@@ -161,16 +187,14 @@ const CaptureList = (): React.JSX.Element => {
           disabled={remaining > 0}
           onClick={() => navigate('/create/generating')}
         >
-          {remaining > 0 ? `${remaining}장 더 올려주세요` : '다음'}
+          {remaining > 0 ? `${remaining}개 더 올려주세요` : '다음'}
         </NextButton>
       </Footer>
 
       <ActionSheet
         open={isAsking}
         title={asking?.label ?? ''}
-        description={
-          asking && draft.captures[asking.index] ? '다시 올릴까요?' : '어떻게 올릴까요?'
-        }
+        description={asking && draft.captures[asking.index] ? '다시 올릴까요?' : '어떻게 올릴까요?'}
         items={items}
         onClose={() => setIsAsking(false)}
       />

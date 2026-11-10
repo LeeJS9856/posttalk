@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
 import { FONT_SIZE, FONT_WEIGHT } from '@/constants/typography';
@@ -152,6 +152,101 @@ export const Shutter = styled.button`
     border-radius: 50%;
     background-color: ${COLORS.white};
   }
+`;
+
+/** 녹화 버튼. 셔터와 자리는 같고 안쪽만 빨갛다. */
+export const RecordButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  transition: transform 0.16s cubic-bezier(0.2, 0.85, 0.25, 1);
+
+  &:active {
+    transform: scale(0.93);
+  }
+
+  &::after {
+    content: '';
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background-color: ${COLORS.record};
+  }
+`;
+
+export const StopWrap = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  margin: 0 auto;
+`;
+
+const fillRing = keyframes`
+  from { stroke-dashoffset: 195; }
+  to { stroke-dashoffset: 0; }
+`;
+
+/** 남은 시간을 숫자 대신 링으로 보여준다. 짧은 녹화에서는 숫자가 바뀔 틈이 없다. */
+export const Ring = styled.svg<{ $seconds: number }>`
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+
+  circle {
+    fill: none;
+    stroke-width: 3;
+  }
+
+  circle:first-child {
+    stroke: rgba(255, 255, 255, 0.25);
+  }
+
+  circle:last-child {
+    stroke: ${COLORS.white};
+    stroke-linecap: round;
+    stroke-dasharray: 195;
+    animation: ${fillRing} ${({ $seconds }) => $seconds}s linear forwards;
+  }
+`;
+
+export const StopButton = styled.button`
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  background-color: ${COLORS.record};
+`;
+
+export const RecChip = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background-color: ${COLORS.record};
+  color: ${COLORS.white};
+  font-size: ${FONT_SIZE.label};
+
+  &::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: ${COLORS.white};
+  }
+`;
+
+export const ReviewVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 export const ConfirmRow = styled.div`
