@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 import type { AdFormat } from '@/constants/home';
+import type { ScriptLine } from '@/constants/script';
 import type { SuggestionThemeId } from '@/constants/themes';
 
 export type DraftMenu = {
@@ -22,6 +23,8 @@ type AdDraft = {
   menus: DraftMenu[];
   /** 장면 번호를 키로 둔다. 촬영물은 메모리에만 두고 기기에 저장하지 않는다. */
   captures: Record<number, CapturedAsset>;
+  /** 자막. 재료를 찍는 동안 AI 가 만들어 두고, 생성 전에 고칠 수 있다. */
+  script: ScriptLine[];
 };
 
 type AdDraftContextValue = {
@@ -29,6 +32,8 @@ type AdDraftContextValue = {
   setConcept: (value: { format: AdFormat; theme: SuggestionThemeId }) => void;
   setStoreInfo: (value: { storeDescription: string; menus: DraftMenu[] }) => void;
   setCapture: (sceneIndex: number, file: File) => void;
+  setScript: (lines: ScriptLine[]) => void;
+  setScriptLine: (sceneIndex: number, text: string) => void;
   resetDraft: () => void;
 };
 
@@ -38,6 +43,7 @@ const createInitialDraft = (): AdDraft => ({
   storeDescription: '',
   menus: [],
   captures: {},
+  script: [],
 });
 
 const revoke = (asset?: CapturedAsset): void => {
@@ -55,9 +61,9 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
 
   const setStoreInfo = useCallback((value: { storeDescription: string; menus: DraftMenu[] }) => {
     setDraft((current) => {
-      // 메뉴가 바뀌면 장면 구성이 달라지므로 찍어둔 재료를 비운다.
+      // 메뉴가 바뀌면 장면 구성이 달라지므로 찍어둔 재료와 자막을 비운다.
       Object.values(current.captures).forEach(revoke);
-      return { ...current, ...value, captures: {} };
+      return { ...current, ...value, captures: {}, script: [] };
     });
   }, []);
 
@@ -78,6 +84,19 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
     });
   }, []);
 
+  const setScript = useCallback((lines: ScriptLine[]) => {
+    setDraft((current) => ({ ...current, script: lines }));
+  }, []);
+
+  const setScriptLine = useCallback((sceneIndex: number, text: string) => {
+    setDraft((current) => ({
+      ...current,
+      script: current.script.map((line) =>
+        line.sceneIndex === sceneIndex ? { ...line, text } : line,
+      ),
+    }));
+  }, []);
+
   const resetDraft = useCallback(() => {
     setDraft((current) => {
       Object.values(current.captures).forEach(revoke);
@@ -86,8 +105,8 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
   }, []);
 
   const value = useMemo<AdDraftContextValue>(
-    () => ({ draft, setConcept, setStoreInfo, setCapture, resetDraft }),
-    [draft, setConcept, setStoreInfo, setCapture, resetDraft],
+    () => ({ draft, setConcept, setStoreInfo, setCapture, setScript, setScriptLine, resetDraft }),
+    [draft, setConcept, setStoreInfo, setCapture, setScript, setScriptLine, resetDraft],
   );
 
   return <AdDraftContext.Provider value={value}>{children}</AdDraftContext.Provider>;

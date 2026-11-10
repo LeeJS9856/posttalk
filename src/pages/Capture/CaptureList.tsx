@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import ActionSheet, { type ActionSheetItem } from '@/components/common/ActionSheet';
 import PageHeader from '@/components/layout/PageHeader';
 import { buildScenes, type CaptureSource, type Scene } from '@/constants/scenes';
+import { usesSubtitles } from '@/constants/script';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import {
   Bar,
@@ -185,7 +186,9 @@ const CaptureList = (): React.JSX.Element => {
         <NextButton
           type="button"
           disabled={remaining > 0}
-          onClick={() => navigate('/create/generating')}
+          onClick={() =>
+            navigate(usesSubtitles(draft.format) ? '/create/script' : '/create/generating')
+          }
         >
           {remaining > 0 ? `${remaining}개 더 올려주세요` : '다음'}
         </NextButton>
