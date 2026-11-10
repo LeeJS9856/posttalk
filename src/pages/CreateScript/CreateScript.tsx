@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import PageHeader from '@/components/layout/PageHeader';
+import { posterSrc } from '@/constants/media';
 import { buildScenes } from '@/constants/scenes';
 import { MAX_SUBTITLE_LENGTH, buildDraftScript } from '@/constants/script';
 import { useAdDraft } from '@/hooks/useAdDraft';
@@ -98,7 +99,12 @@ const CreateScript = (): React.JSX.Element => {
                 <Thumb>
                   {captured ? (
                     captured.kind === 'video' ? (
-                      <ThumbVideo src={captured.previewUrl} muted playsInline preload="metadata" />
+                      <ThumbVideo
+                          src={posterSrc(captured.previewUrl)}
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
                     ) : (
                       <ThumbImage src={captured.previewUrl} alt="" />
                     )

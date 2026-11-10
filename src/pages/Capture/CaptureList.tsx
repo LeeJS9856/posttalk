@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import ActionSheet, { type ActionSheetItem } from '@/components/common/ActionSheet';
 import PageHeader from '@/components/layout/PageHeader';
+import { posterSrc } from '@/constants/media';
 import { buildScenes, type CaptureSource, type Scene } from '@/constants/scenes';
 import { usesSubtitles } from '@/constants/script';
 import { useAdDraft } from '@/hooks/useAdDraft';
@@ -153,7 +154,12 @@ const CaptureList = (): React.JSX.Element => {
                     {captured ? (
                       <>
                         {captured.kind === 'video' ? (
-                          <SlotVideo src={captured.previewUrl} muted playsInline preload="metadata" />
+                          <SlotVideo
+                            src={posterSrc(captured.previewUrl)}
+                            muted
+                            playsInline
+                            preload="metadata"
+                          />
                         ) : (
                           <SlotImage src={captured.previewUrl} alt="" />
                         )}

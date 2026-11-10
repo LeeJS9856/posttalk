@@ -31,3 +31,9 @@ export const pickVideoMimeType = (): string | undefined => {
 /** blob 의 형식에서 파일 확장자를 고른다. 확장자가 틀리면 업로드 쪽에서 거른다. */
 export const extensionForMimeType = (mimeType: string): string =>
   mimeType.includes('mp4') ? 'mp4' : 'webm';
+
+/**
+ * 영상 썸네일용 주소. 크롬은 preload=metadata 만으로는 첫 프레임을 그리지 않아
+ * 까만 상자가 남는다. 0.1초 지점을 가리키면 그 프레임을 그려 포스터처럼 쓸 수 있다.
+ */
+export const posterSrc = (url: string): string => `${url}#t=0.1`;
