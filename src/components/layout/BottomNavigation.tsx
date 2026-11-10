@@ -71,7 +71,7 @@ const NavButton = styled.button<{ $active: boolean }>`
   gap: 3px;
   min-height: 48px;
   padding: 8px 0 4px;
-  color: ${({ $active }) => ($active ? COLORS.text.main : COLORS.text.muted)};
+  color: ${({ $active }) => ($active ? COLORS.brand.main : COLORS.text.muted)};
   transition: color 0.18s ease;
 `;
 

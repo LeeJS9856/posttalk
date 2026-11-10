@@ -186,7 +186,7 @@ const Dot = styled.span<{ $active: boolean }>`
   width: ${({ $active }) => ($active ? '14px' : '5px')};
   height: 5px;
   border-radius: 3px;
-  background-color: ${({ $active }) => ($active ? COLORS.text.main : COLORS.border.strong)};
+  background-color: ${({ $active }) => ($active ? COLORS.brand.main : COLORS.border.strong)};
   transition:
     width 0.3s ease,
     background-color 0.3s ease;

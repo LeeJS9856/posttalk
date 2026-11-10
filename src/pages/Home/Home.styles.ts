@@ -127,7 +127,7 @@ export const Toast = styled.div`
   z-index: 20;
   padding: 12px 14px;
   border-radius: ${RADIUS.chip};
-  background-color: ${COLORS.action.main};
+  background-color: ${COLORS.text.main};
   color: ${COLORS.text.inverse};
   font-size: ${FONT_SIZE.body};
   text-align: center;
