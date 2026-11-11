@@ -103,25 +103,19 @@ export const SectionTitle = styled.p`
 `;
 
 export const EmptyRow = styled.p`
-  padding: 14px 12px;
-  border-radius: ${RADIUS.chip};
-  background-color: ${COLORS.background.subtle};
+  padding: 13px 2px;
+  border-bottom: 0.5px solid ${COLORS.border.main};
   color: ${COLORS.text.muted};
   font-size: ${FONT_SIZE.body};
-  text-align: center;
 `;
 
+/** 누를 수 없는 줄이다. 눌리는 카드처럼 보이지 않게 바탕을 비우고 선으로만 나눈다. */
 export const Row = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px;
-  border-radius: ${RADIUS.chip};
-  background-color: ${COLORS.background.subtle};
-
-  & + & {
-    margin-top: 7px;
-  }
+  gap: 11px;
+  padding: 13px 2px;
+  border-bottom: 0.5px solid ${COLORS.border.main};
 `;
 
 export const RowIcon = styled.span`
@@ -129,11 +123,9 @@ export const RowIcon = styled.span`
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  background-color: ${COLORS.brand.soft};
-  color: ${COLORS.brand.main};
+  width: 28px;
+  height: 28px;
+  color: ${COLORS.text.muted};
 
   svg {
     width: 16px;
