@@ -1,32 +1,36 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import Toast from '@/components/common/Toast';
+import AppHeader from '@/components/layout/AppHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { SAMPLE_AD_DETAILS, formatPublishedAt } from '@/constants/ads';
 import { AD_FORMAT_LABEL, type AdFormat } from '@/constants/home';
 import { posterSrc } from '@/constants/media';
+import { useShop } from '@/hooks/useShop';
 import {
-  AdButton,
-  AdStatusText,
-  AdTitle,
+  Avatar,
   Caption,
+  CaptionName,
   Chip,
   ChipRail,
+  Counter,
   EmptyAction,
   EmptyMark,
   EmptyText,
   EmptyWrap,
-  FormatBadge,
-  Frame,
-  FrameImage,
-  FrameVideo,
-  Header,
-  Item,
-  List,
+  Feed,
+  HeadText,
+  MediaButton,
+  MediaImage,
+  MediaVideo,
   Page,
   PlayMark,
-  Title,
+  Post,
+  PostDate,
+  PostHead,
+  PostMeta,
+  ShopName,
+  StatusBadge,
 } from '@/pages/Archive/Archive.styles';
 
 const FolderIcon = (): React.JSX.Element => (
@@ -48,10 +52,15 @@ const PlayIcon = (): React.JSX.Element => (
 
 type Filter = 'all' | AdFormat;
 
+const LINE_BREAK = String.fromCharCode(10);
+
+/** 피드에는 캡션 첫 줄만 보여준다. 해시태그 줄은 상세에서 본다. */
+const firstLine = (caption: string): string => caption.split(LINE_BREAK)[0] ?? '';
+
 const Archive = (): React.JSX.Element => {
   const navigate = useNavigate();
+  const { profile } = useShop();
   const [filter, setFilter] = useState<Filter>('all');
-  const [notice, setNotice] = useState<string | null>(null);
 
   const ads = SAMPLE_AD_DETAILS;
 
@@ -77,9 +86,7 @@ const Archive = (): React.JSX.Element => {
 
   return (
     <Page aria-label="보관함">
-      <Header>
-        <Title>보관함</Title>
-      </Header>
+      <AppHeader title="보관함" />
 
       {ads.length > 0 && (
         <ChipRail>
@@ -112,57 +119,66 @@ const Archive = (): React.JSX.Element => {
           </EmptyAction>
         </EmptyWrap>
       ) : (
-        <List>
+        <Feed>
           {shown.map((ad) => {
             const isReels = ad.format === 'reels';
-            const isPending = ad.status !== 'published';
+            const isPublished = ad.status === 'published';
 
             return (
-              <Item key={ad.adId}>
-                <AdButton
+              <Post key={ad.adId}>
+                <PostHead>
+                  <Avatar aria-hidden="true">{profile.name.slice(0, 1)}</Avatar>
+                  <HeadText>
+                    <ShopName>{profile.name}</ShopName>
+                    <PostMeta>
+                      {AD_FORMAT_LABEL[ad.format]}
+                      {!isReels && ` · ${ad.cards.length}장`}
+                    </PostMeta>
+                  </HeadText>
+                  <StatusBadge $published={isPublished}>
+                    {isPublished ? '올림' : '안 올림'}
+                  </StatusBadge>
+                </PostHead>
+
+                <MediaButton
                   type="button"
                   aria-label={`${ad.title} 광고 열기`}
                   onClick={() => navigate(`/ads/${ad.adId}`)}
                 >
-                  <Frame>
-                    {isReels ? (
-                      <>
-                        <FrameVideo
-                          src={ad.videoUrl && posterSrc(ad.videoUrl)}
-                          muted
-                          playsInline
-                          preload="metadata"
-                        />
-                        <PlayMark aria-hidden="true">
-                          <PlayIcon />
-                        </PlayMark>
-                      </>
-                    ) : (
-                      <FrameImage src={ad.cards[0]} alt="" />
-                    )}
-                    <FormatBadge>{AD_FORMAT_LABEL[ad.format]}</FormatBadge>
-                  </Frame>
+                  {isReels ? (
+                    <>
+                      <MediaVideo
+                        src={ad.videoUrl && posterSrc(ad.videoUrl)}
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                      <PlayMark aria-hidden="true">
+                        <PlayIcon />
+                      </PlayMark>
+                    </>
+                  ) : (
+                    <>
+                      <MediaImage src={ad.cards[0]} alt="" />
+                      <Counter>1 / {ad.cards.length}</Counter>
+                    </>
+                  )}
+                </MediaButton>
 
-                  <Caption>
-                    <AdTitle>{ad.title}</AdTitle>
-                    <AdStatusText $pending={isPending}>
-                      {isPending
-                        ? '아직 안 올렸어요'
-                        : ad.publishedAt
-                          ? `${formatPublishedAt(ad.publishedAt)}에 올림`
-                          : '올렸어요'}
-                    </AdStatusText>
-                  </Caption>
-                </AdButton>
-              </Item>
+                <Caption>
+                  <CaptionName>{profile.name}</CaptionName>
+                  {firstLine(ad.caption)}
+                </Caption>
+                {ad.publishedAt && (
+                  <PostDate>{formatPublishedAt(ad.publishedAt)}에 올림</PostDate>
+                )}
+              </Post>
             );
           })}
-        </List>
+        </Feed>
       )}
 
-      <Toast message={notice} onDismiss={() => setNotice(null)} />
-
-      <BottomNavigation onUnbuilt={setNotice} />
+      <BottomNavigation />
     </Page>
   );
 };

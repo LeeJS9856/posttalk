@@ -1,14 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import PageHeader from '@/components/layout/PageHeader';
+import AppHeader from '@/components/layout/AppHeader';
+import { createTemplateId } from '@/constants/shop';
+import { MAX_MENU_COUNT, countScenes, type StoreTemplate } from '@/constants/templates';
 import { useAdDraft } from '@/hooks/useAdDraft';
-import {
-  MAX_MENU_COUNT,
-  SAMPLE_TEMPLATES,
-  countScenes,
-  type StoreTemplate,
-} from '@/constants/templates';
+import { useShop } from '@/hooks/useShop';
 import {
   AddMenuButton,
   CheckBox,
@@ -76,6 +73,7 @@ const CheckIcon = (): React.JSX.Element => (
 const CreateInfo = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { setStoreInfo } = useAdDraft();
+  const { templates, addTemplate } = useShop();
 
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [storeDescription, setStoreDescription] = useState('');
@@ -113,26 +111,35 @@ const CreateInfo = (): React.JSX.Element => {
   const canProceed = storeDescription.trim().length > 0 && filledMenus.length > 0;
 
   const goNext = (): void => {
-    setStoreInfo({
-      storeDescription: storeDescription.trim(),
-      menus: filledMenus.map(({ name, description }) => ({
-        name: name.trim(),
-        description: description.trim(),
-      })),
-    });
+    const menus = filledMenus.map(({ name, description }) => ({
+      name: name.trim(),
+      description: description.trim(),
+    }));
+
+    // 저장해두면 다음 관람객이 정보 입력에서 바로 고를 수 있다.
+    if (isSaving && templateName.trim().length > 0) {
+      addTemplate({
+        templateId: createTemplateId(),
+        name: templateName.trim(),
+        storeDescription: storeDescription.trim(),
+        menus,
+      });
+    }
+
+    setStoreInfo({ storeDescription: storeDescription.trim(), menus });
     navigate('/create/capture');
   };
 
   return (
     <Page aria-label="가게와 메뉴 정보 입력">
-      <PageHeader title="광고 제작" onBack={() => navigate(-1)} />
+      <AppHeader title="광고 제작" onBack={() => navigate(-1)} />
 
       <Content>
         <Question>무엇을 알릴까요?</Question>
 
         <Label>저장된 내용</Label>
         <ChipRail>
-          {SAMPLE_TEMPLATES.map((template) => {
+          {templates.map((template) => {
             const selected = templateId === template.templateId;
 
             return (

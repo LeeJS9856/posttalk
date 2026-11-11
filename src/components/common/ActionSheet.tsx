@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
+import { MAX_APP_WIDTH } from '@/constants/layout';
 import { FONT_SIZE, FONT_WEIGHT, RADIUS } from '@/constants/typography';
 
 export type ActionSheetItem = {
@@ -124,7 +125,13 @@ const slideDown = keyframes`
 const Layer = styled.div<{ $leaving: boolean }>`
   position: fixed;
   z-index: 20;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  /* fixed 는 뷰포트를 기준으로 잡힌다. 앱 틀 폭으로 되돌려 가운데에 맞춘다. */
+  width: 100%;
+  max-width: ${MAX_APP_WIDTH};
+  transform: translateX(-50%);
   animation: ${({ $leaving }) => ($leaving ? fadeOut : fadeIn)} 0.2s ease forwards;
 `;
 

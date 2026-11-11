@@ -10,6 +10,9 @@ import CreateInfo from '@/pages/CreateInfo/CreateInfo';
 import CreateScript from '@/pages/CreateScript/CreateScript';
 import Generating from '@/pages/Generating/Generating';
 import Home from '@/pages/Home/Home';
+import My from '@/pages/My/My';
+import ProfileEdit from '@/pages/My/ProfileEdit';
+import Templates from '@/pages/My/Templates';
 import Login from '@/pages/Login/Login';
 
 const App = (): React.JSX.Element => {
@@ -29,6 +32,9 @@ const App = (): React.JSX.Element => {
           <Route path="/create/generating" element={<Generating />} />
           <Route path="/ads/:adId" element={<AdDetail />} />
           <Route path="/archive" element={<Archive />} />
+          <Route path="/my" element={<My />} />
+          <Route path="/my/edit" element={<ProfileEdit />} />
+          <Route path="/my/templates" element={<Templates />} />
           {/* 주소가 어긋나면 흰 화면 대신 홈으로 보낸다. 전시 기기에는 주소창이 없다. */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

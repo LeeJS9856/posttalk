@@ -6,7 +6,7 @@ import campaignIcon from '@/assets/icons/campaign.svg?raw';
 import homeIcon from '@/assets/icons/home.svg?raw';
 import myIcon from '@/assets/icons/my.svg?raw';
 import { COLORS } from '@/constants/colors';
-import { NAV_ITEMS, UNBUILT_NOTICE, UNBUILT_PATHS, type NavItemId } from '@/constants/navigation';
+import { NAV_ITEMS, type NavItemId } from '@/constants/navigation';
 import { FONT_SIZE, FONT_WEIGHT } from '@/constants/typography';
 
 const ICONS: Record<NavItemId, string> = {
@@ -16,19 +16,11 @@ const ICONS: Record<NavItemId, string> = {
   my: myIcon,
 };
 
-type BottomNavigationProps = {
-  onUnbuilt?: (message: string) => void;
-};
-
-const BottomNavigation = ({ onUnbuilt }: BottomNavigationProps): React.JSX.Element => {
+const BottomNavigation = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
   const handleSelect = (path: string): void => {
-    if (UNBUILT_PATHS.includes(path)) {
-      onUnbuilt?.(UNBUILT_NOTICE);
-      return;
-    }
     if (path === pathname) return;
     navigate(path);
   };

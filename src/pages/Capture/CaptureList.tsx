@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import ActionSheet, { type ActionSheetItem } from '@/components/common/ActionSheet';
-import PageHeader from '@/components/layout/PageHeader';
+import AppHeader from '@/components/layout/AppHeader';
 import { posterSrc } from '@/constants/media';
 import { buildScenes, type CaptureSource, type Scene } from '@/constants/scenes';
 import { usesSubtitles } from '@/constants/script';
@@ -121,7 +121,7 @@ const CaptureList = (): React.JSX.Element => {
 
   return (
     <Page aria-label="촬영 목록">
-      <PageHeader title="광고 제작" onBack={() => navigate(-1)} />
+      <AppHeader title="광고 제작" onBack={() => navigate(-1)} />
 
       <Content>
         <TitleRow>

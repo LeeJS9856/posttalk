@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import SegmentedToggle from '@/components/common/SegmentedToggle';
-import PageHeader from '@/components/layout/PageHeader';
+import AppHeader from '@/components/layout/AppHeader';
 import { AD_FORMAT_OPTIONS, DEFAULT_AD_FORMAT } from '@/constants/create';
 import type { AdFormat } from '@/constants/home';
 import { SUGGESTION_THEMES } from '@/constants/themes';
@@ -81,7 +81,7 @@ const Create = (): React.JSX.Element => {
 
   return (
     <Page aria-label="광고 형식과 콘셉트 선택">
-      <PageHeader title="광고 제작" onBack={() => navigate('/')} />
+      <AppHeader title="광고 제작" onBack={() => navigate('/')} />
 
       <Content>
         <Question>어떤 광고를 만들까요?</Question>

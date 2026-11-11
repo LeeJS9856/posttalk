@@ -10,22 +10,11 @@ export const Page = styled.div`
   background-color: ${COLORS.background.main};
 `;
 
-export const Header = styled.header`
-  flex-shrink: 0;
-  padding: calc(14px + env(safe-area-inset-top)) 16px 12px;
-`;
-
-export const Title = styled.h1`
-  color: ${COLORS.text.main};
-  font-size: ${FONT_SIZE.titleLarge};
-  font-weight: ${FONT_WEIGHT.medium};
-`;
-
 export const ChipRail = styled.div`
   display: flex;
   flex-shrink: 0;
   gap: 6px;
-  padding: 0 16px 14px;
+  padding: 2px 16px 14px;
   overflow-x: auto;
   scroll-padding-left: 16px;
 `;
@@ -42,54 +31,97 @@ export const Chip = styled.button<{ $on: boolean }>`
   transition: background-color 0.18s ease;
 `;
 
-export const List = styled.ul`
+export const Feed = styled.ul`
   flex: 1;
   min-height: 0;
-  padding: 0 16px 16px;
   list-style: none;
   overflow-y: auto;
 `;
 
-export const Item = styled.li`
+export const Post = styled.li`
   & + & {
-    margin-top: 20px;
+    margin-top: 6px;
+    border-top: 0.5px solid ${COLORS.border.main};
+    padding-top: 14px;
   }
 `;
 
-export const AdButton = styled.button`
-  display: block;
-  width: 100%;
-  text-align: left;
+/** 게시물 머리. 가게 아바타와 이름, 오른쪽에 올렸는지 여부. */
+export const PostHead = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 16px 9px;
 `;
 
-/**
- * 한 줄에 하나씩. 카드뉴스와 릴스가 같은 비율로 서야 목록 리듬이 흐트러지지 않는다.
- * 릴스는 세로가 더 길어 가운데가 잘린다.
- */
-export const Frame = styled.div`
+export const Avatar = styled.span`
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: ${RADIUS.round};
+  background-color: ${COLORS.brand.main};
+  color: ${COLORS.text.inverse};
+  font-size: ${FONT_SIZE.body};
+  font-weight: ${FONT_WEIGHT.medium};
+`;
+
+export const HeadText = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+export const ShopName = styled.p`
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.body};
+  font-weight: ${FONT_WEIGHT.medium};
+`;
+
+export const PostMeta = styled.p`
+  margin-top: 1px;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.label};
+`;
+
+export const StatusBadge = styled.span<{ $published: boolean }>`
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background-color: ${({ $published }) =>
+    $published ? COLORS.statusSoft.published : COLORS.statusSoft.unpublished};
+  color: ${({ $published }) =>
+    $published ? COLORS.status.published : COLORS.status.unpublished};
+  font-size: ${FONT_SIZE.label};
+`;
+
+/** 인스타처럼 좌우 여백 없이 화면 끝까지 채운다. */
+export const MediaButton = styled.button`
   position: relative;
+  display: block;
+  width: 100%;
   aspect-ratio: 4 / 5;
-  border-radius: ${RADIUS.panel};
   background-color: ${COLORS.background.subtle};
   overflow: hidden;
 `;
 
-export const FrameImage = styled.img`
+export const MediaImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
 `;
 
-export const FrameVideo = styled.video`
+export const MediaVideo = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
 `;
 
-export const FormatBadge = styled.span`
+export const Counter = styled.span`
   position: absolute;
   top: 10px;
-  left: 10px;
+  right: 10px;
   padding: 3px 9px;
   border-radius: 999px;
   background-color: ${COLORS.scrim};
@@ -106,7 +138,7 @@ export const PlayMark = styled.span`
   justify-content: center;
   width: 46px;
   height: 46px;
-  border-radius: 50%;
+  border-radius: ${RADIUS.round};
   background-color: rgba(255, 255, 255, 0.88);
   color: ${COLORS.text.main};
   transform: translate(-50%, -50%);
@@ -117,23 +149,22 @@ export const PlayMark = styled.span`
   }
 `;
 
-export const Caption = styled.div`
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 9px;
+export const Caption = styled.p`
+  padding: 10px 16px 14px;
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.6;
 `;
 
-export const AdTitle = styled.p`
-  color: ${COLORS.text.main};
-  font-size: ${FONT_SIZE.bodyLarge};
+export const CaptionName = styled.span`
+  margin-right: 5px;
   font-weight: ${FONT_WEIGHT.medium};
 `;
 
-export const AdStatusText = styled.p<{ $pending: boolean }>`
-  flex-shrink: 0;
-  color: ${({ $pending }) => ($pending ? COLORS.status.unpublished : COLORS.text.muted)};
+export const PostDate = styled.p`
+  margin-top: -8px;
+  padding: 0 16px 14px;
+  color: ${COLORS.text.muted};
   font-size: ${FONT_SIZE.label};
 `;
 

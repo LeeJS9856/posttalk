@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import PageHeader from '@/components/layout/PageHeader';
+import AppHeader from '@/components/layout/AppHeader';
 import { posterSrc } from '@/constants/media';
 import { buildScenes } from '@/constants/scenes';
 import { MAX_SUBTITLE_LENGTH, buildDraftScript } from '@/constants/script';
@@ -80,7 +80,7 @@ const CreateScript = (): React.JSX.Element => {
 
   return (
     <Page aria-label="자막 확인">
-      <PageHeader title="광고 제작" onBack={() => navigate(-1)} />
+      <AppHeader title="광고 제작" onBack={() => navigate(-1)} />
 
       <Content>
         <Question>문구를 확인해주세요</Question>

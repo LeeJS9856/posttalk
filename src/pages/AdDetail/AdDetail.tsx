@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
+import AppHeader from '@/components/layout/AppHeader';
 import { findAdDetail, formatPublishedAt, type AdStatus } from '@/constants/ads';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import {
@@ -30,7 +31,6 @@ import {
   Thumb,
   ThumbImage,
   TopAction,
-  TopBar,
 } from '@/pages/AdDetail/AdDetail.styles';
 
 const CheckIcon = (): React.JSX.Element => (
@@ -48,18 +48,6 @@ const CheckIcon = (): React.JSX.Element => (
 const CloseIcon = (): React.JSX.Element => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
-
-const ChevronLeftIcon = (): React.JSX.Element => (
-  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path
-      d="M15 5L8 12L15 19"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
   </svg>
 );
 
@@ -154,24 +142,23 @@ const AdDetail = (): React.JSX.Element => {
 
   return (
     <Page aria-label="광고 상세">
-      <TopBar>
-        {fromCreate ? (
-          <>
-            <DoneMark>
+      {fromCreate ? (
+        <AppHeader
+          title="다 만들었어요"
+          leading={
+            <DoneMark aria-hidden="true">
               <CheckIcon />
-              다 만들었어요
             </DoneMark>
+          }
+          action={
             <TopAction type="button" aria-label="닫기" onClick={finish}>
               <CloseIcon />
             </TopAction>
-          </>
-        ) : (
-          <TopAction type="button" onClick={() => navigate(-1)}>
-            <ChevronLeftIcon />
-            보관함
-          </TopAction>
-        )}
-      </TopBar>
+          }
+        />
+      ) : (
+        <AppHeader title="보관함" onBack={() => navigate(-1)} />
+      )}
 
       <Content>
         <Card $tall={isReels}>

@@ -1,6 +1,7 @@
 import { createGlobalStyle } from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
+import { MAX_APP_WIDTH } from '@/constants/layout';
 
 // 폰트 파일은 src/assets/fonts/ 에 두고 아래에서 import 해 @font-face 로 정의한다.
 // 예) import Pretendard from '@/assets/fonts/Pretendard.woff2';
@@ -25,6 +26,12 @@ const GlobalStyle = createGlobalStyle`
     background-color: ${COLORS.background.main};
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    max-width: ${MAX_APP_WIDTH};
+    margin: 0 auto;
+    background-color: ${COLORS.background.main};
   }
 
   button, input, textarea, select {

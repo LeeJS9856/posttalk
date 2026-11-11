@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
+import { MAX_APP_WIDTH } from '@/constants/layout';
 import { FONT_SIZE, RADIUS } from '@/constants/typography';
 
 const TOAST_DURATION_MS = 1800;
@@ -35,10 +36,13 @@ export default Toast;
 
 const Box = styled.div`
   position: fixed;
-  right: 16px;
   bottom: calc(76px + env(safe-area-inset-bottom));
-  left: 16px;
+  left: 50%;
   z-index: 20;
+  /* fixed 는 뷰포트를 기준으로 잡힌다. 앱 틀 폭으로 되돌려 가운데에 맞춘다. */
+  width: calc(100% - 32px);
+  max-width: calc(${MAX_APP_WIDTH} - 32px);
+  transform: translateX(-50%);
   padding: 12px 14px;
   border-radius: ${RADIUS.chip};
   background-color: ${COLORS.text.main};
