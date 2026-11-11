@@ -20,7 +20,7 @@ export const Content = styled.div`
 `;
 
 export const Guide = styled.p`
-  padding: 2px 0 14px;
+  padding: 0 0 14px;
   color: ${COLORS.text.muted};
   font-size: ${FONT_SIZE.body};
 `;

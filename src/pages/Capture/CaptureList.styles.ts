@@ -36,7 +36,7 @@ export const Progress = styled.span`
 
 export const Track = styled.div`
   height: 3px;
-  margin: 12px 16px 20px;
+  margin: 8px 16px 20px;
   border-radius: 2px;
   background-color: ${COLORS.border.main};
   overflow: hidden;

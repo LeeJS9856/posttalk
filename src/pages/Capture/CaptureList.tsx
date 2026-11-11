@@ -22,8 +22,6 @@ import {
   SlotImage,
   SlotLabel,
   SlotVideo,
-  Title,
-  TitleRow,
   Track,
 } from '@/pages/Capture/CaptureList.styles';
 
@@ -121,15 +119,17 @@ const CaptureList = (): React.JSX.Element => {
 
   return (
     <Page aria-label="촬영 목록">
-      <AppHeader title="광고 제작" onBack={() => navigate(-1)} />
-
-      <Content>
-        <TitleRow>
-          <Title>{hasVideo ? '사진과 영상을 올려주세요' : '사진을 올려주세요'}</Title>
+      <AppHeader
+        title={hasVideo ? '사진과 영상을 올려주세요' : '사진을 올려주세요'}
+        onBack={() => navigate(-1)}
+        action={
           <Progress>
             {doneCount} / {scenes.length}
           </Progress>
-        </TitleRow>
+        }
+      />
+
+      <Content>
         <Track>
           <Bar $ratio={scenes.length === 0 ? 0 : doneCount / scenes.length} />
         </Track>

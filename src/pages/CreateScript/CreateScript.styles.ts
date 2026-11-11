@@ -24,7 +24,7 @@ export const Question = styled.h2`
 `;
 
 export const Guide = styled.p`
-  padding: 4px 16px 14px;
+  padding: 0 16px 14px;
   color: ${COLORS.text.muted};
   font-size: ${FONT_SIZE.body};
 `;

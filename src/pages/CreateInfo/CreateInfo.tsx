@@ -25,7 +25,6 @@ import {
   NameField,
   NextButton,
   Page,
-  Question,
   RemoveButton,
   SaveLabel,
   SaveRow,
@@ -132,11 +131,9 @@ const CreateInfo = (): React.JSX.Element => {
 
   return (
     <Page aria-label="가게와 메뉴 정보 입력">
-      <AppHeader title="광고 제작" onBack={() => navigate(-1)} />
+      <AppHeader title="무엇을 알릴까요?" onBack={() => navigate(-1)} />
 
       <Content>
-        <Question>무엇을 알릴까요?</Question>
-
         <Label>저장된 내용</Label>
         <ChipRail>
           {templates.map((template) => {

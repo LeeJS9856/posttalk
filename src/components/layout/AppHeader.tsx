@@ -19,10 +19,8 @@ type AppHeaderProps = {
  * 흐름 안쪽 화면은 뒤로 버튼과 작은 제목을 쓴다. 높이와 여백은 같다.
  */
 const AppHeader = ({ title, onBack, leading, action }: AppHeaderProps): React.JSX.Element => {
-  const isNested = Boolean(onBack || leading);
-
   return (
-    <Header $nested={isNested}>
+    <Header>
       <Left>
         {onBack && (
           <BackButton type="button" aria-label="뒤로" onClick={onBack}>
@@ -39,7 +37,7 @@ const AppHeader = ({ title, onBack, leading, action }: AppHeaderProps): React.JS
           </BackButton>
         )}
         {leading}
-        <Title $nested={isNested}>{title}</Title>
+        <Title>{title}</Title>
       </Left>
       {action}
     </Header>
@@ -48,15 +46,15 @@ const AppHeader = ({ title, onBack, leading, action }: AppHeaderProps): React.JS
 
 export default AppHeader;
 
-const Header = styled.header<{ $nested: boolean }>`
+/* 어느 화면이든 같은 높이와 같은 여백을 쓴다. 제목 글자의 왼쪽 끝은 늘 16px 에 선다. */
+const Header = styled.header`
   display: flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 52px;
-  padding: calc(10px + env(safe-area-inset-top)) 16px 10px
-    ${({ $nested }) => ($nested ? '6px' : '16px')};
+  min-height: 56px;
+  padding: calc(8px + env(safe-area-inset-top)) 16px 8px;
 `;
 
 const Left = styled.div`
@@ -70,9 +68,11 @@ const BackButton = styled.button`
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  justify-content: center;
-  width: 44px;
+  justify-content: flex-start;
+  width: 34px;
   height: 44px;
+  /* 44px 터치 영역은 지키되, 아이콘이 왼쪽 여백선에 맞게 당긴다. */
+  margin-left: -5px;
   color: ${COLORS.text.main};
 `;
 
@@ -81,10 +81,10 @@ const Chevron = styled.svg`
   height: 22px;
 `;
 
-const Title = styled.h1<{ $nested: boolean }>`
+const Title = styled.h1`
   overflow: hidden;
   color: ${COLORS.text.main};
-  font-size: ${({ $nested }) => ($nested ? FONT_SIZE.bodyLarge : FONT_SIZE.titleLarge)};
+  font-size: ${FONT_SIZE.titleLarge};
   font-weight: ${FONT_WEIGHT.medium};
   white-space: nowrap;
   text-overflow: ellipsis;

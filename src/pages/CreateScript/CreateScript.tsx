@@ -19,7 +19,6 @@ import {
   Meta,
   NextButton,
   Page,
-  Question,
   Row,
   SceneLabel,
   Thumb,
@@ -80,10 +79,9 @@ const CreateScript = (): React.JSX.Element => {
 
   return (
     <Page aria-label="자막 확인">
-      <AppHeader title="광고 제작" onBack={() => navigate(-1)} />
+      <AppHeader title="문구를 확인해주세요" onBack={() => navigate(-1)} />
 
       <Content>
-        <Question>문구를 확인해주세요</Question>
         <Guide>바꾸고 싶은 줄을 누르면 고칠 수 있어요</Guide>
 
         <Lines>

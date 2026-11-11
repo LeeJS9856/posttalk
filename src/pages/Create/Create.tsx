@@ -23,7 +23,6 @@ import {
   FormatBar,
   NextButton,
   Page,
-  Question,
 } from '@/pages/Create/Create.styles';
 
 const FORMAT_SEGMENTS = AD_FORMAT_OPTIONS.map(({ id, label }) => ({ id, label }));
@@ -81,10 +80,9 @@ const Create = (): React.JSX.Element => {
 
   return (
     <Page aria-label="광고 형식과 콘셉트 선택">
-      <AppHeader title="광고 제작" onBack={() => navigate('/')} />
+      <AppHeader title="어떤 광고를 만들까요?" onBack={() => navigate('/')} />
 
       <Content>
-        <Question>어떤 광고를 만들까요?</Question>
 
         <FormatBar>
           <SegmentedToggle

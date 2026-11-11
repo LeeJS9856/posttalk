@@ -14,7 +14,7 @@ export const ChipRail = styled.div`
   display: flex;
   flex-shrink: 0;
   gap: 6px;
-  padding: 2px 16px 14px;
+  padding: 0 16px 14px;
   overflow-x: auto;
   scroll-padding-left: 16px;
 `;

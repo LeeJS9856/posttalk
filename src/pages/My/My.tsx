@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import AppHeader from '@/components/layout/AppHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import SettingsButton from '@/components/layout/SettingsButton';
 import { SAMPLE_AD_DETAILS } from '@/constants/ads';
 import { useShop } from '@/hooks/useShop';
 import {
@@ -76,7 +77,7 @@ const My = (): React.JSX.Element => {
 
   return (
     <Page aria-label="마이">
-      <AppHeader title="마이" />
+      <AppHeader title="마이" action={<SettingsButton />} />
 
       <Content>
         <ShopCard>
