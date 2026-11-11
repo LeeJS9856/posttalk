@@ -13,7 +13,6 @@ import {
   CardVideo,
   Content,
   Counter,
-  DoneMark,
   EditButton,
   Footer,
   Meta,
@@ -145,11 +144,6 @@ const AdDetail = (): React.JSX.Element => {
       {fromCreate ? (
         <AppHeader
           title="다 만들었어요"
-          leading={
-            <DoneMark aria-hidden="true">
-              <CheckIcon />
-            </DoneMark>
-          }
           action={
             <TopAction type="button" aria-label="닫기" onClick={finish}>
               <CloseIcon />
