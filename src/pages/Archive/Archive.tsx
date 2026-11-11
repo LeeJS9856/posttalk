@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import Toast from '@/components/common/Toast';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { SAMPLE_AD_DETAILS, formatPublishedAt } from '@/constants/ads';
 import { AD_FORMAT_LABEL, type AdFormat } from '@/constants/home';
@@ -50,6 +51,7 @@ type Filter = 'all' | AdFormat;
 const Archive = (): React.JSX.Element => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>('all');
+  const [notice, setNotice] = useState<string | null>(null);
 
   const ads = SAMPLE_AD_DETAILS;
 
@@ -158,7 +160,9 @@ const Archive = (): React.JSX.Element => {
         </List>
       )}
 
-      <BottomNavigation />
+      <Toast message={notice} onDismiss={() => setNotice(null)} />
+
+      <BottomNavigation onUnbuilt={setNotice} />
     </Page>
   );
 };

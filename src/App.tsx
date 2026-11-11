@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import RequireAuth from '@/components/common/RequireAuth';
 import AdDetail from '@/pages/AdDetail/AdDetail';
@@ -29,6 +29,8 @@ const App = (): React.JSX.Element => {
           <Route path="/create/generating" element={<Generating />} />
           <Route path="/ads/:adId" element={<AdDetail />} />
           <Route path="/archive" element={<Archive />} />
+          {/* 주소가 어긋나면 흰 화면 대신 홈으로 보낸다. 전시 기기에는 주소창이 없다. */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </Router>

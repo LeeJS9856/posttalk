@@ -119,16 +119,3 @@ export const EmptyNotice = styled.p`
   line-height: 1.6;
 `;
 
-export const Toast = styled.div`
-  position: fixed;
-  right: 16px;
-  bottom: calc(76px + env(safe-area-inset-bottom));
-  left: 16px;
-  z-index: 20;
-  padding: 12px 14px;
-  border-radius: ${RADIUS.chip};
-  background-color: ${COLORS.text.main};
-  color: ${COLORS.text.inverse};
-  font-size: ${FONT_SIZE.body};
-  text-align: center;
-`;
