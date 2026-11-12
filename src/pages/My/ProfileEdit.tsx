@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import AppHeader from '@/components/layout/AppHeader';
+import { goBackTo } from '@/constants/navigation';
 import { MAX_SHOP_DESCRIPTION } from '@/constants/shop';
 import { useShop } from '@/hooks/useShop';
 import {
@@ -41,7 +42,7 @@ const ProfileEdit = (): React.JSX.Element => {
     if (!canSave) return;
 
     setProfile({ ...profile, name: name.trim(), description: description.trim() });
-    navigate('/my', { replace: true });
+    goBackTo(navigate, '/my');
   };
 
   return (

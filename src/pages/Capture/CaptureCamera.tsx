@@ -7,6 +7,7 @@ import {
   extensionForMimeType,
   pickVideoMimeType,
 } from '@/constants/media';
+import { goBackTo } from '@/constants/navigation';
 import { GALLERY_HINT, buildScenes, type CaptureSource } from '@/constants/scenes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import {
@@ -251,7 +252,7 @@ const CaptureCamera = (): React.JSX.Element => {
   const confirm = (): void => {
     if (!shot) return;
     setCapture(scene.index, shot.file);
-    navigate('/create/capture');
+    goBackTo(navigate, '/create/capture');
   };
 
   const retakeLabel = isGallery ? '다시 고르기' : '다시 찍기';
@@ -286,7 +287,7 @@ const CaptureCamera = (): React.JSX.Element => {
       <TopBar>
         <TopRow>
           {!shot && !isRecording && (
-            <CloseButton type="button" aria-label="닫기" onClick={() => navigate('/create/capture')}>
+            <CloseButton type="button" aria-label="닫기" onClick={() => goBackTo(navigate, '/create/capture')}>
               <CloseIcon />
             </CloseButton>
           )}
