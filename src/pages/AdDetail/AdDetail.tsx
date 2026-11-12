@@ -2,10 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import AppHeader from '@/components/layout/AppHeader';
-import { findAdDetail, formatPublishedAt, type AdStatus } from '@/constants/ads';
+import {
+  MAX_CAPTION_LENGTH,
+  MAX_HASHTAG_COUNT,
+  countHashtags,
+  findAdDetail,
+  formatPublishedAt,
+  type AdStatus,
+} from '@/constants/ads';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import {
   Caption,
+  CaptionCount,
   CaptionField,
   CaptionInput,
   Card,
@@ -15,6 +23,7 @@ import {
   Counter,
   EditButton,
   Footer,
+  FooterNote,
   Meta,
   MetaLabel,
   MetaRow,
@@ -121,6 +130,14 @@ const AdDetail = (): React.JSX.Element => {
 
   const isReels = ad.format === 'reels';
   const isPublished = status === 'published';
+  /**
+   * 공용 계정이라 보관함에서 연 남의 광고는 올리지도 고치지도 못한다.
+   * 올릴 수 있는 건 방금 자기가 만든 것뿐이다.
+   */
+  const canPublish = fromCreate && !isPublished;
+  const hashtagCount = countHashtags(caption);
+  const isCaptionTooLong =
+    caption.length > MAX_CAPTION_LENGTH || hashtagCount > MAX_HASHTAG_COUNT;
 
   /** 체험이 끝나면 다음 관람객을 위해 입력값을 비운다. */
   const finish = (): void => {
@@ -209,16 +226,18 @@ const AdDetail = (): React.JSX.Element => {
         )}
 
         <Meta>
-          {isPublished && publishedAt && (
-            <StatusBadge>
-              <CheckIcon />
-              {formatPublishedAt(publishedAt)}에 올림
-            </StatusBadge>
-          )}
+          <StatusBadge $status={status}>
+            {isPublished && <CheckIcon />}
+            {isPublished
+              ? publishedAt
+                ? `${formatPublishedAt(publishedAt)}에 올림`
+                : '올렸어요'
+              : '아직 안 올렸어요'}
+          </StatusBadge>
 
           <MetaRow>
             <MetaLabel>캡션</MetaLabel>
-            {!isPublished && !isPublishing && (
+            {canPublish && !isPublishing && (
               <EditButton type="button" onClick={() => setIsEditing((on) => !on)}>
                 <EditIcon />
                 {isEditing ? '다 고쳤어요' : '고치기'}
@@ -233,12 +252,20 @@ const AdDetail = (): React.JSX.Element => {
                 autoFocus
                 rows={4}
                 value={caption}
+                maxLength={MAX_CAPTION_LENGTH}
                 aria-label="캡션"
                 onChange={(event) => setCaption(event.target.value)}
               />
             </CaptionField>
           ) : (
-            <Caption $muted={isPublished}>{caption}</Caption>
+            <Caption $muted={!canPublish}>{caption}</Caption>
+          )}
+
+          {isEditing && (
+            <CaptionCount $over={isCaptionTooLong}>
+              {caption.length} / {MAX_CAPTION_LENGTH}자 · 해시태그 {hashtagCount} /{' '}
+              {MAX_HASHTAG_COUNT}개
+            </CaptionCount>
           )}
         </Meta>
       </Content>
@@ -249,10 +276,16 @@ const AdDetail = (): React.JSX.Element => {
             <LinkIcon />
             게시물 보기
           </SecondaryButton>
-        ) : (
-          <PrimaryButton type="button" disabled={isPublishing} onClick={publish}>
+        ) : canPublish ? (
+          <PrimaryButton
+            type="button"
+            disabled={isPublishing || isCaptionTooLong}
+            onClick={publish}
+          >
             {isPublishing ? '올리는 중이에요' : '인스타그램에 올리기'}
           </PrimaryButton>
+        ) : (
+          <FooterNote>만든 사람만 올릴 수 있어요</FooterNote>
         )}
       </Footer>
     </Page>

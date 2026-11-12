@@ -14,9 +14,40 @@ export const ChipRail = styled.div`
   display: flex;
   flex-shrink: 0;
   gap: 6px;
-  padding: 0 16px 14px;
+  padding: 0 16px 8px;
   overflow-x: auto;
   scroll-padding-left: 16px;
+
+  &:last-of-type {
+    padding-bottom: 14px;
+  }
+`;
+
+export const CreateButton = styled.button`
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin-right: -6px;
+  padding: 0 6px;
+  color: ${COLORS.brand.main};
+  font-size: ${FONT_SIZE.body};
+  font-weight: ${FONT_WEIGHT.medium};
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+`;
+
+/** 필터를 걸었는데 남는 게 없을 때. 아예 비어 있는 것과 다른 말을 한다. */
+export const NoMatch = styled.p`
+  padding: 40px 24px;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.bodyLarge};
+  line-height: 1.7;
+  text-align: center;
 `;
 
 export const Chip = styled.button<{ $on: boolean }>`

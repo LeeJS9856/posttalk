@@ -159,21 +159,37 @@ export const Meta = styled.div`
   padding: 16px 16px 0;
 `;
 
-export const StatusBadge = styled.span`
+export const StatusBadge = styled.span<{ $status: 'unpublished' | 'published' | 'failed' }>`
   display: inline-flex;
   align-items: center;
   gap: 5px;
   margin-bottom: 14px;
   padding: 4px 10px;
   border-radius: 999px;
-  background-color: ${COLORS.statusSoft.published};
-  color: ${COLORS.status.published};
+  background-color: ${({ $status }) => COLORS.statusSoft[$status]};
+  color: ${({ $status }) => COLORS.status[$status]};
   font-size: ${FONT_SIZE.label};
 
   svg {
     width: 13px;
     height: 13px;
   }
+`;
+
+/** 올릴 수 없는 자리에 버튼 대신 둔다. 빈 띠만 남기지 않는다. */
+export const FooterNote = styled.p`
+  padding: 6px 0;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.6;
+  text-align: center;
+`;
+
+export const CaptionCount = styled.p<{ $over: boolean }>`
+  margin-top: 6px;
+  color: ${({ $over }) => ($over ? COLORS.status.failed : COLORS.text.muted)};
+  font-size: ${FONT_SIZE.label};
+  text-align: right;
 `;
 
 export const MetaRow = styled.div`

@@ -14,6 +14,7 @@ import {
   Chip,
   ChipRail,
   Counter,
+  CreateButton,
   EmptyAction,
   EmptyMark,
   EmptyText,
@@ -23,6 +24,7 @@ import {
   MediaButton,
   MediaImage,
   MediaVideo,
+  NoMatch,
   Page,
   PlayMark,
   Post,
@@ -44,6 +46,12 @@ const FolderIcon = (): React.JSX.Element => (
   </svg>
 );
 
+const PlusIcon = (): React.JSX.Element => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+  </svg>
+);
+
 const PlayIcon = (): React.JSX.Element => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path d="M8 5.5l11 6.5-11 6.5v-13Z" fill="currentColor" />
@@ -51,6 +59,7 @@ const PlayIcon = (): React.JSX.Element => (
 );
 
 type Filter = 'all' | AdFormat;
+type StatusFilter = 'all' | 'published' | 'unpublished';
 
 const LINE_BREAK = String.fromCharCode(10);
 
@@ -61,6 +70,7 @@ const Archive = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { profile } = useShop();
   const [filter, setFilter] = useState<Filter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const ads = SAMPLE_AD_DETAILS;
 
@@ -69,39 +79,79 @@ const Archive = (): React.JSX.Element => {
       all: ads.length,
       card_news: ads.filter((ad) => ad.format === 'card_news').length,
       reels: ads.filter((ad) => ad.format === 'reels').length,
+      published: ads.filter((ad) => ad.status === 'published').length,
+      unpublished: ads.filter((ad) => ad.status !== 'published').length,
     }),
     [ads],
   );
 
   const shown = useMemo(
-    () => (filter === 'all' ? ads : ads.filter((ad) => ad.format === filter)),
-    [ads, filter],
+    () =>
+      ads
+        .filter((ad) => filter === 'all' || ad.format === filter)
+        .filter(
+          (ad) =>
+            statusFilter === 'all' ||
+            (statusFilter === 'published') === (ad.status === 'published'),
+        ),
+    [ads, filter, statusFilter],
   );
 
-  const chips: { key: Filter; label: string }[] = [
+  const formatChips: { key: Filter; label: string }[] = [
     { key: 'all', label: '전체' },
     { key: 'card_news', label: AD_FORMAT_LABEL.card_news },
     { key: 'reels', label: AD_FORMAT_LABEL.reels },
   ];
 
+  const statusChips: { key: StatusFilter; label: string }[] = [
+    { key: 'all', label: '상태 전체' },
+    { key: 'published', label: '올림' },
+    { key: 'unpublished', label: '안 올림' },
+  ];
+
   return (
     <Page aria-label="보관함">
-      <AppHeader title="보관함" />
+      <AppHeader
+        title="보관함"
+        action={
+          <CreateButton type="button" onClick={() => navigate('/create')}>
+            <PlusIcon />
+            만들기
+          </CreateButton>
+        }
+      />
 
       {ads.length > 0 && (
-        <ChipRail>
-          {chips.map((chip) => (
-            <Chip
-              key={chip.key}
-              type="button"
-              aria-pressed={filter === chip.key}
-              $on={filter === chip.key}
-              onClick={() => setFilter(chip.key)}
-            >
-              {chip.label} {counts[chip.key]}
-            </Chip>
-          ))}
-        </ChipRail>
+        <>
+          <ChipRail aria-label="형식 거르기">
+            {formatChips.map((chip) => (
+              <Chip
+                key={chip.key}
+                type="button"
+                aria-pressed={filter === chip.key}
+                $on={filter === chip.key}
+                onClick={() => setFilter(chip.key)}
+              >
+                {chip.label} {counts[chip.key]}
+              </Chip>
+            ))}
+          </ChipRail>
+
+          <ChipRail aria-label="게시 상태 거르기">
+            {statusChips.map((chip) => (
+              <Chip
+                key={chip.key}
+                type="button"
+                aria-pressed={statusFilter === chip.key}
+                $on={statusFilter === chip.key}
+                onClick={() => setStatusFilter(chip.key)}
+              >
+                {chip.label}
+                {chip.key !== 'all' && ` ${counts[chip.key]}`}
+              </Chip>
+            ))}
+          </ChipRail>
+        </>
       )}
 
       {ads.length === 0 ? (
@@ -120,6 +170,13 @@ const Archive = (): React.JSX.Element => {
         </EmptyWrap>
       ) : (
         <Feed>
+          {shown.length === 0 && (
+            <NoMatch>
+              고른 조건에 맞는 광고가 없어요
+              <br />
+              위에서 조건을 바꿔보세요
+            </NoMatch>
+          )}
           {shown.map((ad) => {
             const isReels = ad.format === 'reels';
             const isPublished = ad.status === 'published';

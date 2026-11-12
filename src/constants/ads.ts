@@ -14,6 +14,13 @@ export const AD_STATUS_LABEL: Record<AdStatus, string> = {
   failed: '만들지 못했어요',
 };
 
+/** 인스타그램 본문 제한. 넘기면 게시 단계에서 거절당한다. */
+export const MAX_CAPTION_LENGTH = 2200;
+export const MAX_HASHTAG_COUNT = 30;
+
+export const countHashtags = (caption: string): number =>
+  (caption.match(/#[^\s#]+/g) ?? []).length;
+
 export type AdDetail = {
   adId: string;
   title: string;
