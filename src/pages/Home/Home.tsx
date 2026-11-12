@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 import AppHeader from '@/components/layout/AppHeader';
+import BrandLogo from '@/components/layout/BrandLogo';
 import SettingsButton from '@/components/layout/SettingsButton';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { AD_FORMAT_LABEL, HOME_AD_PREVIEW_COUNT, SAMPLE_ADS } from '@/constants/home';
@@ -33,7 +34,7 @@ const Home = (): React.JSX.Element => {
 
   return (
     <Page aria-label="홈">
-      <AppHeader title="PostTalk" action={<SettingsButton />} />
+      <AppHeader logo={<BrandLogo size={24} />} title="PostTalk" action={<SettingsButton />} />
 
       <Content>
         <SuggestionCarousel onSelect={startWithTheme} />

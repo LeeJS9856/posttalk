@@ -1,18 +1,32 @@
 import { createGlobalStyle } from 'styled-components';
 
+import gabarito from '@/assets/fonts/Gabarito.woff2';
+import pretendard from '@/assets/fonts/PretendardVariable.woff2';
 import { COLORS } from '@/constants/colors';
 import { MAX_APP_WIDTH } from '@/constants/layout';
 
-// 폰트 파일은 src/assets/fonts/ 에 두고 아래에서 import 해 @font-face 로 정의한다.
-// 예) import Pretendard from '@/assets/fonts/Pretendard.woff2';
-
 const GlobalStyle = createGlobalStyle`
+  /* 본문용. 한글 자소 간격이 고른 가변 폰트 하나로 굵기를 모두 덮는다. */
+  @font-face {
+    font-family: 'Pretendard Variable';
+    src: url(${pretendard}) format('woff2-variations');
+    font-weight: 100 900;
+    font-display: swap;
+  }
+
+  /* 로고 전용. 본문에는 쓰지 않는다. 글자가 늦게 와도 다른 글씨로 깜빡이지 않게 block 으로 둔다. */
+  @font-face {
+    font-family: 'Gabarito';
+    src: url(${gabarito}) format('woff2-variations');
+    font-weight: 400 900;
+    font-display: block;
+  }
+
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    /* 폰트 파일 수급 전까지는 시스템 스택을 쓴다. 확정되면 @font-face 로 교체한다. */
-    font-family: 'Pretendard', system-ui, -apple-system, 'Apple SD Gothic Neo',
+    font-family: 'Pretendard Variable', system-ui, -apple-system, 'Apple SD Gothic Neo',
       'Noto Sans KR', 'Malgun Gothic', sans-serif;
   }
 

@@ -1,11 +1,11 @@
 {
-  "name": "포스트톡",
-  "short_name": "포스트톡",
-  "description": "시장 상인을 위한 광고 제작 서비스",
+  "name": "PostTalk",
+  "short_name": "PostTalk",
+  "description": "가게 사진과 영상으로 광고를 만들어 인스타그램에 올립니다",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F2F3F8",
-  "theme_color": "#6664A8",
+  "background_color": "#ffffff",
+  "theme_color": "#6f63a0",
   "lang": "ko-KR",
   "icons": [
     {

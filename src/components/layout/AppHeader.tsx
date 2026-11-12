@@ -10,6 +10,8 @@ type AppHeaderProps = {
   onBack?: () => void;
   /** 제목 오른쪽에 둘 버튼이나 표시. */
   action?: ReactNode;
+  /** 글자 제목 대신 세울 로고. title 은 읽어주기용으로 남는다. */
+  logo?: ReactNode;
 };
 
 /**
@@ -17,7 +19,7 @@ type AppHeaderProps = {
  * 뒤로 버튼은 제목과 같은 줄에 두지 않는다. 같은 줄에 두면 화살표만큼
  * 제목이 밀려 화면마다 제목의 왼쪽 끝이 어긋난다.
  */
-const AppHeader = ({ title, onBack, action }: AppHeaderProps): React.JSX.Element => (
+const AppHeader = ({ title, onBack, action, logo }: AppHeaderProps): React.JSX.Element => (
   <Header>
     {onBack && (
       <BackRow>
@@ -37,7 +39,7 @@ const AppHeader = ({ title, onBack, action }: AppHeaderProps): React.JSX.Element
     )}
 
     <TitleRow>
-      <Title>{title}</Title>
+      {logo ? <Title as="h1" aria-label={title}>{logo}</Title> : <Title>{title}</Title>}
       {action}
     </TitleRow>
   </Header>
