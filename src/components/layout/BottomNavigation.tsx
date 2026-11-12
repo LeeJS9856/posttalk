@@ -47,10 +47,11 @@ const BottomNavigation = (): React.JSX.Element => {
   );
 };
 
+/* 아이콘 24px · 글자 11px · 탭 높이 56px. iOS 49pt 와 Material 3 의 80dp 사이에 둔다. */
 const Navigation = styled.nav`
   display: flex;
   flex-shrink: 0;
-  padding: 0 2px calc(6px + env(safe-area-inset-bottom));
+  padding: 0 2px calc(8px + env(safe-area-inset-bottom));
   border-top: 0.5px solid ${COLORS.border.main};
   background-color: ${COLORS.background.main};
 `;
@@ -60,9 +61,9 @@ const NavButton = styled.button<{ $active: boolean }>`
   flex: 1;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  min-height: 48px;
-  padding: 8px 0 4px;
+  gap: 4px;
+  min-height: 56px;
+  padding: 9px 0 5px;
   color: ${({ $active }) => ($active ? COLORS.brand.main : COLORS.text.muted)};
   transition: color 0.18s ease;
 `;
@@ -72,13 +73,13 @@ const NavIcon = styled.span`
   line-height: 0;
 
   svg {
-    width: 21px;
-    height: 21px;
+    width: 24px;
+    height: 24px;
   }
 `;
 
 const NavLabel = styled.span`
-  font-size: ${FONT_SIZE.caption};
+  font-size: ${FONT_SIZE.label};
   font-weight: ${FONT_WEIGHT.medium};
 `;
 
