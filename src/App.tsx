@@ -1,62 +1,46 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
+import RequireAuth from '@/components/common/RequireAuth';
+import AdDetail from '@/pages/AdDetail/AdDetail';
 import Archive from '@/pages/Archive/Archive';
-import ArchiveDetail from '@/pages/ArchiveDetail/ArchiveDetail';
-import AdminHome from '@/pages/AdminHome/AdminHome';
-import AdminArchive from '@/pages/AdminArchive/AdminArchive';
-import AdminReviews from '@/pages/AdminReviews/AdminReviews';
-import AdminReviewDetailPage from '@/pages/AdminReviewDetail/AdminReviewDetail';
-import Capture from '@/pages/Capture/Capture';
-import CaptureResult from '@/pages/CaptureResult/CaptureResult';
 import Create from '@/pages/Create/Create';
-import Entry from '@/pages/Entry/Entry';
-import GenerationComplete from '@/pages/GenerationComplete/GenerationComplete';
+import CaptureCamera from '@/pages/Capture/CaptureCamera';
+import CaptureList from '@/pages/Capture/CaptureList';
+import CreateInfo from '@/pages/CreateInfo/CreateInfo';
+import CreateScript from '@/pages/CreateScript/CreateScript';
 import Generating from '@/pages/Generating/Generating';
 import Home from '@/pages/Home/Home';
-import PublishRequested from '@/pages/PublishRequested/PublishRequested';
-import VoiceQuestion from '@/pages/VoiceQuestion/VoiceQuestion';
-import VideoCapture from '@/pages/VideoCapture/VideoCapture';
-import VideoCaptureResult from '@/pages/VideoCaptureResult/VideoCaptureResult';
-import VideoCaptureComplete from '@/pages/VideoCaptureComplete/VideoCaptureComplete';
-import { MerchantSessionProvider } from '@/hooks/useMerchantSession';
-import { useMerchantSession } from '@/hooks/useMerchantSession';
+import My from '@/pages/My/My';
+import ProfileEdit from '@/pages/My/ProfileEdit';
+import Templates from '@/pages/My/Templates';
+import Login from '@/pages/Login/Login';
 
-const Root = (): React.JSX.Element => {
-  const { isLoading, session } = useMerchantSession();
-  const qrToken = new URLSearchParams(window.location.search).get('qrToken');
-
-  if (qrToken && !isLoading && !session) {
-    return <Navigate to={`/entry${window.location.search}`} replace />;
-  }
-
-  return <Home />;
-};
-
-const App = (): React.JSX.Element => (
-  <MerchantSessionProvider>
-    <BrowserRouter>
+const App = (): React.JSX.Element => {
+  return (
+    <Router>
       <Routes>
-        <Route path="/" element={<Root />} />
-        <Route path="/entry" element={<Entry />} />
-        <Route path="/admin" element={<AdminHome />} />
-        <Route path="/admin/archive" element={<AdminArchive />} />
-        <Route path="/admin/reviews" element={<AdminReviews />} />
-        <Route path="/admin/reviews/:submissionId" element={<AdminReviewDetailPage />} />
-        <Route path="/create" element={<Create />} />
-        <Route path="/create/capture" element={<Capture />} />
-        <Route path="/create/capture/result" element={<CaptureResult />} />
-        <Route path="/create/questions/:questionIndex" element={<VoiceQuestion />} />
-        <Route path="/create/video-capture" element={<VideoCapture />} />
-        <Route path="/create/video-capture/result" element={<VideoCaptureResult />} />
-        <Route path="/create/video-capture/complete" element={<VideoCaptureComplete />} />
-        <Route path="/create/generating" element={<Generating />} />
-        <Route path="/create/complete" element={<GenerationComplete />} />
-        <Route path="/create/requested" element={<PublishRequested />} />
-        <Route path="/archive" element={<Archive />} />
-        <Route path="/archive/:submissionId" element={<ArchiveDetail />} />
+        {/* 로그인 상태에서도 열린다. 운영자가 다시 로그인할 길이 여기뿐이다. */}
+        <Route path="/login" element={<Login />} />
+
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/create" element={<Create />} />
+          <Route path="/create/info" element={<CreateInfo />} />
+          <Route path="/create/capture" element={<CaptureList />} />
+          <Route path="/create/capture/:sceneIndex" element={<CaptureCamera />} />
+          <Route path="/create/script" element={<CreateScript />} />
+          <Route path="/create/generating" element={<Generating />} />
+          <Route path="/ads/:adId" element={<AdDetail />} />
+          <Route path="/archive" element={<Archive />} />
+          <Route path="/my" element={<My />} />
+          <Route path="/my/edit" element={<ProfileEdit />} />
+          <Route path="/my/templates" element={<Templates />} />
+          {/* 주소가 어긋나면 흰 화면 대신 홈으로 보낸다. 전시 기기에는 주소창이 없다. */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
       </Routes>
-    </BrowserRouter>
-  </MerchantSessionProvider>
-);
+    </Router>
+  );
+};
 
 export default App;

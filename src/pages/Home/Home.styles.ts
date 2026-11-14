@@ -1,117 +1,121 @@
 import styled from 'styled-components';
 
-import heroImage from '@/assets/market-image.png';
-import PageFrame from '@/components/layout/PageFrame';
 import { COLORS } from '@/constants/colors';
-import { FONT_SIZE } from '@/constants/typography';
+import { FONT_SIZE, FONT_WEIGHT, RADIUS } from '@/constants/typography';
 
-export const AppFrame = styled(PageFrame)`
-  position: relative;
-  overflow: hidden;
-  background: ${COLORS.background.main};
+export const Page = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  background-color: ${COLORS.background.main};
 `;
 
-export const Hero = styled.header`
-  position: absolute;
-  inset: 0 0 auto;
-  height: 62svh;
-  background-image: url(${heroImage});
-  background-position: center;
-  background-size: cover;
+export const Header = styled.header`
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(16px + env(safe-area-inset-top)) 16px 14px;
+`;
 
-  &::after {
-    position: absolute;
-    inset: 0 0 auto;
-    height: 310px;
-    background: linear-gradient(180deg, rgba(21, 22, 37, 0.82) 0%, rgba(31, 31, 48, 0.6) 46%, rgba(31, 31, 48, 0) 100%);
-    backdrop-filter: blur(8px);
-    content: '';
-    mask-image: linear-gradient(to bottom, black 0%, black 58%, transparent 100%);
+export const BrandName = styled.span`
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.display};
+  font-weight: ${FONT_WEIGHT.medium};
+  letter-spacing: -0.01em;
+`;
+
+export const IconButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+  color: ${COLORS.text.grey};
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
 `;
 
-export const HeroMessage = styled.h1`
-  position: relative;
-  z-index: 1;
-  margin: 52px 24px 0;
-  color: ${COLORS.white};
-  font-size: clamp(22px, 5.6vw, 26px);
-  font-weight: 400;
-  line-height: 1.42;
-  letter-spacing: -0.7px;
-`;
-
-export const HeroStrong = styled.strong`
-  font-weight: 700;
-`;
-
-export const Section = styled.section<{ $withTopBorder?: boolean }>`
-  padding-top: ${({ $withTopBorder }) => ($withTopBorder ? '14px' : '0')};
-
-  & + & {
-    margin-top: 24px;
-  }
+export const Content = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: 2px;
+  overflow-y: auto;
 `;
 
 export const SectionHeader = styled.div`
   display: flex;
-  align-items: center;
+  flex-shrink: 0;
+  align-items: baseline;
   justify-content: space-between;
+  padding: 18px 16px 10px;
 `;
 
 export const SectionTitle = styled.h2`
-  margin-bottom: 18px;
-  color: ${COLORS.black700};
-  font-size: ${FONT_SIZE.title};
-  font-weight: 700;
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.bodyLarge};
+  font-weight: ${FONT_WEIGHT.medium};
 `;
 
-export const AllButton = styled.button`
-  margin-bottom: 18px;
-  border: 0;
-  color: ${COLORS.black700};
-  background: transparent;
+export const SectionAction = styled.button`
+  color: ${COLORS.text.muted};
   font-size: ${FONT_SIZE.label};
-  font-weight: 400;
 `;
 
-export const PromotionList = styled.div`
+export const AdRail = styled.ul`
   display: flex;
-  gap: 14px;
+  flex-shrink: 0;
+  gap: 10px;
+  padding: 0 16px 4px;
   overflow-x: auto;
-  margin: 0 -24px;
-  padding: 0 24px;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  scroll-snap-type: x mandatory;
+  /* 첫 카드가 화면 좌측 여백에 맞춰 멈추게 한다 */
+  scroll-padding-left: 16px;
+  list-style: none;
 `;
 
-export const ReviewList = styled.div`
-  display: grid;
-  gap: 12px;
+export const AdItem = styled.li`
+  flex: 0 0 164px;
+  scroll-snap-align: start;
 `;
 
-export const EmptyMessage = styled.p`
-  margin: 0;
-  padding: 20px 0;
-  color: ${COLORS.black500};
+export const AdButton = styled.button`
+  display: block;
+  width: 100%;
+  text-align: left;
+`;
+
+export const AdThumbnail = styled.img`
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: ${RADIUS.card};
+  object-fit: cover;
+  background-color: ${COLORS.background.subtle};
+`;
+
+export const AdTitle = styled.p`
+  margin-top: 7px;
+  color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.body};
-  text-align: center;
+  font-weight: ${FONT_WEIGHT.medium};
 `;
 
-export const FloatingButtonArea = styled.div`
-  position: absolute;
-  right: 0;
-  bottom: 96px;
-  left: 0;
-  z-index: 30;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-
-  button {
-    pointer-events: auto;
-  }
+export const AdFormatLabel = styled.p`
+  margin-top: 1px;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.caption};
 `;
+
+export const EmptyNotice = styled.p`
+  padding: 6px 16px 18px;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.6;
+`;
+

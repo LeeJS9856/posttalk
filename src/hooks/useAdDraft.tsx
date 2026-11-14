@@ -1,67 +1,52 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
-import type { AdSessionRequest } from '@/apis/adSessions';
-import type { AdFormat } from '@/constants/create';
-import type { VoiceQuestionKey } from '@/constants/questions';
+import type { AdFormat } from '@/constants/home';
+import type { ScriptLine } from '@/constants/script';
+import type { SuggestionThemeId } from '@/constants/themes';
 
-type DraftAssetType = 'menu_board' | 'food_photo';
+export type DraftMenu = {
+  name: string;
+  description: string;
+};
 
-type DraftAsset = {
+export type CapturedAsset = {
   file: File;
   previewUrl: string;
-};
-
-export type SessionPhotoAsset = DraftAsset & {
-  assetType: string;
-};
-
-export type VideoClip = DraftAsset & {
-  duration: number;
-  stepIndex: number;
+  /** 사진인지 영상인지. 목록 썸네일과 확인 화면이 갈린다. */
+  kind: 'photo' | 'video';
 };
 
 type AdDraft = {
-  answers: Partial<Record<VoiceQuestionKey, string>>;
-  currentRequest?: AdSessionRequest;
-  foodPhoto?: DraftAsset;
   format: AdFormat;
-  generatedAssets?: string[];
-  generatedResultUrl?: string;
-  jobId?: string;
-  menuBoard?: DraftAsset;
-  retryMessage?: string;
-  sessionId?: string;
-  sessionPhoto?: SessionPhotoAsset;
-  submissionId?: string;
-  submissionCaption?: string;
-  submissionHashtags?: string[];
-  videoClips: VideoClip[];
+  theme: SuggestionThemeId;
+  storeDescription: string;
+  menus: DraftMenu[];
+  /** 장면 번호를 키로 둔다. 촬영물은 메모리에만 두고 기기에 저장하지 않는다. */
+  captures: Record<number, CapturedAsset>;
+  /** 자막. 재료를 찍는 동안 AI 가 만들어 두고, 생성 전에 고칠 수 있다. */
+  script: ScriptLine[];
 };
 
 type AdDraftContextValue = {
   draft: AdDraft;
-  resetDraft: (format?: AdFormat) => void;
-  setAnswer: (key: VoiceQuestionKey, answer: string) => void;
-  setAsset: (assetType: DraftAssetType, file: File) => void;
-  setCurrentRequest: (request: AdSessionRequest) => void;
-  setGenerationResult: ({ generatedAssets, resultUrl, submissionId, caption, hashtags }: {
-    caption?: string;
-    generatedAssets: string[];
-    hashtags?: string[];
-    resultUrl?: string;
-    submissionId?: string;
-  }) => void;
-  setGeneration: ({ jobId, submissionId }: { jobId: string; submissionId: string }) => void;
-  setGeneratedResultUrl: (resultUrl: string) => void;
-  setRetryMessage: (message?: string) => void;
-  setSession: ({ sessionId, request }: { sessionId: string; request: AdSessionRequest }) => void;
-  setSessionPhoto: (assetType: string, file: File) => void;
-  setVideoClip: ({ duration, file, stepIndex }: { duration: number; file: File; stepIndex: number }) => void;
+  setConcept: (value: { format: AdFormat; theme: SuggestionThemeId }) => void;
+  setStoreInfo: (value: { storeDescription: string; menus: DraftMenu[] }) => void;
+  setCapture: (sceneIndex: number, file: File) => void;
+  setScript: (lines: ScriptLine[]) => void;
+  setScriptLine: (sceneIndex: number, text: string) => void;
+  resetDraft: () => void;
 };
 
-const createInitialDraft = (format: AdFormat = 'photo'): AdDraft => ({ answers: {}, format, videoClips: [] });
+const createInitialDraft = (): AdDraft => ({
+  format: 'card_news',
+  theme: 'christmas',
+  storeDescription: '',
+  menus: [],
+  captures: {},
+  script: [],
+});
 
-const revokePreviewUrl = (asset?: DraftAsset): void => {
+const revoke = (asset?: CapturedAsset): void => {
   if (asset?.previewUrl.startsWith('blob:')) URL.revokeObjectURL(asset.previewUrl);
 };
 
@@ -70,67 +55,64 @@ const AdDraftContext = createContext<AdDraftContextValue | null>(null);
 export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
   const [draft, setDraft] = useState<AdDraft>(createInitialDraft);
 
-  const value = useMemo<AdDraftContextValue>(() => ({
-    draft,
-    resetDraft: (format = 'photo') => setDraft((current) => {
-      revokePreviewUrl(current.menuBoard);
-      revokePreviewUrl(current.foodPhoto);
-      revokePreviewUrl(current.sessionPhoto);
-      current.videoClips.forEach(revokePreviewUrl);
-      return createInitialDraft(format);
-    }),
-    setAnswer: (key, answer) => setDraft((current) => ({
-      ...current,
-      answers: { ...current.answers, [key]: answer },
-    })),
-    setAsset: (assetType, file) => setDraft((current) => {
-      const assetKey = assetType === 'menu_board' ? 'menuBoard' : 'foodPhoto';
-      revokePreviewUrl(current[assetKey]);
+  const setConcept = useCallback((value: { format: AdFormat; theme: SuggestionThemeId }) => {
+    setDraft((current) => ({ ...current, ...value }));
+  }, []);
 
+  const setStoreInfo = useCallback((value: { storeDescription: string; menus: DraftMenu[] }) => {
+    setDraft((current) => {
+      // 메뉴가 바뀌면 장면 구성이 달라지므로 찍어둔 재료와 자막을 비운다.
+      Object.values(current.captures).forEach(revoke);
+      return { ...current, ...value, captures: {}, script: [] };
+    });
+  }, []);
+
+  const setCapture = useCallback((sceneIndex: number, file: File) => {
+    setDraft((current) => {
+      revoke(current.captures[sceneIndex]);
       return {
         ...current,
-        [assetKey]: {
-          file,
-          previewUrl: URL.createObjectURL(file),
+        captures: {
+          ...current.captures,
+          [sceneIndex]: {
+            file,
+            previewUrl: URL.createObjectURL(file),
+            kind: file.type.startsWith('video/') ? 'video' : 'photo',
+          },
         },
       };
-    }),
-    setCurrentRequest: (currentRequest) => setDraft((current) => ({ ...current, currentRequest, retryMessage: undefined })),
-    setGenerationResult: ({ generatedAssets, resultUrl, submissionId, caption, hashtags }) => setDraft((current) => ({
-      ...current,
-      generatedAssets,
-      generatedResultUrl: resultUrl,
-      submissionId: submissionId ?? current.submissionId,
-      submissionCaption: caption,
-      submissionHashtags: hashtags,
-    })),
-    setGeneration: ({ jobId, submissionId }) => setDraft((current) => ({ ...current, jobId, submissionId })),
-    setGeneratedResultUrl: (generatedResultUrl) => setDraft((current) => ({ ...current, generatedResultUrl })),
-    setRetryMessage: (retryMessage) => setDraft((current) => ({ ...current, retryMessage })),
-    setSession: ({ sessionId, request }) => setDraft((current) => ({ ...current, sessionId, currentRequest: request, retryMessage: undefined })),
-    setSessionPhoto: (assetType, file) => setDraft((current) => {
-      revokePreviewUrl(current.sessionPhoto);
-      return {
-        ...current,
-        sessionPhoto: { assetType, file, previewUrl: URL.createObjectURL(file) },
-      };
-    }),
-    setVideoClip: ({ duration, file, stepIndex }) => setDraft((current) => {
-      const previousClip = current.videoClips.find((clip) => clip.stepIndex === stepIndex);
-      revokePreviewUrl(previousClip);
-      const videoClip: VideoClip = { duration, file, stepIndex, previewUrl: URL.createObjectURL(file) };
+    });
+  }, []);
 
-      return {
-        ...current,
-        videoClips: [...current.videoClips.filter((clip) => clip.stepIndex !== stepIndex), videoClip]
-          .sort((first, second) => first.stepIndex - second.stepIndex),
-      };
-    }),
-  }), [draft]);
+  const setScript = useCallback((lines: ScriptLine[]) => {
+    setDraft((current) => ({ ...current, script: lines }));
+  }, []);
+
+  const setScriptLine = useCallback((sceneIndex: number, text: string) => {
+    setDraft((current) => ({
+      ...current,
+      script: current.script.map((line) =>
+        line.sceneIndex === sceneIndex ? { ...line, text } : line,
+      ),
+    }));
+  }, []);
+
+  const resetDraft = useCallback(() => {
+    setDraft((current) => {
+      Object.values(current.captures).forEach(revoke);
+      return createInitialDraft();
+    });
+  }, []);
+
+  const value = useMemo<AdDraftContextValue>(
+    () => ({ draft, setConcept, setStoreInfo, setCapture, setScript, setScriptLine, resetDraft }),
+    [draft, setConcept, setStoreInfo, setCapture, setScript, setScriptLine, resetDraft],
+  );
 
   return <AdDraftContext.Provider value={value}>{children}</AdDraftContext.Provider>;
 };
 
+// oxlint-disable-next-line react/only-export-components -- 훅과 프로바이더가 같은 컨텍스트를 공유한다
 export const useAdDraft = (): AdDraftContextValue => {
   const context = useContext(AdDraftContext);
   if (!context) throw new Error('useAdDraft must be used within AdDraftProvider.');

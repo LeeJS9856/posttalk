@@ -1,69 +1,137 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import PrimaryActionButton from '@/components/common/PrimaryActionButton';
 import SegmentedToggle from '@/components/common/SegmentedToggle';
-import QrLoginRequired from '@/components/auth/QrLoginRequired';
-import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
-import VideoPreview from '@/components/create/VideoPreview';
-import BottomNavigation from '@/components/layout/BottomNavigation';
-import { AD_FORMAT_OPTIONS, PHOTO_PREVIEW_IMAGES, VIDEO_PREVIEW_SOURCE, type AdFormat } from '@/constants/create';
+import AppHeader from '@/components/layout/AppHeader';
+import { AD_FORMAT_OPTIONS, DEFAULT_AD_FORMAT } from '@/constants/create';
+import type { AdFormat } from '@/constants/home';
+import { SUGGESTION_THEMES } from '@/constants/themes';
 import { useAdDraft } from '@/hooks/useAdDraft';
-import { useMerchantSession } from '@/hooks/useMerchantSession';
-import { ActionArea, Guide, GuideDescription, GuideTitle, Page, Title, TopContent } from '@/pages/Create/Create.styles';
+import {
+  ConceptCaption,
+  ConceptCard,
+  ConceptDescription,
+  ConceptItem,
+  ConceptLabel,
+  ConceptMedia,
+  ConceptRail,
+  ConceptScrim,
+  Content,
+  Dot,
+  Dots,
+  Footer,
+  FormatBar,
+  NextButton,
+  Page,
+} from '@/pages/Create/Create.styles';
+
+const FORMAT_SEGMENTS = AD_FORMAT_OPTIONS.map(({ id, label }) => ({ id, label }));
 
 const Create = (): React.JSX.Element => {
-  const [selectedFormat, setSelectedFormat] = useState<AdFormat>('photo');
   const navigate = useNavigate();
-  const { resetDraft } = useAdDraft();
-  const { isLoading: isQrLoading, session } = useMerchantSession();
+  const [searchParams] = useSearchParams();
+  const railRef = useRef<HTMLUListElement>(null);
+  const { setConcept } = useAdDraft();
 
-  const startCreation = (): void => {
-    resetDraft(selectedFormat);
-    navigate('/create/questions/0');
+  const requestedTheme = searchParams.get('theme');
+  const initialIndex = Math.max(
+    SUGGESTION_THEMES.findIndex((theme) => theme.id === requestedTheme),
+    0,
+  );
+
+  const [format, setFormat] = useState<AdFormat>(DEFAULT_AD_FORMAT);
+  const [index, setIndex] = useState(initialIndex);
+
+  // 홈에서 고른 콘셉트가 처음부터 가운데 오도록 레일을 옮겨둔다.
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail || initialIndex === 0) return;
+
+    const target = rail.children[initialIndex] as HTMLElement | undefined;
+    if (target) rail.scrollLeft = target.offsetLeft - rail.offsetLeft;
+  }, [initialIndex]);
+
+  const handleScroll = (): void => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const step = rail.scrollWidth / SUGGESTION_THEMES.length;
+    const next = Math.min(
+      Math.round(rail.scrollLeft / step),
+      SUGGESTION_THEMES.length - 1,
+    );
+    if (next !== index) setIndex(next);
+  };
+
+  const scrollTo = (order: number): void => {
+    const rail = railRef.current;
+    const target = rail?.children[order] as HTMLElement | undefined;
+    if (!rail || !target) return;
+
+    rail.scrollTo({ left: target.offsetLeft - rail.offsetLeft, behavior: 'smooth' });
+  };
+
+  const concept = SUGGESTION_THEMES[index];
+
+  const goNext = (): void => {
+    setConcept({ format, theme: concept.id });
+    navigate('/create/info');
   };
 
   return (
-    <Page aria-label="광고 제작 페이지">
-      {!isQrLoading && !session ? (
-        <QrLoginRequired />
-      ) : (
-        <>
-      <TopContent>
-        <Title>
-          어떤 광고를 만들어볼까요?
-          <br />
-          원하는 방식을 골라주세요.
-        </Title>
-        <SegmentedToggle
-          ariaLabel="광고 형식 선택"
-          options={AD_FORMAT_OPTIONS}
-          value={selectedFormat}
-          onChange={setSelectedFormat}
-        />
-      </TopContent>
+    <Page aria-label="광고 형식과 콘셉트 선택">
+      <AppHeader title="어떤 광고를 만들까요?" onBack={() => navigate('/')} />
 
-      {selectedFormat === 'photo' ? (
-        <PhotoPreviewCarousel images={PHOTO_PREVIEW_IMAGES} />
-      ) : (
-        <VideoPreview videoSrc={VIDEO_PREVIEW_SOURCE} objectFit="contain" />
-      )}
+      <Content>
 
-      <Guide>
-        <GuideTitle>{selectedFormat === 'photo' ? '사진과 글로 한눈에 보여줘요.' : '영상으로 생생하게 보여줘요.'}</GuideTitle>
-        <GuideDescription>
-          {selectedFormat === 'photo' ? '여러 장으로 보기 쉽게 정리해드려요.' : '짧은 영상으로 가게의 매력을 알려드려요.'}
-        </GuideDescription>
-        <ActionArea>
-          <PrimaryActionButton type="button" onClick={startCreation}>
-            선택하기
-          </PrimaryActionButton>
-        </ActionArea>
-      </Guide>
+        <FormatBar>
+          <SegmentedToggle
+            ariaLabel="광고 형식"
+            options={FORMAT_SEGMENTS}
+            value={format}
+            onChange={setFormat}
+          />
+        </FormatBar>
 
-      <BottomNavigation fixed />
-        </>
-      )}
+        <ConceptRail ref={railRef} onScroll={handleScroll} aria-label="광고 콘셉트">
+          {SUGGESTION_THEMES.map((theme, order) => (
+            <ConceptItem key={theme.id}>
+              <ConceptCard
+                type="button"
+                aria-label={`${theme.label} 콘셉트 선택`}
+                aria-pressed={order === index}
+                $selected={order === index}
+                onClick={() => scrollTo(order)}
+              >
+                <ConceptMedia $surface={theme.tone.surface}>
+                  {format === 'reels' ? (
+                    <video src={theme.sample.reels} muted loop playsInline autoPlay />
+                  ) : (
+                    <img src={theme.sample.card_news} alt="" />
+                  )}
+                </ConceptMedia>
+                <ConceptScrim aria-hidden="true" />
+                <ConceptCaption>
+                  <ConceptLabel>{theme.label}</ConceptLabel>
+                  <ConceptDescription>{theme.description}</ConceptDescription>
+                </ConceptCaption>
+              </ConceptCard>
+            </ConceptItem>
+          ))}
+        </ConceptRail>
+
+        <Dots aria-hidden="true">
+          {SUGGESTION_THEMES.map((theme, order) => (
+            <Dot key={theme.id} $active={order === index} />
+          ))}
+        </Dots>
+      </Content>
+
+      <Footer>
+        <NextButton type="button" onClick={goNext}>
+          {concept.label} 광고 만들기
+        </NextButton>
+      </Footer>
     </Page>
   );
 };

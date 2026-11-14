@@ -1,164 +1,76 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { getMerchantHome, type MerchantHomeData } from '@/apis/home';
-import FloatingCreateButton from '@/components/common/FloatingCreateButton';
-import QrLoginRequired from '@/components/auth/QrLoginRequired';
-import HomeAdSkeleton from '@/components/home/HomeAdSkeleton';
-import PromotionCard from '@/components/home/PromotionCard';
-import ReviewAdCard from '@/components/home/ReviewAdCard';
+import AppHeader from '@/components/layout/AppHeader';
+import BrandLogo from '@/components/layout/BrandLogo';
+import SettingsButton from '@/components/layout/SettingsButton';
 import BottomNavigation from '@/components/layout/BottomNavigation';
-import DraggableBottomSheet from '@/components/layout/DraggableBottomSheet';
-import { useMerchantSession } from '@/hooks/useMerchantSession';
-import { AllButton, AppFrame, EmptyMessage, FloatingButtonArea, Hero, HeroMessage, HeroStrong, PromotionList, ReviewList, Section, SectionHeader, SectionTitle } from '@/pages/Home/Home.styles';
-
-const FALLBACK_THUMBNAIL = 'https://images.unsplash.com/photo-1610057099431-d73a1c9d2f2f?auto=format&fit=crop&w=360&q=85';
-const RECENT_REVIEW_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
-
-const isReviewedWithinTwoDays = ({ createdAt, updatedAt }: { createdAt: string; updatedAt?: string }): boolean => {
-  const reviewedAt = new Date(updatedAt ?? createdAt).getTime();
-  const elapsed = Date.now() - reviewedAt;
-
-  return Number.isFinite(reviewedAt) && elapsed >= 0 && elapsed <= RECENT_REVIEW_WINDOW_MS;
-};
+import { AD_FORMAT_LABEL, HOME_AD_PREVIEW_COUNT, SAMPLE_ADS } from '@/constants/home';
+import type { SuggestionThemeId } from '@/constants/themes';
+import SuggestionCarousel from '@/pages/Home/SuggestionCarousel';
+import {
+  AdButton,
+  AdFormatLabel,
+  AdItem,
+  AdRail,
+  AdThumbnail,
+  AdTitle,
+  Content,
+  EmptyNotice,
+  Page,
+  SectionAction,
+  SectionHeader,
+  SectionTitle,
+} from '@/pages/Home/Home.styles';
 
 const Home = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const { isLoading: isQrLoading, session } = useMerchantSession();
-  const [homeData, setHomeData] = useState<MerchantHomeData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
 
-  useEffect(() => {
-    if (isQrLoading || !session) {
-      setIsLoading(false);
-      return;
-    }
 
-    setIsLoading(true);
-    setHasError(false);
-    const controller = new AbortController();
+  const ads = SAMPLE_ADS.slice(0, HOME_AD_PREVIEW_COUNT);
 
-    const loadHome = async () => {
-      try {
-        const response = await getMerchantHome({
-          storeId: session.storeId,
-          signal: controller.signal,
-        });
-
-        setHomeData(response.data);
-      } catch (error) {
-        if (!(error instanceof DOMException && error.name === 'AbortError')) {
-          setHasError(true);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void loadHome();
-
-    return () => controller.abort();
-  }, [isQrLoading, session]);
-
-  const storeName = homeData?.summary.storeName ?? session?.storeName;
-  const pendingReviewCount = homeData?.summary.pendingReviewCount ?? 0;
-  const pendingReviewItems = (homeData?.attentionItems ?? []).filter((item) => item.status === 'pending_review');
-  const recentReviewedAds = (homeData?.myAds ?? [])
-    .filter((ad) => (ad.status === 'approved' || ad.status === 'rejected') && isReviewedWithinTwoDays(ad))
-    .sort((first, second) => new Date(second.updatedAt ?? second.createdAt).getTime() - new Date(first.updatedAt ?? first.createdAt).getTime())
-    .slice(0, 2);
+  const startWithTheme = (themeId: SuggestionThemeId): void => {
+    navigate(`/create?theme=${themeId}`);
+  };
 
   return (
-    <AppFrame>
-      <Hero>
-        <HeroMessage>
-          {isQrLoading ? 'QR 정보를 불러오고 있어요.' : !session ? (
-            'QR 로그인을 해주세요.'
-          ) : (
-            <>
-              <HeroStrong>{storeName}</HeroStrong> 사장님,
-              <br />
-              {isLoading ? (
-                '홈 정보를 불러오고 있어요.'
-              ) : hasError ? (
-                '홈 정보를 불러오지 못했어요.'
-              ) : pendingReviewCount > 0 ? (
-                <>
-                  검토가 필요한 광고가
-                  <br />
-                  <HeroStrong>{pendingReviewCount}건</HeroStrong> 있어요!
-                </>
-              ) : (
-                '안녕하세요!'
-              )}
-            </>
-          )}
-        </HeroMessage>
-      </Hero>
-      <DraggableBottomSheet>
-        {!isQrLoading && !session ? (
-          <QrLoginRequired />
-        ) : <>
-        <Section>
-          <SectionHeader>
-            <SectionTitle>검토가 필요한 광고</SectionTitle>
-            <AllButton type="button" onClick={() => navigate('/archive')}>전체 보기</AllButton>
-          </SectionHeader>
-          {isQrLoading || isLoading ? (
-            <ReviewList aria-label="검토가 필요한 광고를 불러오는 중">
-              <HomeAdSkeleton variant="attention" />
-              <HomeAdSkeleton variant="attention" />
-            </ReviewList>
-          ) : hasError ? <EmptyMessage>광고를 불러오지 못했어요.</EmptyMessage> : pendingReviewItems.length > 0 ? (
-            <ReviewList>
-              {pendingReviewItems.slice(0, 2).map((item) => (
-                <ReviewAdCard
-                  key={item.submissionId}
-                  status="pending"
-                  storeName={item.title}
-                  image={item.thumbnailUrl ?? FALLBACK_THUMBNAIL}
-                  onClick={() => navigate('/archive')}
-                />
-              ))}
-            </ReviewList>
-          ) : <EmptyMessage>검토가 필요한 광고가 없어요.</EmptyMessage>}
-        </Section>
+    <Page aria-label="홈">
+      <AppHeader logo={<BrandLogo size={24} />} title="PostTalk" action={<SettingsButton />} />
 
-        <Section $withTopBorder={pendingReviewCount === 0}>
-          <SectionHeader>
-            <SectionTitle>내가 만든 광고</SectionTitle>
-            <AllButton type="button" onClick={() => navigate('/archive')}>전체 보기</AllButton>
-          </SectionHeader>
-          <PromotionList>
-            {isQrLoading || isLoading ? (
-              <>
-                <HomeAdSkeleton variant="promotion" />
-                <HomeAdSkeleton variant="promotion" />
-                <HomeAdSkeleton variant="promotion" />
-              </>
-            ) : (
-              <>
-                <PromotionCard onClick={() => navigate('/create')} />
-                {recentReviewedAds.map((ad) => (
-                  <PromotionCard
-                    key={ad.submissionId}
-                    image={ad.thumbnailUrl ?? FALLBACK_THUMBNAIL}
-                    title={ad.title}
-                    onClick={() => navigate('/archive')}
-                  />
-                ))}
-              </>
-            )}
-          </PromotionList>
-        </Section>
-        </>}
-      </DraggableBottomSheet>
-      {session && <FloatingButtonArea>
-        <FloatingCreateButton onClick={() => navigate('/create')} />
-      </FloatingButtonArea>}
+      <Content>
+        <SuggestionCarousel onSelect={startWithTheme} />
+
+        <SectionHeader>
+          <SectionTitle>만든 광고</SectionTitle>
+          {ads.length > 0 && (
+            <SectionAction type="button" onClick={() => navigate('/archive')}>
+              전체 보기
+            </SectionAction>
+          )}
+        </SectionHeader>
+
+        {ads.length > 0 ? (
+          <AdRail>
+            {ads.map((ad) => (
+              <AdItem key={ad.adId}>
+                <AdButton
+                  type="button"
+                  aria-label={`${ad.title} 광고 열기`}
+                  onClick={() => navigate(`/ads/${ad.adId}`)}
+                >
+                  <AdThumbnail src={ad.thumbnailUrl} alt="" />
+                  <AdTitle>{ad.title}</AdTitle>
+                  <AdFormatLabel>{AD_FORMAT_LABEL[ad.format]}</AdFormatLabel>
+                </AdButton>
+              </AdItem>
+            ))}
+          </AdRail>
+        ) : (
+          <EmptyNotice>아직 만든 광고가 없어요. 위에서 하나 만들어보세요.</EmptyNotice>
+        )}
+      </Content>
+
       <BottomNavigation />
-    </AppFrame>
+    </Page>
   );
 };
 

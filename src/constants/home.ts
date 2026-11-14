@@ -1,13 +1,31 @@
-import type { AdStatus } from '@/constants/status';
+import photoEx1 from '@/assets/photo-ex1.jpg';
+import photoEx2 from '@/assets/photo-ex2.jpg';
+import photoEx3 from '@/assets/photo-ex3.jpg';
+import photoEx4 from '@/assets/photo-ex4.jpg';
 
-export type ReviewStatus = Exclude<AdStatus, 'posted'>;
+export type AdFormat = 'card_news' | 'reels';
 
-export const DEMO_REVIEW_ADS: ReadonlyArray<{ id: number; status: ReviewStatus }> = [
-  { id: 1, status: 'pending' },
-  { id: 2, status: 'supplement' },
+export type HomeAd = {
+  adId: string;
+  title: string;
+  format: AdFormat;
+  thumbnailUrl: string;
+};
+
+export const AD_FORMAT_LABEL: Record<AdFormat, string> = {
+  card_news: '카드뉴스',
+  reels: '릴스',
+};
+
+/**
+ * 광고 목록 API 가 붙기 전까지 쓰는 표본.
+ * 이전 프로젝트의 결과물 샘플 이미지를 그대로 쓴다.
+ */
+export const SAMPLE_ADS: readonly HomeAd[] = [
+  { adId: 'sample-1', title: '창억떡', format: 'card_news', thumbnailUrl: photoEx1 },
+  { adId: 'sample-2', title: '버터쿠키', format: 'reels', thumbnailUrl: photoEx2 },
+  { adId: 'sample-3', title: '소금빵', format: 'card_news', thumbnailUrl: photoEx3 },
+  { adId: 'sample-4', title: '쑥떡', format: 'reels', thumbnailUrl: photoEx4 },
 ];
 
-export const REVIEW_DESCRIPTION: Record<ReviewStatus, string> = {
-  pending: '운영팀에서 내용을 확인하고 있어요',
-  supplement: '사진을 한 장 더 올려주세요',
-};
+export const HOME_AD_PREVIEW_COUNT = 4;

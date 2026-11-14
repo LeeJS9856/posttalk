@@ -1,21 +1,32 @@
-import photoExample1 from '@/assets/photo-ex1.jpg';
-import photoExample2 from '@/assets/photo-ex2.jpg';
-import photoExample3 from '@/assets/photo-ex3.jpg';
-import photoExample4 from '@/assets/photo-ex4.jpg';
-import videoExample from '@/assets/video-ex.mp4';
+import photoSample from '@/assets/photo-ex1.jpg';
+import videoSample from '@/assets/video-ex.mp4';
 
-export const AD_FORMAT_OPTIONS = [
-  { label: '사진 광고', value: 'photo' },
-  { label: '동영상 광고', value: 'video' },
-] as const;
+import type { AdFormat } from '@/constants/home';
 
-export type AdFormat = (typeof AD_FORMAT_OPTIONS)[number]['value'];
+export type AdFormatOption = {
+  id: AdFormat;
+  label: string;
+  description: string;
+  sample: string;
+  sampleKind: 'image' | 'video';
+};
 
-export const PHOTO_PREVIEW_IMAGES = [
-  photoExample1,
-  photoExample2,
-  photoExample3,
-  photoExample4,
-] as const;
+/** 결과물 샘플은 이전 프로젝트의 산출물을 쓴다. 콘셉트별 샘플이 나오면 교체한다. */
+export const AD_FORMAT_OPTIONS: readonly AdFormatOption[] = [
+  {
+    id: 'card_news',
+    label: '카드뉴스',
+    description: '사진 여러 장으로',
+    sample: photoSample,
+    sampleKind: 'image',
+  },
+  {
+    id: 'reels',
+    label: '릴스',
+    description: '짧은 영상으로',
+    sample: videoSample,
+    sampleKind: 'video',
+  },
+];
 
-export const VIDEO_PREVIEW_SOURCE = videoExample;
+export const DEFAULT_AD_FORMAT: AdFormat = 'card_news';

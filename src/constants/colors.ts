@@ -1,31 +1,43 @@
 export const COLORS = {
-  primary: '#6664A8',
-  primary100: '#F6F6FA',
-  primary200: '#E8E7F2',
-  primary700: '#454379',
-  navActive: '#6664A8',
-  navInactive: '#B0B0C0',
-  background: {
-    main: '#F2F3F8',
-    grey: '#F2F3F8',
-  },
-  white: '#FFFFFF',
+  white: '#ffffff',
   black: '#000000',
-  black700: '#212121',
-  black500: '#5F5F5F',
-  black400: '#8A8A8A',
-  black200: '#E5E5E5',
-  statusCheck: '#E8A169',
-  statusCheckBackground: '#FFF0E6',
-  statusPost: '#2F7D62',
-  statusPostBackground: '#E5F3EC',
-  statusWarning: '#B94A3C',
+  background: {
+    main: '#ffffff',
+    subtle: '#f3f3f5',
+  },
+  /**
+   * 브랜드 색. 면적은 좁게, 자리는 분명하게 쓴다.
+   * 화면 대부분을 사용자가 만든 광고 사진이 채우므로, 넓게 깔면 결과물과 색이 싸운다.
+   * 쓰는 곳 — 주 버튼, 활성 탭, 선택 표시.
+   */
   brand: {
-    primary: '#6664A8',
-    secondary: '#454379',
+    main: '#6f63a0',
+    pressed: '#5c5188',
+    soft: '#f0edf8',
   },
   text: {
-    main: '#212121',
-    grey: '#5F5F5F',
+    main: '#15161a',
+    grey: '#6a6b73',
+    muted: '#9a9ba2',
+    inverse: '#ffffff',
+  },
+  /** 녹화 표시. 다른 곳에 쓰지 않는다. */
+  record: '#e2503f',
+  /** 바텀시트·모달 뒤를 덮는 막 */
+  scrim: 'rgba(10, 10, 12, 0.32)',
+  border: {
+    main: '#ececef',
+    strong: '#dcdce0',
+  },
+  status: {
+    unpublished: '#8a6a45',
+    published: '#4e7a5e',
+    failed: '#a3503f',
+  },
+  /** 상태 뱃지 바탕. 글씨는 같은 이름의 status 색을 쓴다. */
+  statusSoft: {
+    unpublished: '#f5efe6',
+    published: '#e8f0ea',
+    failed: '#f7eceb',
   },
 } as const;

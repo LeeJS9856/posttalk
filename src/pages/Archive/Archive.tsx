@@ -1,175 +1,241 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import {
-  getMerchantArchive,
-  type MerchantArchiveItem,
-  type MerchantArchiveStatus,
-} from '@/apis/archive';
-import ArchivedAdCard from '@/components/archive/ArchivedAdCard';
-import ArchivedAdCardSkeleton from '@/components/archive/ArchivedAdCardSkeleton';
-import QrLoginRequired from '@/components/auth/QrLoginRequired';
+import AppHeader from '@/components/layout/AppHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
-import PageHeader from '@/components/layout/PageHeader';
-import { ARCHIVE_FILTERS, type ArchivedAd, type ArchiveFormat, type StatusFilter } from '@/constants/archive';
-import { useMerchantSession } from '@/hooks/useMerchantSession';
-import { AdList, Content, EmptyMessage, FilterButton, FilterList, FormatIndicator, FormatTab, FormatTabs, Page, SearchButton, SearchIcon } from '@/pages/Archive/Archive.styles';
+import { SAMPLE_AD_DETAILS, formatPublishedAt } from '@/constants/ads';
+import { AD_FORMAT_LABEL, type AdFormat } from '@/constants/home';
+import { posterSrc } from '@/constants/media';
+import { useShop } from '@/hooks/useShop';
+import {
+  Avatar,
+  Caption,
+  CaptionName,
+  Chip,
+  ChipRail,
+  Counter,
+  CreateButton,
+  EmptyAction,
+  EmptyMark,
+  EmptyText,
+  EmptyWrap,
+  Feed,
+  HeadText,
+  MediaButton,
+  MediaImage,
+  MediaVideo,
+  NoMatch,
+  Page,
+  PlayMark,
+  Post,
+  PostDate,
+  PostHead,
+  PostMeta,
+  ShopName,
+  StatusBadge,
+} from '@/pages/Archive/Archive.styles';
 
-const API_STATUS_BY_FILTER: Record<StatusFilter, MerchantArchiveStatus> = {
-  all: 'all',
-  pending: 'pending_review',
-  supplement: 'rejected',
-  posted: 'approved',
-};
+const FolderIcon = (): React.JSX.Element => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path
+      d="M3.5 6.5h6l2 2.5h9v9.5h-17V6.5Z"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
-const UI_STATUS_BY_API_STATUS: Record<MerchantArchiveItem['status'], ArchivedAd['status']> = {
-  pending_review: 'pending',
-  rejected: 'supplement',
-  approved: 'posted',
-};
+const PlusIcon = (): React.JSX.Element => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+  </svg>
+);
 
-const FILTERED_STATUS: Record<Exclude<StatusFilter, 'all'>, ArchivedAd['status']> = {
-  pending: 'pending',
-  supplement: 'supplement',
-  posted: 'posted',
-};
+const PlayIcon = (): React.JSX.Element => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M8 5.5l11 6.5-11 6.5v-13Z" fill="currentColor" />
+  </svg>
+);
 
-const toArchivedAd = (item: MerchantArchiveItem, format: ArchiveFormat = item.mediaType): ArchivedAd => {
-  const previewImages = [...(item.previewAssets ?? [])]
-    .sort((first, second) => first.sortOrder - second.sortOrder)
-    .map((asset) => asset.url)
-    .filter(Boolean);
-  const fallbackImage = item.thumbnailUrl ?? item.generatedAssetUrl ?? undefined;
+type Filter = 'all' | AdFormat;
+type StatusFilter = 'all' | 'published' | 'unpublished';
 
-  return {
-    id: item.submissionId,
-    caption: item.publishCaption ?? undefined,
-    format,
-    title: item.title,
-    date: item.createdAt.slice(0, 10).replaceAll('-', '.'),
-    status: UI_STATUS_BY_API_STATUS[item.status],
-    images: format === 'photo' ? (previewImages.length > 0 ? previewImages : (fallbackImage ? [fallbackImage] : [])) : [],
-    thumbnailUrl: fallbackImage,
-  };
-};
+const LINE_BREAK = String.fromCharCode(10);
+
+/** 피드에는 캡션 첫 줄만 보여준다. 해시태그 줄은 상세에서 본다. */
+const firstLine = (caption: string): string => caption.split(LINE_BREAK)[0] ?? '';
 
 const Archive = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const { isLoading: isQrLoading, session } = useMerchantSession();
-  const [format, setFormat] = useState<ArchiveFormat>('photo');
-  const [filter, setFilter] = useState<StatusFilter>('all');
-  const [allAds, setAllAds] = useState<ArchivedAd[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  const { profile } = useShop();
+  const [filter, setFilter] = useState<Filter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
-  useEffect(() => {
-    if (isQrLoading || !session) {
-      setIsLoading(false);
-      return;
-    }
+  const ads = SAMPLE_AD_DETAILS;
 
-    const controller = new AbortController();
+  const counts = useMemo(
+    () => ({
+      all: ads.length,
+      card_news: ads.filter((ad) => ad.format === 'card_news').length,
+      reels: ads.filter((ad) => ad.format === 'reels').length,
+      published: ads.filter((ad) => ad.status === 'published').length,
+      unpublished: ads.filter((ad) => ad.status !== 'published').length,
+    }),
+    [ads],
+  );
 
-    const loadArchive = async () => {
-      setIsLoading(true);
-      setHasError(false);
+  const shown = useMemo(
+    () =>
+      ads
+        .filter((ad) => filter === 'all' || ad.format === filter)
+        .filter(
+          (ad) =>
+            statusFilter === 'all' ||
+            (statusFilter === 'published') === (ad.status === 'published'),
+        ),
+    [ads, filter, statusFilter],
+  );
 
-      try {
-        const responses = await Promise.all(
-          (['photo', 'video'] as const).map((mediaType) => getMerchantArchive({
-            storeId: session.storeId,
-            mediaType,
-            status: API_STATUS_BY_FILTER.all,
-            signal: controller.signal,
-          })),
-        );
+  const formatChips: { key: Filter; label: string }[] = [
+    { key: 'all', label: '전체' },
+    { key: 'card_news', label: AD_FORMAT_LABEL.card_news },
+    { key: 'reels', label: AD_FORMAT_LABEL.reels },
+  ];
 
-        const [photoResponse, videoResponse] = responses;
-        const videoSubmissionIds = new Set(videoResponse.data.items.map((item) => item.submissionId));
-        const photoAds = photoResponse.data.items
-          .filter((item) => !videoSubmissionIds.has(item.submissionId))
-          .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())
-          .map((item) => toArchivedAd(item, 'photo'));
-        const videoAds = [...videoResponse.data.items]
-          .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())
-          .map((item) => toArchivedAd(item, 'video'));
-
-        setAllAds([...photoAds, ...videoAds]);
-      } catch (error) {
-        if (!(error instanceof DOMException && error.name === 'AbortError')) {
-          setHasError(true);
-        }
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
-      }
-    };
-
-    void loadArchive();
-
-    return () => controller.abort();
-  }, [isQrLoading, session]);
-
-  const ads = allAds.filter((ad) =>
-    ad.format === format && (filter === 'all' || ad.status === FILTERED_STATUS[filter]));
+  const statusChips: { key: StatusFilter; label: string }[] = [
+    { key: 'all', label: '상태 전체' },
+    { key: 'published', label: '올림' },
+    { key: 'unpublished', label: '안 올림' },
+  ];
 
   return (
-    <Page aria-label="보관함 페이지">
-      <PageHeader
+    <Page aria-label="보관함">
+      <AppHeader
         title="보관함"
-        rightAction={
-          <SearchButton type="button" aria-label="광고 검색">
-          <SearchIcon aria-hidden="true" />
-          </SearchButton>
+        action={
+          <CreateButton type="button" onClick={() => navigate('/create')}>
+            <PlusIcon />
+            만들기
+          </CreateButton>
         }
       />
 
-      {session && <>
-      <FormatTabs aria-label="광고 형식">
-        <FormatIndicator $format={format} aria-hidden="true" />
-        <FormatTab type="button" $active={format === 'photo'} onClick={() => setFormat('photo')}>
-          사진 광고
-        </FormatTab>
-        <FormatTab type="button" $active={format === 'video'} onClick={() => setFormat('video')}>
-          동영상 광고
-        </FormatTab>
-      </FormatTabs>
-
-      <FilterList aria-label="광고 상태 필터">
-        {ARCHIVE_FILTERS.map(({ label, value }) => (
-          <FilterButton
-            key={value}
-            type="button"
-            $active={filter === value}
-            aria-pressed={filter === value}
-            onClick={() => setFilter(value)}
-          >
-            {label}
-          </FilterButton>
-        ))}
-      </FilterList>
-      </>}
-
-      <Content>
-        {isQrLoading || isLoading ? (
-          <AdList aria-label="보관함 광고를 불러오는 중">
-            <ArchivedAdCardSkeleton />
-            <ArchivedAdCardSkeleton />
-          </AdList>
-        ) : !session ? (
-          <QrLoginRequired />
-        ) : hasError ? (
-          <EmptyMessage>보관함을 불러오지 못했어요.</EmptyMessage>
-        ) : ads.length > 0 ? (
-          <AdList>
-            {ads.map((ad) => (
-              <ArchivedAdCard key={ad.id} {...ad} onClick={() => navigate(`/archive/${ad.id}`, { state: { ad } })} />
+      {ads.length > 0 && (
+        <>
+          <ChipRail aria-label="형식 거르기">
+            {formatChips.map((chip) => (
+              <Chip
+                key={chip.key}
+                type="button"
+                aria-pressed={filter === chip.key}
+                $on={filter === chip.key}
+                onClick={() => setFilter(chip.key)}
+              >
+                {chip.label} {counts[chip.key]}
+              </Chip>
             ))}
-          </AdList>
-        ) : (
-          <EmptyMessage>해당 조건의 광고가 없어요.</EmptyMessage>
-        )}
-      </Content>
-      <BottomNavigation fixed />
+          </ChipRail>
+
+          <ChipRail aria-label="게시 상태 거르기">
+            {statusChips.map((chip) => (
+              <Chip
+                key={chip.key}
+                type="button"
+                aria-pressed={statusFilter === chip.key}
+                $on={statusFilter === chip.key}
+                onClick={() => setStatusFilter(chip.key)}
+              >
+                {chip.label}
+                {chip.key !== 'all' && ` ${counts[chip.key]}`}
+              </Chip>
+            ))}
+          </ChipRail>
+        </>
+      )}
+
+      {ads.length === 0 ? (
+        <EmptyWrap>
+          <EmptyMark aria-hidden="true">
+            <FolderIcon />
+          </EmptyMark>
+          <EmptyText>
+            아직 만든 광고가 없어요
+            <br />
+            하나 만들어볼까요?
+          </EmptyText>
+          <EmptyAction type="button" onClick={() => navigate('/create')}>
+            광고 만들기
+          </EmptyAction>
+        </EmptyWrap>
+      ) : (
+        <Feed>
+          {shown.length === 0 && (
+            <NoMatch>
+              고른 조건에 맞는 광고가 없어요
+              <br />
+              위에서 조건을 바꿔보세요
+            </NoMatch>
+          )}
+          {shown.map((ad) => {
+            const isReels = ad.format === 'reels';
+            const isPublished = ad.status === 'published';
+
+            return (
+              <Post key={ad.adId}>
+                <PostHead>
+                  <Avatar aria-hidden="true">{profile.name.slice(0, 1)}</Avatar>
+                  <HeadText>
+                    <ShopName>{profile.name}</ShopName>
+                    <PostMeta>
+                      {AD_FORMAT_LABEL[ad.format]}
+                      {!isReels && ` · ${ad.cards.length}장`}
+                    </PostMeta>
+                  </HeadText>
+                  <StatusBadge $published={isPublished}>
+                    {isPublished ? '올림' : '안 올림'}
+                  </StatusBadge>
+                </PostHead>
+
+                <MediaButton
+                  type="button"
+                  aria-label={`${ad.title} 광고 열기`}
+                  onClick={() => navigate(`/ads/${ad.adId}`)}
+                >
+                  {isReels ? (
+                    <>
+                      <MediaVideo
+                        src={ad.videoUrl && posterSrc(ad.videoUrl)}
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                      <PlayMark aria-hidden="true">
+                        <PlayIcon />
+                      </PlayMark>
+                    </>
+                  ) : (
+                    <>
+                      <MediaImage src={ad.cards[0]} alt="" />
+                      <Counter>1 / {ad.cards.length}</Counter>
+                    </>
+                  )}
+                </MediaButton>
+
+                <Caption>
+                  <CaptionName>{profile.name}</CaptionName>
+                  {firstLine(ad.caption)}
+                </Caption>
+                {ad.publishedAt && (
+                  <PostDate>{formatPublishedAt(ad.publishedAt)}에 올림</PostDate>
+                )}
+              </Post>
+            );
+          })}
+        </Feed>
+      )}
+
+      <BottomNavigation />
     </Page>
   );
 };

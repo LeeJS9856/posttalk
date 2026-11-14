@@ -1,113 +1,246 @@
 import styled from 'styled-components';
 
-import PageFrame from '@/components/layout/PageFrame';
-import type { ArchiveFormat } from '@/constants/archive';
 import { COLORS } from '@/constants/colors';
-import { FONT_SIZE } from '@/constants/typography';
+import { FONT_SIZE, FONT_WEIGHT, RADIUS } from '@/constants/typography';
 
-export const Page = styled(PageFrame)`
-  position: relative;
-  padding-bottom: 80px;
-  background: ${COLORS.background.main};
-`;
-
-export const SearchButton = styled.button`
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border: 0;
-  background: transparent;
-`;
-
-export const SearchIcon = styled.span`
-  position: relative;
-  width: 15px;
-  height: 15px;
-  border: 2px solid ${COLORS.black700};
-  border-radius: 50%;
-
-  &::after {
-    position: absolute;
-    right: -5px;
-    bottom: -3px;
-    width: 7px;
-    height: 2px;
-    border-radius: 2px;
-    background: ${COLORS.black700};
-    content: '';
-    transform: rotate(45deg);
-  }
-`;
-
-export const FormatTabs = styled.div`
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  border-bottom: 1px solid ${COLORS.black200};
-  background: ${COLORS.background.main};
-`;
-
-export const FormatIndicator = styled.span<{ $format: ArchiveFormat }>`
-  position: absolute;
-  right: auto;
-  bottom: -1px;
-  left: 24px;
-  width: calc(50% - 48px);
-  height: 2px;
-  background: ${COLORS.black700};
-  transform: ${({ $format }) => ($format === 'photo' ? 'translateX(0)' : 'translateX(calc(100% + 48px))')};
-  transition: transform 220ms ease-out;
-`;
-
-export const FormatTab = styled.button<{ $active: boolean }>`
-  position: relative;
-  height: 48px;
-  border: 0;
-  color: ${({ $active }) => ($active ? COLORS.black700 : COLORS.black400)};
-  background: transparent;
-  font-size: ${FONT_SIZE.body};
-  font-weight: ${({ $active }) => ($active ? 700 : 500)};
-`;
-
-export const FilterList = styled.div`
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 20px 24px 14px;
-  background: ${COLORS.background.main};
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
-export const FilterButton = styled.button<{ $active: boolean }>`
-  flex: 0 0 auto;
-  border: 0;
-  border-radius: 999px;
-  padding: 9px 12px;
-  color: ${({ $active }) => ($active ? COLORS.white : COLORS.black400)};
-  background: ${({ $active }) => ($active ? COLORS.primary : COLORS.primary100)};
-  box-shadow: 0 2px 5px rgba(33, 33, 33, 0.12);
-  font-size: ${FONT_SIZE.label};
-  font-weight: 400;
-`;
-
-export const Content = styled.section`
-  padding-top: 20px;
-`;
-
-export const AdList = styled.div`
+export const Page = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  height: 100svh;
+  background-color: ${COLORS.background.main};
 `;
 
-export const EmptyMessage = styled.p`
-  padding: 72px 24px;
-  color: ${COLORS.black500};
+export const ChipRail = styled.div`
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 0 16px 8px;
+  overflow-x: auto;
+  scroll-padding-left: 16px;
+
+  &:last-of-type {
+    padding-bottom: 14px;
+  }
+`;
+
+export const CreateButton = styled.button`
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin-right: -6px;
+  padding: 0 6px;
+  color: ${COLORS.brand.main};
   font-size: ${FONT_SIZE.body};
+  font-weight: ${FONT_WEIGHT.medium};
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+`;
+
+/** 필터를 걸었는데 남는 게 없을 때. 아예 비어 있는 것과 다른 말을 한다. */
+export const NoMatch = styled.p`
+  padding: 40px 24px;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.bodyLarge};
+  line-height: 1.7;
   text-align: center;
+`;
+
+export const Chip = styled.button<{ $on: boolean }>`
+  flex-shrink: 0;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background-color: ${({ $on }) => ($on ? COLORS.brand.main : COLORS.background.subtle)};
+  color: ${({ $on }) => ($on ? COLORS.text.inverse : COLORS.text.grey)};
+  font-size: ${FONT_SIZE.body};
+  font-weight: ${({ $on }) => ($on ? FONT_WEIGHT.medium : FONT_WEIGHT.regular)};
+  white-space: nowrap;
+  transition: background-color 0.18s ease;
+`;
+
+export const Feed = styled.ul`
+  flex: 1;
+  min-height: 0;
+  list-style: none;
+  overflow-y: auto;
+`;
+
+export const Post = styled.li`
+  & + & {
+    margin-top: 6px;
+    border-top: 0.5px solid ${COLORS.border.main};
+    padding-top: 14px;
+  }
+`;
+
+/** 게시물 머리. 가게 아바타와 이름, 오른쪽에 올렸는지 여부. */
+export const PostHead = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 16px 9px;
+`;
+
+export const Avatar = styled.span`
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: ${RADIUS.round};
+  background-color: ${COLORS.brand.main};
+  color: ${COLORS.text.inverse};
+  font-size: ${FONT_SIZE.body};
+  font-weight: ${FONT_WEIGHT.medium};
+`;
+
+export const HeadText = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+export const ShopName = styled.p`
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.body};
+  font-weight: ${FONT_WEIGHT.medium};
+`;
+
+export const PostMeta = styled.p`
+  margin-top: 1px;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.label};
+`;
+
+export const StatusBadge = styled.span<{ $published: boolean }>`
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background-color: ${({ $published }) =>
+    $published ? COLORS.statusSoft.published : COLORS.statusSoft.unpublished};
+  color: ${({ $published }) =>
+    $published ? COLORS.status.published : COLORS.status.unpublished};
+  font-size: ${FONT_SIZE.label};
+`;
+
+/** 인스타처럼 좌우 여백 없이 화면 끝까지 채운다. */
+export const MediaButton = styled.button`
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background-color: ${COLORS.background.subtle};
+  overflow: hidden;
+`;
+
+export const MediaImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+export const MediaVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+export const Counter = styled.span`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background-color: ${COLORS.scrim};
+  color: ${COLORS.text.inverse};
+  font-size: ${FONT_SIZE.label};
+`;
+
+export const PlayMark = styled.span`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: ${RADIUS.round};
+  background-color: rgba(255, 255, 255, 0.88);
+  color: ${COLORS.text.main};
+  transform: translate(-50%, -50%);
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+`;
+
+export const Caption = styled.p`
+  padding: 10px 16px 14px;
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.6;
+`;
+
+export const CaptionName = styled.span`
+  margin-right: 5px;
+  font-weight: ${FONT_WEIGHT.medium};
+`;
+
+export const PostDate = styled.p`
+  margin-top: -8px;
+  padding: 0 16px 14px;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.label};
+`;
+
+export const EmptyWrap = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 24px;
+`;
+
+export const EmptyMark = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: ${RADIUS.chip};
+  background-color: ${COLORS.background.subtle};
+  color: #b2b3b9;
+
+  svg {
+    width: 21px;
+    height: 21px;
+  }
+`;
+
+export const EmptyText = styled.p`
+  color: ${COLORS.text.grey};
+  font-size: ${FONT_SIZE.bodyLarge};
+  line-height: 1.7;
+  text-align: center;
+`;
+
+export const EmptyAction = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: ${RADIUS.card};
+  background-color: ${COLORS.brand.main};
+  color: ${COLORS.text.inverse};
+  font-size: ${FONT_SIZE.bodyLarge};
+  font-weight: ${FONT_WEIGHT.medium};
 `;

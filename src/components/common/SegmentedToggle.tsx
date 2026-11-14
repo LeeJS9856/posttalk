@@ -1,90 +1,77 @@
 import styled from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
-import { FONT_SIZE } from '@/constants/typography';
-
-export type SegmentedToggleOption<T extends string> = {
-  label: string;
-  value: T;
-};
+import { FONT_SIZE, FONT_WEIGHT } from '@/constants/typography';
 
 type SegmentedToggleProps<T extends string> = {
   ariaLabel: string;
-  options: readonly SegmentedToggleOption<T>[];
+  options: readonly { id: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
 };
 
-const SegmentedToggle = <T extends string,>({
+/**
+ * 밑줄로 선택을 표시하는 세그먼트. 배경을 깔지 않아 결과물 미리보기와 경쟁하지 않는다.
+ * 인디케이터는 항목 사이를 미끄러진다.
+ */
+const SegmentedToggle = <T extends string>({
   ariaLabel,
   options,
   value,
   onChange,
 }: SegmentedToggleProps<T>): React.JSX.Element => {
-  const selectedIndex = Math.max(
-    options.findIndex((option) => option.value === value),
+  const activeIndex = Math.max(
+    options.findIndex((option) => option.id === value),
     0,
   );
 
   return (
-    <Toggle aria-label={ariaLabel} $optionCount={options.length}>
-      <ToggleIndicator $selectedIndex={selectedIndex} $optionCount={options.length} aria-hidden="true" />
-      {options.map((option) => {
-        const isSelected = option.value === value;
-
-        return (
-          <ToggleButton
-            key={option.value}
-            type="button"
-            $selected={isSelected}
-            aria-pressed={isSelected}
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </ToggleButton>
-        );
-      })}
-    </Toggle>
+    <Track role="radiogroup" aria-label={ariaLabel}>
+      {options.map((option) => (
+        <Segment
+          key={option.id}
+          type="button"
+          role="radio"
+          aria-checked={value === option.id}
+          $selected={value === option.id}
+          onClick={() => onChange(option.id)}
+        >
+          {option.label}
+        </Segment>
+      ))}
+      <Indicator aria-hidden="true" $count={options.length} $index={activeIndex} />
+    </Track>
   );
 };
 
-const Toggle = styled.div<{ $optionCount: number }>`
+const Track = styled.div`
   position: relative;
-  display: grid;
-  grid-template-columns: repeat(${({ $optionCount }) => $optionCount}, 1fr);
-  gap: 4px;
-  width: 100%;
-  max-width: 256px;
-  margin: 12px auto 0;
-  padding: 4px;
-  border-radius: 28px;
-  background: ${COLORS.primary200};
-  box-shadow: 0 3px 8px rgba(33, 33, 33, 0.12);
+  display: flex;
+  box-shadow: inset 0 -1px 0 ${COLORS.border.main};
 `;
 
-const ToggleIndicator = styled.span<{ $selectedIndex: number; $optionCount: number }>`
+const Segment = styled.button<{ $selected: boolean }>`
+  flex: 1;
+  min-height: 46px;
+  color: ${({ $selected }) => ($selected ? COLORS.brand.main : COLORS.text.muted)};
+  font-size: ${FONT_SIZE.bodyLarge};
+  font-weight: ${FONT_WEIGHT.medium};
+  transition: color 0.2s ease;
+`;
+
+const Indicator = styled.span<{ $count: number; $index: number }>`
   position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  width: ${({ $optionCount }) => `calc((100% - ${8 + ($optionCount - 1) * 4}px) / ${$optionCount})`};
-  border-radius: 22px;
-  background: ${COLORS.primary};
-  transform: ${({ $selectedIndex }) => `translateX(calc(${$selectedIndex * 100}% + ${$selectedIndex * 4}px))`};
-  transition: transform 220ms ease-out;
-`;
+  bottom: 0;
+  left: 0;
+  width: ${({ $count }) => 100 / $count}%;
+  height: 2px;
+  background-color: ${COLORS.brand.main};
+  transform: translateX(${({ $index }) => $index * 100}%);
+  transition: transform 0.28s cubic-bezier(0.2, 0.85, 0.25, 1);
 
-const ToggleButton = styled.button<{ $selected: boolean }>`
-  position: relative;
-  z-index: 1;
-  height: 40px;
-  border: 0;
-  border-radius: 22px;
-  color: ${({ $selected }) => ($selected ? COLORS.white : COLORS.black400)};
-  background: transparent;
-  font-size: ${FONT_SIZE.body};
-  font-weight: ${({ $selected }) => ($selected ? 700 : 400)};
-  transition: color 180ms ease-out;
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 `;
 
 export default SegmentedToggle;

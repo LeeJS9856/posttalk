@@ -1,11 +1,22 @@
 export const FONT_SIZE = {
-  caption: '12px',
-  label: '13px',
-  body: '14px',
-  bodyLarge: '16px',
-  titleSmall: '17px',
-  title: '18px',
-  titleLarge: '20px',
-  titleEmphasis: '22px',
-  display: '24px',
+  caption: '10.5px',
+  label: '11px',
+  body: '12px',
+  bodyLarge: '13px',
+  titleSmall: '14.5px',
+  title: '16.5px',
+  titleLarge: '17px',
+  display: '19px',
+} as const;
+
+export const FONT_WEIGHT = {
+  regular: 400,
+  medium: 500,
+} as const;
+
+export const RADIUS = {
+  chip: '11px',
+  card: '14px',
+  panel: '20px',
+  round: '50%',
 } as const;
