@@ -1,183 +1,206 @@
-import { useEffect, useRef, useState } from 'react';
-import { ClipLoader } from 'react-spinners';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import popo from '@/assets/popo.svg';
-import { getAdSession, type GeneratedAsset } from '@/apis/adSessions';
-import { checkPhoto, createSubmission, getGenerationResult, startGeneration, type UploadAssetType, uploadAsset } from '@/apis/creation';
-import { getServerHealth } from '@/apis/server';
-import { FlowTitleStrong } from '@/components/common/FlowTitle';
-import { COLORS } from '@/constants/colors';
+import { isAbortError } from '@/apis/api';
+import { getGenerationProgress, type GenerationProgress } from '@/apis/posttalk';
+import {
+  ESTIMATED_SECONDS,
+  GENERATION_FAILED_NOTICE,
+  POLL_INTERVAL_MS,
+  SLIDE_INTERVAL_MS,
+  buildSteps,
+  stepIndexOf,
+} from '@/constants/generating';
 import { useAdDraft } from '@/hooks/useAdDraft';
-import { useMerchantSession } from '@/hooks/useMerchantSession';
-import { Content, Description, LoaderArea, Page, Popo, RetakeButton, Title } from '@/pages/Generating/Generating.styles';
+import {
+  BackButton,
+  Dot,
+  Dots,
+  EmptyText,
+  EmptyWrap,
+  Frame,
+  Heading,
+  Note,
+  Page,
+  Slide,
+  SlideImage,
+  SlideVideo,
+  Spinner,
+  Step,
+  StepMark,
+  Steps,
+} from '@/pages/Generating/Generating.styles';
 
-const Generating = (): React.JSX.Element => (
-  <GeneratingContent />
+const CheckIcon = (): React.JSX.Element => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path
+      d="M5 12.5l4.5 4.5L19 7.5"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
 );
 
-const getGeneratedAssetUrl = (asset: GeneratedAsset | string): string | undefined => {
-  if (typeof asset === 'string') return asset;
-  return asset.url ?? asset.publicUrl ?? asset.resultUrl ?? asset.filePath;
-};
-
-const normalizeHashtags = (hashtags?: string[] | string): string[] | undefined => {
-  if (Array.isArray(hashtags)) return hashtags;
-  if (!hashtags) return undefined;
-  return hashtags.split(/[\n,]/).map((hashtag) => hashtag.trim()).filter(Boolean);
-};
-
-const GeneratingContent = (): React.JSX.Element => {
+const Generating = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const { draft, setGeneratedResultUrl, setGeneration, setGenerationResult } = useAdDraft();
-  const { errorMessage: qrErrorMessage, isLoading: isQrLoading, session } = useMerchantSession();
-  const startedRef = useRef(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [retakeAssetType, setRetakeAssetType] = useState<UploadAssetType | null>(null);
+  const { draft, resetDraft } = useAdDraft();
+
+  const steps = useMemo(() => buildSteps(draft.format), [draft.format]);
+  const assets = useMemo(
+    () =>
+      Object.keys(draft.captures)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map((index) => draft.captures[index]),
+    [draft.captures],
+  );
+
+  const [slide, setSlide] = useState(0);
+  const [progress, setProgress] = useState<GenerationProgress | null>(null);
+  /** 조회가 잠시 끊겼는지. 생성은 서버에서 계속되므로 안내만 하고 계속 묻는다. */
+  const [isOffline, setIsOffline] = useState(false);
+  /** 이 화면에서 기다린 시간(초). 서버 진행률이 어림값일 때 단계를 넘기는 기준이다. */
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  const session = draft.session;
+  const jobId = session?.jobId;
+  // 새로고침하면 찍은 재료(메모리)는 사라지지만 생성 작업 번호는 탭에 남아 있다. 작업 번호만 있으면 이어서 기다린다.
+  const hasJob = Boolean(jobId);
+  const stepIndex = stepIndexOf(progress, steps.length, elapsedSeconds);
+
+  // 생성 중 이탈하면 결과물을 놓친다. 안드로이드 하드웨어 뒤로 버튼까지 붙잡는다.
+  useEffect(() => {
+    if (!hasJob) return;
+
+    const hold = (): void => window.history.pushState(null, '', window.location.href);
+    hold();
+    window.addEventListener('popstate', hold);
+
+    return () => window.removeEventListener('popstate', hold);
+  }, [hasJob]);
 
   useEffect(() => {
-    if (isQrLoading || startedRef.current) return;
-    startedRef.current = true;
+    if (assets.length < 2) return;
 
-    const generateAdvertisement = async (): Promise<void> => {
-      const { answers, foodPhoto, format, menuBoard } = draft;
+    const timer = window.setInterval(() => {
+      setSlide((current) => (current + 1) % assets.length);
+    }, SLIDE_INTERVAL_MS);
 
-      if (!session) {
-        setErrorMessage(qrErrorMessage ?? 'QR로 가게 정보를 확인해주세요.');
-        return;
-      }
+    return () => window.clearInterval(timer);
+  }, [assets.length]);
 
-      if (draft.sessionId) {
-        if (!draft.sessionId) {
-          setErrorMessage('광고 생성 세션을 찾지 못했어요. 다시 만들어주세요.');
-          return;
-        }
+  /**
+   * 진행률 조회. 끝날 때까지 정해진 간격으로 묻는다.
+   * 생성은 서버에서 돌아가므로 조회가 실패해도 다시 요청을 보내지 않고 다음 조회만 기다린다.
+   */
+  useEffect(() => {
+    if (!jobId) return;
 
-        try {
-          while (true) {
-            const response = await getAdSession({ sessionId: draft.sessionId });
-            const sessionData = response.data;
-            const isCompleted = sessionData.status === 'completed' || sessionData.generation?.status === 'completed';
+    const controller = new AbortController();
+    let timer: number | undefined;
+    const startedAt = Date.now();
 
-            if (isCompleted) {
-              const generatedAssets = (sessionData.generation?.generatedAssets ?? [])
-                .map(getGeneratedAssetUrl)
-                .filter((url): url is string => Boolean(url));
-              const resultUrl = sessionData.generation?.resultUrl ?? generatedAssets[0];
-              const previewImages = generatedAssets.length > 0
-                ? generatedAssets
-                : (resultUrl ? [resultUrl] : []);
-
-              if (previewImages.length === 0) {
-                throw new Error('생성된 광고 이미지를 받지 못했어요.');
-              }
-
-              setGenerationResult({
-                generatedAssets: previewImages,
-                resultUrl: resultUrl ?? previewImages[0],
-                submissionId: sessionData.submission?.id ?? sessionData.submission?.submissionId,
-                caption: sessionData.submission?.caption ?? sessionData.draft?.caption,
-                hashtags: normalizeHashtags(sessionData.submission?.hashtags ?? sessionData.draft?.hashtags),
-              });
-              navigate('/create/complete', { replace: true });
-              return;
-            }
-
-            if (sessionData.status === 'failed' || sessionData.generation?.status === 'failed') {
-              throw new Error('광고 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
-            }
-
-            await new Promise<void>((resolve) => window.setTimeout(resolve, 2000));
-          }
-        } catch (error) {
-          setErrorMessage(error instanceof Error ? error.message : '광고 생성 중 문제가 발생했어요.');
-        }
-        return;
-      }
-
-      if (!menuBoard || !foodPhoto || !answers.storeType || !answers.targetMenuName || !answers.appealPoint) {
-        setErrorMessage('광고 생성에 필요한 사진 또는 답변이 없어요. 다시 입력해주세요.');
-        return;
-      }
-
+    const poll = async (): Promise<void> => {
+      setElapsedSeconds((Date.now() - startedAt) / 1000);
       try {
-        await getServerHealth();
-        const [menuBoardAsset, foodPhotoAsset] = await Promise.all([
-          uploadAsset({ assetType: 'menu_board', file: menuBoard.file, session }),
-          uploadAsset({ assetType: 'food_photo', file: foodPhoto.file, session }),
-        ]);
-        const [menuBoardReview, foodPhotoReview] = await Promise.all([
-          checkPhoto({ asset: menuBoardAsset, assetType: 'menu_board', session, shotOrder: 1 }),
-          checkPhoto({ asset: foodPhotoAsset, assetType: 'food_photo', session, shotOrder: 2 }),
-        ]);
+        const next = await getGenerationProgress(jobId, controller.signal);
+        setProgress(next);
+        setIsOffline(false);
 
-        const failedReview = [
-          { assetType: 'menu_board' as const, result: menuBoardReview },
-          { assetType: 'food_photo' as const, result: foodPhotoReview },
-        ].find(({ result }) => !result.review.passed);
-        if (failedReview) {
-          setRetakeAssetType(failedReview.assetType);
-          setErrorMessage(`${failedReview.result.review.summary} ${failedReview.result.review.feedback.join(' ')}`);
+        if (next.status === 'completed') {
+          const target = session?.submissionId ?? session?.sessionId;
+          void navigate(`/ads/${target}?from=create&session=${session?.sessionId}`, {
+            replace: true,
+          });
           return;
         }
-
-        const submission = await createSubmission({
-          answers: {
-            storeType: answers.storeType,
-            targetMenuName: answers.targetMenuName,
-            appealPoint: answers.appealPoint,
-            targetCustomer: answers.targetCustomer,
-            peakSalesTime: answers.peakSalesTime,
-            popularMenuNotes: answers.popularMenuNotes,
-            extraMessage: answers.extraMessage,
-          },
-          assets: [menuBoardAsset, foodPhotoAsset],
-          session,
-        });
-        const job = await startGeneration({ format, submissionId: submission.submissionId });
-        setGeneration({ jobId: job.jobId, submissionId: submission.submissionId });
-
-        while (true) {
-          const result = await getGenerationResult({ format, jobId: job.jobId });
-
-          if (result.status === 'completed' && result.resultUrl) {
-            setGeneratedResultUrl(result.resultUrl);
-            navigate('/create/complete', { replace: true });
-            return;
-          }
-
-          if (result.status === 'failed') {
-            throw new Error('광고 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
-          }
-
-          await new Promise<void>((resolve) => window.setTimeout(resolve, 2000));
+        if (next.status === 'failed') {
+          // 같은 재료로 다시 돌리는 API 가 없다. 재료를 비우고 홈에서 실패를 알린다.
+          resetDraft();
+          void navigate('/', { replace: true, state: { notice: GENERATION_FAILED_NOTICE } });
+          return;
         }
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : '광고 생성 중 문제가 발생했어요.');
+      } catch (cause) {
+        if (isAbortError(cause)) return;
+        setIsOffline(true);
       }
+      timer = window.setTimeout(() => void poll(), POLL_INTERVAL_MS);
     };
 
-    void generateAdvertisement();
-  }, [draft, isQrLoading, navigate, qrErrorMessage, session, setGeneratedResultUrl, setGeneration, setGenerationResult]);
+    void poll();
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+    // 세션 값은 생성이 시작된 뒤 바뀌지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobId]);
+
+  if (!hasJob) {
+    return (
+      <Page aria-label="생성 대기">
+        <EmptyWrap>
+          <EmptyText>
+            만들 재료가 없어요.
+            <br />
+            사진부터 올려주세요.
+          </EmptyText>
+          <BackButton type="button" onClick={() => navigate('/create')}>
+            처음부터 하기
+          </BackButton>
+        </EmptyWrap>
+      </Page>
+    );
+  }
 
   return (
-    <Page aria-label={retakeAssetType ? '사진 재촬영 안내' : '광고 생성 중'} aria-busy={!errorMessage}>
-      <Content>
-        <Popo src={popo} alt="" />
-        <Title>
-          <FlowTitleStrong>광고</FlowTitleStrong>를 만들고 있어요
-        </Title>
-        <Description>{errorMessage ?? '조금만 기다려 주세요'}</Description>
-        {retakeAssetType ? (
-          <RetakeButton type="button" onClick={() => navigate(`/create/capture?asset=${retakeAssetType}`)}>
-            {retakeAssetType === 'menu_board' ? '메뉴판' : '음식 사진'} 다시 촬영하기
-          </RetakeButton>
-        ) : (
-          <LoaderArea aria-label="광고 생성 중입니다">
-            <ClipLoader color={COLORS.primary} size={30} speedMultiplier={0.8} />
-          </LoaderArea>
-        )}
-      </Content>
+    <Page aria-label="생성 대기">
+      <Frame>
+        {assets.map((asset, order) => (
+          <Slide key={asset.previewUrl} $shown={order === slide}>
+            {asset.kind === 'video' ? (
+              <SlideVideo src={asset.previewUrl} autoPlay loop muted playsInline />
+            ) : (
+              <SlideImage src={asset.previewUrl} alt="" />
+            )}
+          </Slide>
+        ))}
+        <Dots aria-hidden="true">
+          {assets.map((asset, order) => (
+            <Dot key={asset.previewUrl} $on={order === slide} />
+          ))}
+        </Dots>
+      </Frame>
+
+      <Heading>
+        올려주신 재료로
+        <br />
+        광고를 만들고 있어요
+      </Heading>
+      <Note role="status">
+        {isOffline
+          ? '연결이 잠시 끊겼어요. 다시 확인하고 있어요'
+          : (progress?.message ?? `${ESTIMATED_SECONDS}초쯤 걸려요. 화면을 끄지 말아주세요`)}
+      </Note>
+
+      <Steps aria-live="polite">
+        {steps.map((step, order) => {
+          const done = order < stepIndex;
+          const active = order === stepIndex;
+
+          return (
+            <Step key={step.key} $done={done} $active={active}>
+              <StepMark>
+                {done ? <CheckIcon /> : active ? <Spinner aria-hidden="true" /> : null}
+              </StepMark>
+              {step.label}
+            </Step>
+          );
+        })}
+      </Steps>
     </Page>
   );
 };

@@ -1,21 +1,15 @@
-import photoExample1 from '@/assets/photo-ex1.jpg';
-import photoExample2 from '@/assets/photo-ex2.jpg';
-import photoExample3 from '@/assets/photo-ex3.jpg';
-import photoExample4 from '@/assets/photo-ex4.jpg';
-import videoExample from '@/assets/video-ex.mp4';
+import type { AdFormat } from '@/constants/home';
 
-export const AD_FORMAT_OPTIONS = [
-  { label: '사진 광고', value: 'photo' },
-  { label: '동영상 광고', value: 'video' },
-] as const;
+export type AdFormatOption = {
+  id: AdFormat;
+  label: string;
+  /** 무엇을 찍고 무엇을 받는지. 형식의 차이를 한 줄로 알린다. 백엔드 명세의 장수 그대로다. */
+  flow: string;
+};
 
-export type AdFormat = (typeof AD_FORMAT_OPTIONS)[number]['value'];
+export const AD_FORMAT_OPTIONS: readonly AdFormatOption[] = [
+  { id: 'card_news', label: '카드뉴스', flow: '사진 6장 → 카드 3장' },
+  { id: 'reels', label: '릴스', flow: '영상 4개 → 13초 영상' },
+];
 
-export const PHOTO_PREVIEW_IMAGES = [
-  photoExample1,
-  photoExample2,
-  photoExample3,
-  photoExample4,
-] as const;
-
-export const VIDEO_PREVIEW_SOURCE = videoExample;
+export const DEFAULT_AD_FORMAT: AdFormat = 'card_news';

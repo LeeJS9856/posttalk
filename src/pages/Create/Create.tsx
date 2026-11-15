@@ -1,69 +1,152 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import PrimaryActionButton from '@/components/common/PrimaryActionButton';
-import SegmentedToggle from '@/components/common/SegmentedToggle';
-import QrLoginRequired from '@/components/auth/QrLoginRequired';
-import PhotoPreviewCarousel from '@/components/create/PhotoPreviewCarousel';
-import VideoPreview from '@/components/create/VideoPreview';
+import AppHeader from '@/components/layout/AppHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
-import { AD_FORMAT_OPTIONS, PHOTO_PREVIEW_IMAGES, VIDEO_PREVIEW_SOURCE, type AdFormat } from '@/constants/create';
+import { AD_FORMAT_OPTIONS, DEFAULT_AD_FORMAT } from '@/constants/create';
+import { AD_FORMAT_LABEL, type AdFormat } from '@/constants/home';
+import { SUGGESTION_THEMES, type SuggestionThemeId } from '@/constants/themes';
 import { useAdDraft } from '@/hooks/useAdDraft';
-import { useMerchantSession } from '@/hooks/useMerchantSession';
-import { ActionArea, Guide, GuideDescription, GuideTitle, Page, Title, TopContent } from '@/pages/Create/Create.styles';
+import {
+  CardMain,
+  CardSide,
+  CardStage,
+  Content,
+  Footer,
+  FormatFlow,
+  FormatLabel,
+  FormatOption,
+  MoodLabel,
+  MoodOption,
+  MoodThumb,
+  NextButton,
+  OptionGrid,
+  Page,
+  PageDot,
+  PageDots,
+  Phone,
+  PhoneTime,
+  Preview,
+  PreviewLabel,
+  ReelsStage,
+  ReelsTag,
+  ReelsTags,
+  SectionLabel,
+} from '@/pages/Create/Create.styles';
 
+/** 릴스 미리보기 옆에 붙이는 이름표. 카드뉴스에는 없는, 릴스에만 들어가는 것들이다. */
+const REELS_EXTRAS = ['자막', '배경음악', '장면 전환'] as const;
+
+/**
+ * 광고 만들기의 첫 화면. 형식과 분위기를 한 화면에서 고른다.
+ * 무엇을 고르든 위의 미리보기가 그 조합의 결과물 모양으로 바뀐다.
+ * 형식 버튼에는 찍을 것 → 받을 것을 적어, 카드뉴스와 릴스의 차이를 이름만으로 짐작하지 않게 한다.
+ */
 const Create = (): React.JSX.Element => {
-  const [selectedFormat, setSelectedFormat] = useState<AdFormat>('photo');
   const navigate = useNavigate();
-  const { resetDraft } = useAdDraft();
-  const { isLoading: isQrLoading, session } = useMerchantSession();
+  const { setConcept } = useAdDraft();
 
-  const startCreation = (): void => {
-    resetDraft(selectedFormat);
-    navigate('/create/questions/0');
+  // 형식과 콘셉트는 이 화면에서 한 번만 고른다. 홈에서 미리 고르게 하지 않는다.
+  const [format, setFormat] = useState<AdFormat>(DEFAULT_AD_FORMAT);
+  const [themeId, setThemeId] = useState<SuggestionThemeId>(SUGGESTION_THEMES[0].id);
+
+  const theme = SUGGESTION_THEMES.find((item) => item.id === themeId) ?? SUGGESTION_THEMES[0];
+  const [mainCard, leftCard, rightCard] = theme.preview.cards;
+  const combo = `${theme.label} ${AD_FORMAT_LABEL[format]}`;
+
+  const goNext = (): void => {
+    setConcept({ format, theme: theme.id });
+    navigate('/create/info');
   };
 
   return (
-    <Page aria-label="광고 제작 페이지">
-      {!isQrLoading && !session ? (
-        <QrLoginRequired />
-      ) : (
-        <>
-      <TopContent>
-        <Title>
-          어떤 광고를 만들어볼까요?
-          <br />
-          원하는 방식을 골라주세요.
-        </Title>
-        <SegmentedToggle
-          ariaLabel="광고 형식 선택"
-          options={AD_FORMAT_OPTIONS}
-          value={selectedFormat}
-          onChange={setSelectedFormat}
-        />
-      </TopContent>
+    <Page aria-label="광고 형식과 분위기 선택">
+      {/* 하단 메뉴의 한 탭이라 뒤로 버튼을 두지 않는다. 다른 탭(보관함·마이)과 머리를 맞춘다. */}
+      <AppHeader title="새 광고" />
 
-      {selectedFormat === 'photo' ? (
-        <PhotoPreviewCarousel images={PHOTO_PREVIEW_IMAGES} />
-      ) : (
-        <VideoPreview videoSrc={VIDEO_PREVIEW_SOURCE} objectFit="contain" />
-      )}
+      <Content>
+        <Preview aria-label={`${combo} 미리보기`}>
+          <PreviewLabel>{combo} 예시</PreviewLabel>
 
-      <Guide>
-        <GuideTitle>{selectedFormat === 'photo' ? '사진과 글로 한눈에 보여줘요.' : '영상으로 생생하게 보여줘요.'}</GuideTitle>
-        <GuideDescription>
-          {selectedFormat === 'photo' ? '여러 장으로 보기 쉽게 정리해드려요.' : '짧은 영상으로 가게의 매력을 알려드려요.'}
-        </GuideDescription>
-        <ActionArea>
-          <PrimaryActionButton type="button" onClick={startCreation}>
-            선택하기
-          </PrimaryActionButton>
-        </ActionArea>
-      </Guide>
+          {format === 'card_news' ? (
+            <>
+              <CardStage aria-hidden="true">
+                <CardSide src={leftCard} alt="" />
+                <CardMain src={mainCard} alt="" />
+                <CardSide src={rightCard} alt="" />
+              </CardStage>
+              <PageDots aria-hidden="true">
+                <PageDot />
+                <PageDot $active />
+                <PageDot />
+              </PageDots>
+            </>
+          ) : (
+            <ReelsStage aria-hidden="true">
+              <Phone>
+                <video
+                  key={theme.id}
+                  src={theme.preview.reels.video}
+                  poster={theme.preview.reels.poster}
+                  muted
+                  loop
+                  playsInline
+                  autoPlay
+                />
+                <PhoneTime>0:13</PhoneTime>
+              </Phone>
+              <ReelsTags>
+                {REELS_EXTRAS.map((extra) => (
+                  <ReelsTag key={extra}>{extra}</ReelsTag>
+                ))}
+              </ReelsTags>
+            </ReelsStage>
+          )}
+        </Preview>
 
-      <BottomNavigation fixed />
-        </>
-      )}
+        <SectionLabel id="format-label">형식</SectionLabel>
+        <OptionGrid role="radiogroup" aria-labelledby="format-label">
+          {AD_FORMAT_OPTIONS.map((option) => (
+            <FormatOption
+              key={option.id}
+              type="button"
+              role="radio"
+              aria-checked={format === option.id}
+              $selected={format === option.id}
+              onClick={() => setFormat(option.id)}
+            >
+              <FormatLabel>{option.label}</FormatLabel>
+              <FormatFlow>{option.flow}</FormatFlow>
+            </FormatOption>
+          ))}
+        </OptionGrid>
+
+        <SectionLabel id="mood-label">분위기</SectionLabel>
+        <OptionGrid role="radiogroup" aria-labelledby="mood-label">
+          {SUGGESTION_THEMES.map((item) => (
+            <MoodOption
+              key={item.id}
+              type="button"
+              role="radio"
+              aria-checked={themeId === item.id}
+              $selected={themeId === item.id}
+              onClick={() => setThemeId(item.id)}
+            >
+              <MoodThumb src={item.thumb} alt="" />
+              <MoodLabel>{item.label}</MoodLabel>
+            </MoodOption>
+          ))}
+        </OptionGrid>
+      </Content>
+
+      <Footer>
+        <NextButton type="button" onClick={goNext}>
+          {combo} 만들기
+        </NextButton>
+      </Footer>
+
+      {/* 제작 흐름의 입구까지만 하단 메뉴를 둔다. 다음 화면부터는 이탈을 막으려 감춘다. */}
+      <BottomNavigation />
     </Page>
   );
 };
