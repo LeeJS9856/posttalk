@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
+import IdleReset from '@/components/common/IdleReset';
 import RequireAuth from '@/components/common/RequireAuth';
 import AdDetail from '@/pages/AdDetail/AdDetail';
 import Archive from '@/pages/Archive/Archive';
@@ -17,6 +18,7 @@ import Login from '@/pages/Login/Login';
 const App = (): React.JSX.Element => {
   return (
     <Router>
+      <IdleReset />
       <Routes>
         {/* 로그인 상태에서도 열린다. 운영자가 다시 로그인할 길이 여기뿐이다. */}
         <Route path="/login" element={<Login />} />

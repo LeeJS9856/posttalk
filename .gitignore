@@ -26,3 +26,6 @@ dist-ssr
 
 # Impeccable 작업 파일
 .impeccable/
+
+# 카드뉴스 테스트용 음식 사진. 개인 사진이라 레포에 올리지 않는다.
+/test-photos/

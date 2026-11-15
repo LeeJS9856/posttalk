@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 
 import AppHeader from '@/components/layout/AppHeader';
 import { createTemplateId } from '@/constants/shop';
-import { buildScenes } from '@/constants/scenes';
 import { MAX_MENU_COUNT, type StoreTemplate } from '@/constants/templates';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useShop } from '@/hooks/useShop';
@@ -73,12 +72,13 @@ const CheckIcon = (): React.JSX.Element => (
 const CreateInfo = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { draft, setStoreInfo } = useAdDraft();
-  const shotCount = buildScenes(draft.format).length;
+  // 몇 장을 찍을지는 서버가 정한다. 개수 대신 무엇을 올리는지만 알린다.
   const shotUnit = draft.format === 'reels' ? '영상' : '사진';
-  const { profile, setProfile, templates, addTemplate } = useShop();
+  const { profile, templates, addTemplate } = useShop();
 
   const [templateId, setTemplateId] = useState<string | null>(null);
-  // 가게 이름은 캡션 첫 줄과 카드뉴스에 들어간다. 한 번 적으면 프로필에 남아 다음에 채워져 있다.
+  // 가게 이름은 캡션 첫 줄과 카드뉴스에 들어간다. 운영자가 마이에서 정한 이름만 미리 채운다.
+  // 관람객이 적은 이름은 프로필에 남기지 않는다. 남기면 다음 관람객 칸에 앞사람 가게가 채워져 있다.
   const [storeName, setStoreName] = useState(profile.name);
   const [storeDescription, setStoreDescription] = useState('');
   const [menus, setMenus] = useState<MenuDraft[]>([]);
@@ -130,8 +130,7 @@ const CreateInfo = (): React.JSX.Element => {
       });
     }
 
-    setProfile({ ...profile, name: storeName.trim() });
-    setStoreInfo({ storeDescription: storeDescription.trim(), menus });
+    setStoreInfo({ storeName: storeName.trim(), storeDescription: storeDescription.trim(), menus });
     void navigate('/create/capture');
   };
 
@@ -260,7 +259,7 @@ const CreateInfo = (): React.JSX.Element => {
 
       <Footer>
         <NextButton type="button" disabled={!canProceed} onClick={goNext}>
-          {canProceed ? `다음 · ${shotUnit} ${shotCount}개 올리기` : '다음'}
+          {canProceed ? `다음 · ${shotUnit} 올리기` : '다음'}
         </NextButton>
       </Footer>
     </Page>

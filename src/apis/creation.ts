@@ -8,6 +8,7 @@ import {
   type StartedSession,
 } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
+import { shrinkPhoto } from '@/constants/media';
 import type { SuggestionThemeId } from '@/constants/themes';
 
 /**
@@ -78,7 +79,7 @@ export const readVideoDuration = (file: File): Promise<number | undefined> =>
   });
 
 /**
- * 한 장면을 올리고 세션에 제출한다. 서버가 사진을 검사해 다시 찍으라고 할 수 있다.
+ * 한 장면을 올리고 세션에 제출한다. 사진은 먼저 줄인다. 서버가 사진을 검사해 다시 찍으라고 할 수 있다.
  * 영상 길이를 이미 알면(직접 녹화) 넘기고, 모르면(갤러리) 파일에서 읽는다.
  */
 export const submitScene = async (
@@ -98,8 +99,10 @@ export const submitScene = async (
   signal?: AbortSignal,
 ): Promise<ShotResult> => {
   const isVideo = format === 'reels';
+  // 사진은 줄여서 보낸다. 원본이 크면 업로드가 오래 걸리고 413으로 막힌다.
+  const toUpload = isVideo ? file : await shrinkPhoto(file);
   const uploaded = await uploadFile(
-    { file, storeId, assetType: isVideo ? 'video_clip' : 'food_photo' },
+    { file: toUpload, storeId, assetType: isVideo ? 'video_clip' : 'food_photo' },
     signal,
   );
   const duration = isVideo ? (durationSeconds ?? (await readVideoDuration(file))) : undefined;

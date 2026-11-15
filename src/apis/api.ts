@@ -42,12 +42,30 @@ type RequestOptions = {
   body?: unknown;
   query?: Record<string, string | number | undefined>;
   signal?: AbortSignal;
+  /** 이 시간 안에 응답이 없으면 포기한다. 업로드처럼 오래 걸리는 요청만 늘려 잡는다. */
+  timeoutMs?: number;
 };
 
 const NETWORK_ERROR_MESSAGE = '서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.';
+const TIMEOUT_MESSAGE = '응답이 너무 늦어요. 인터넷 연결을 확인하고 다시 시도해 주세요.';
+const TOO_LARGE_MESSAGE = '파일이 너무 커요. 다른 사진이나 더 짧은 영상으로 올려주세요.';
+
+/**
+ * 기본 응답 대기 시간. 전시장 와이파이가 끊기면 요청이 끝나지 않고 매달린다.
+ * 시간 제한이 없으면 화면이 "확인하고 있어요"에서 영영 멈춘다.
+ */
+export const DEFAULT_TIMEOUT_MS = 20_000;
+/** 사진·영상 업로드는 파일이 커서 더 기다린다. */
+export const UPLOAD_TIMEOUT_MS = 60_000;
+
+const isTimeoutError = (cause: unknown): boolean =>
+  cause instanceof DOMException && cause.name === 'TimeoutError';
 
 export const request = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
-  const { method = 'GET', body, query, signal } = options;
+  const { method = 'GET', body, query, signal, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
+  // 화면이 끊는 신호와 시간 제한 중 먼저 오는 쪽으로 끊는다.
+  const timeout = AbortSignal.timeout(timeoutMs);
+  const combined = signal ? AbortSignal.any([signal, timeout]) : timeout;
 
   const search = new URLSearchParams();
   Object.entries(query ?? {}).forEach(([key, value]) => {
@@ -65,14 +83,22 @@ export const request = async <T>(path: string, options: RequestOptions = {}): Pr
   }
 
   let response: Response;
+  let json: Envelope<T> | null;
   try {
-    response = await fetch(url, { method, headers, body: payload, signal });
+    response = await fetch(url, { method, headers, body: payload, signal: combined });
+    json = (await response.json().catch((cause: unknown) => {
+      // 본문을 받는 도중에 끊긴 것은 그대로 올려 보낸다. 본문이 JSON 이 아닌 것만 null 로 둔다.
+      if (cause instanceof DOMException) throw cause;
+      return null;
+    })) as Envelope<T> | null;
   } catch (cause) {
+    if (isTimeoutError(cause)) throw new ApiError(TIMEOUT_MESSAGE, 0, 'timeout');
     if (cause instanceof DOMException && cause.name === 'AbortError') throw cause;
     throw new ApiError(NETWORK_ERROR_MESSAGE, 0);
   }
 
-  const json = (await response.json().catch(() => null)) as Envelope<T> | null;
+  // 413 은 서버 앞단(프록시)이 HTML 로 돌려줘 메시지가 없다. 이유를 직접 알려준다.
+  if (response.status === 413) throw new ApiError(TOO_LARGE_MESSAGE, 413, 'too_large');
 
   if (!response.ok || !json || json.success === false) {
     const message =

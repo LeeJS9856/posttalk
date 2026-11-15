@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { isAbortError } from '@/apis/api';
@@ -12,7 +12,7 @@ import {
   pickVideoMimeType,
 } from '@/constants/media';
 import { goBackTo } from '@/constants/navigation';
-import { GALLERY_HINT, buildScenes, type CaptureSource } from '@/constants/scenes';
+import { GALLERY_HINT, sceneFromRequest, type CaptureSource } from '@/constants/scenes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import {
@@ -107,15 +107,14 @@ const CaptureCamera = (): React.JSX.Element => {
   /** 서버에 올리고 검사를 기다리는 중. */
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const scenes = useMemo(() => buildScenes(draft.format), [draft.format]);
   const index = Number(sceneIndex ?? 0);
   const session = draft.session;
-  const nextIndex = scenes.find((item) => !draft.captures[item.index])?.index;
-  // 서버는 정해진 순서대로만 받는다. 세션이 없거나 차례가 아닌 장면은 열지 않는다.
-  const scene = session && index === nextIndex ? scenes[index] : undefined;
-  // 서버가 준 안내 문구가 있으면 그쪽을 쓴다.
-  const serverPrompt = session?.nextShot?.prompt;
-  const serverHelper = session?.nextShot?.helperText;
+  const doneCount = Object.keys(draft.captures).length;
+  // 서버가 요구한 다음 장면만 연다. 세션이 없거나 차례가 아닌 장면이면 목록으로 돌려보낸다.
+  const scene =
+    session?.nextShot && !session.jobId && index === doneCount
+      ? sceneFromRequest(session.nextShot, index, draft.format)
+      : undefined;
 
   // 앞 화면 바텀시트에서 고른 경로. 직접 들어온 경우에는 장면이 권하는 쪽을 쓴다.
   const requested = params.get('source');
@@ -123,12 +122,15 @@ const CaptureCamera = (): React.JSX.Element => {
     requested === 'camera' || requested === 'gallery' ? requested : (scene?.recommended ?? 'camera');
   const isGallery = source === 'gallery';
   const isVideo = scene?.kind === 'video';
+  // scene 은 렌더마다 새로 만든 객체다. 카메라 효과가 이것에 걸리면 렌더마다 카메라를 껐다 켜서
+  // 녹화가 시작하자마자 끊긴다. 바뀌었는지는 장면 이름으로만 본다.
+  const sceneKey = scene?.shotKey;
 
   const openPicker = (): void => fileInputRef.current?.click();
 
   // 촬영물은 기기에 저장하지 않는다. getUserMedia 로 앱 안에서 직접 찍는다.
   useEffect(() => {
-    if (!scene || isGallery || shot) return;
+    if (!sceneKey || isGallery || shot) return;
 
     const run = { alive: true };
 
@@ -165,7 +167,7 @@ const CaptureCamera = (): React.JSX.Element => {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     };
-  }, [scene, isGallery, isVideo, shot, facing]);
+  }, [sceneKey, isGallery, isVideo, shot, facing]);
 
   useEffect(() => {
     if (!isGallery || shot || autoOpened.current) return;
@@ -300,7 +302,12 @@ const CaptureCamera = (): React.JSX.Element => {
         return;
       }
 
-      acceptCapture(scene.index, shot.file, result.request ?? null);
+      acceptCapture(
+        scene.index,
+        shot.file,
+        { shotKey: scene.shotKey, label: scene.label },
+        result.request ?? null,
+      );
 
       if (result.generationJobId) {
         setGeneration({ jobId: result.generationJobId, submissionId: result.submissionId });
@@ -359,7 +366,7 @@ const CaptureCamera = (): React.JSX.Element => {
           ) : (
             <>
               <Counter style={{ marginLeft: shot ? 0 : 'auto' }}>
-                {scene.index + 1} / {scenes.length}
+                {scene.index + 1}번째
               </Counter>
               {shot && <Counter>{scene.label}</Counter>}
             </>
@@ -372,10 +379,10 @@ const CaptureCamera = (): React.JSX.Element => {
                 ? '그대로 들고 계세요'
                 : isGallery
                   ? scene.pickTitle
-                  : (serverPrompt ?? scene.title)}
+                  : scene.title}
             </Instruction>
             {!isRecording && (
-              <Hint>{isGallery ? GALLERY_HINT : (serverHelper ?? scene.hint)}</Hint>
+              <Hint>{isGallery ? GALLERY_HINT : scene.hint}</Hint>
             )}
           </>
         )}

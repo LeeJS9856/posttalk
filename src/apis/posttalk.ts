@@ -1,4 +1,4 @@
-import { request } from '@/apis/api';
+import { UPLOAD_TIMEOUT_MS, request } from '@/apis/api';
 
 /**
  * POSTALK 백엔드 엔드포인트. 응답 모양은 docs/백엔드_API.md 의 예시를 따른다.
@@ -43,7 +43,7 @@ export const uploadFile = (
   form.append('file', file);
   form.append('storeId', storeId);
   form.append('assetType', assetType);
-  return request('/api/uploads', { method: 'POST', body: form, signal });
+  return request('/api/uploads', { method: 'POST', body: form, signal, timeoutMs: UPLOAD_TIMEOUT_MS });
 };
 
 /* ---------- 제작 ---------- */

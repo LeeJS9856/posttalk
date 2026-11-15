@@ -60,3 +60,48 @@ export const cameraErrorMessage = (cause: unknown): string => {
   }
   return '카메라를 열지 못했어요.';
 };
+
+/**
+ * 올리기 전에 사진을 줄이는 기준. 폰 원본(PNG 캡처는 15MB를 넘기도 한다)을 그대로 보내면
+ * 전시장 와이파이에서 오래 걸리고 서버 앞단에서 413으로 막힌다. 카드뉴스에는 이 정도면 충분하다.
+ */
+export const MAX_PHOTO_EDGE = 2048;
+const PHOTO_QUALITY = 0.9;
+/** 이보다 작고 가장자리도 기준 안이면 손대지 않는다. */
+const SHRINK_THRESHOLD_BYTES = 1_500_000;
+
+/**
+ * 사진을 긴 변 MAX_PHOTO_EDGE 이하의 JPEG 로 줄인다. 영상과 읽지 못하는 형식(HEIC 등)은 그대로 둔다.
+ * 줄인 결과가 원본보다 크면 원본을 쓴다.
+ */
+export const shrinkPhoto = async (file: File): Promise<File> => {
+  if (!file.type.startsWith('image/') || typeof createImageBitmap === 'undefined') return file;
+
+  let bitmap: ImageBitmap;
+  try {
+    // 폰 사진의 회전 정보(EXIF)를 반영해 그린다. 안 하면 옆으로 누운 채 올라간다.
+    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  } catch {
+    return file;
+  }
+
+  const scale = Math.min(1, MAX_PHOTO_EDGE / Math.max(bitmap.width, bitmap.height));
+  if (scale === 1 && file.size <= SHRINK_THRESHOLD_BYTES) {
+    bitmap.close();
+    return file;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, 'image/jpeg', PHOTO_QUALITY),
+  );
+  if (!blob || blob.size >= file.size) return file;
+
+  const baseName = file.name.replace(/\.[^.]+$/, '') || 'photo';
+  return new File([blob], `${baseName}.jpg`, { type: 'image/jpeg' });
+};

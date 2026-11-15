@@ -24,7 +24,7 @@ paths:
 
 ## 비동기 생성
 
-광고 생성은 요청과 결과 조회가 분리되어 있다. 마지막 사진(6번째)·영상(4번째)을 제출한 응답에 `generationJobId`가 오고,
+광고 생성은 요청과 결과 조회가 분리되어 있다. 마지막 장(몇 장인지는 서버가 정한다)을 제출한 응답에 `generationJobId`가 오고,
 `GET /api/generation-jobs/{jobId}/progress`를 2~3초 간격으로 조회한다. 끝나면 `GET /api/ad-sessions/{sessionId}`로 결과를 받는다.
 
 진행률 응답의 `percent` · `stage` · `message`는 없을 수 있다. 있다고 가정하고 접근하지 않는다.
@@ -34,6 +34,9 @@ paths:
 
 `AbortSignal`을 받을 수 있게 만든다. 화면이 언마운트되면 요청을 끊는다.
 `AbortError`는 사용자에게 오류로 보여주지 않는다.
+
+모든 요청에 시간 제한이 있다(기본 20초, 업로드 60초 — `api.ts`). 전시장 와이파이가 끊기면 요청이 끝나지 않고 매달리기 때문이다.
+넘기면 `ApiError(code: 'timeout')`로 던지고 화면은 다시 시도하게 한다. 413은 서버 앞단이 HTML로 돌려주므로 래퍼가 직접 문구를 만든다.
 
 ## 하지 말 것
 

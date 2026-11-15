@@ -64,19 +64,20 @@ const Generating = (): React.JSX.Element => {
 
   const session = draft.session;
   const jobId = session?.jobId;
-  const hasAssets = assets.length > 0 && Boolean(jobId);
+  // 새로고침하면 찍은 재료(메모리)는 사라지지만 생성 작업 번호는 탭에 남아 있다. 작업 번호만 있으면 이어서 기다린다.
+  const hasJob = Boolean(jobId);
   const stepIndex = stepIndexOf(progress, steps.length);
 
   // 생성 중 이탈하면 결과물을 놓친다. 안드로이드 하드웨어 뒤로 버튼까지 붙잡는다.
   useEffect(() => {
-    if (!hasAssets) return;
+    if (!hasJob) return;
 
     const hold = (): void => window.history.pushState(null, '', window.location.href);
     hold();
     window.addEventListener('popstate', hold);
 
     return () => window.removeEventListener('popstate', hold);
-  }, [hasAssets]);
+  }, [hasJob]);
 
   useEffect(() => {
     if (assets.length < 2) return;
@@ -134,7 +135,7 @@ const Generating = (): React.JSX.Element => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
 
-  if (!hasAssets) {
+  if (!hasJob) {
     return (
       <Page aria-label="생성 대기">
         <EmptyWrap>
