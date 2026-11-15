@@ -164,3 +164,18 @@ export const ErrorText = styled.p`
   font-weight: ${FONT_WEIGHT.semibold};
   text-align: center;
 `;
+
+/** 칸 아래쪽에 붙는 상태 띠. 올리는 중이거나, 다시 올려야 할 때 보인다. */
+export const SlotStatus = styled.span<{ $tone: 'muted' | 'danger' }>`
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background-color: ${({ $tone }) => ($tone === 'danger' ? COLORS.status.failed : COLORS.overlay)};
+  color: ${COLORS.text.inverse};
+  font-size: ${FONT_SIZE.caption};
+  font-weight: ${FONT_WEIGHT.semibold};
+  text-align: center;
+`;

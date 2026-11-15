@@ -12,7 +12,13 @@ import {
   pickVideoMimeType,
 } from '@/constants/media';
 import { goBackTo } from '@/constants/navigation';
-import { GALLERY_HINT, sceneFromRequest, type CaptureSource } from '@/constants/scenes';
+import {
+  CARD_NEWS_SCENES,
+  GALLERY_HINT,
+  isBatchFormat,
+  sceneFromRequest,
+  type CaptureSource,
+} from '@/constants/scenes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import {
@@ -87,7 +93,7 @@ const CaptureCamera = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { sceneIndex } = useParams();
   const [params] = useSearchParams();
-  const { draft, acceptCapture, setGeneration } = useAdDraft();
+  const { draft, acceptCapture, setGeneration, putPhoto } = useAdDraft();
   const { storeId } = useWorkspace();
   const submitRef = useRef<AbortController | null>(null);
 
@@ -110,11 +116,19 @@ const CaptureCamera = (): React.JSX.Element => {
   const index = Number(sceneIndex ?? 0);
   const session = draft.session;
   const doneCount = Object.keys(draft.captures).length;
-  // 서버가 요구한 다음 장면만 연다. 세션이 없거나 차례가 아닌 장면이면 목록으로 돌려보낸다.
-  const scene =
-    session?.nextShot && !session.jobId && index === doneCount
+  // 카드뉴스는 장면을 미리 알아 아무 칸이나 연다. 서버가 이미 받아 준 칸만 막는다.
+  // 릴스는 서버가 요구한 다음 장면만 연다. 차례가 아닌 장면이면 목록으로 돌려보낸다.
+  const isBatch = isBatchFormat(draft.format);
+  const submitted = session?.submittedCount ?? 0;
+  const scene = isBatch
+    ? !session?.jobId && index >= submitted
+      ? CARD_NEWS_SCENES[index]
+      : undefined
+    : session?.nextShot && !session.jobId && index === doneCount
       ? sceneFromRequest(session.nextShot, index, draft.format)
       : undefined;
+  /** 카드뉴스: 제출했더니 서버가 다시 찍으라고 한 칸이면 그 문구를 힌트 자리에 띄운다. */
+  const rejection = isBatch ? draft.captures[index]?.rejection : undefined;
 
   // 앞 화면 바텀시트에서 고른 경로. 직접 들어온 경우에는 장면이 권하는 쪽을 쓴다.
   const requested = params.get('source');
@@ -276,7 +290,16 @@ const CaptureCamera = (): React.JSX.Element => {
    * - 통과하면 저장하고 목록으로 돌아간다. 마지막 장이면 바로 생성 화면으로 간다.
    */
   const confirm = async (): Promise<void> => {
-    if (!shot || !session || !storeId || isSubmitting) return;
+    if (!shot || isSubmitting) return;
+
+    // 카드뉴스는 기다리지 않는다. 칸에 넣으면 뒤에서 올라가고, 제출은 목록에서 다 찍은 뒤 한 번에 한다.
+    if (isBatch) {
+      putPhoto(scene.index, shot.file, { shotKey: scene.shotKey, label: scene.label });
+      goBackTo(navigate, '/create/capture');
+      return;
+    }
+
+    if (!session || !storeId) return;
 
     const controller = new AbortController();
     submitRef.current = controller;
@@ -382,7 +405,7 @@ const CaptureCamera = (): React.JSX.Element => {
                   : scene.title}
             </Instruction>
             {!isRecording && (
-              <Hint>{isGallery ? GALLERY_HINT : scene.hint}</Hint>
+              <Hint>{rejection ?? (isGallery ? GALLERY_HINT : scene.hint)}</Hint>
             )}
           </>
         )}

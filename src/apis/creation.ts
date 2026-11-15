@@ -6,6 +6,7 @@ import {
   type ShotResult,
   type StartSessionBody,
   type StartedSession,
+  type UploadedFile,
 } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
 import { shrinkPhoto } from '@/constants/media';
@@ -114,6 +115,14 @@ export const submitScene = async (
     signal,
   );
 };
+
+/** 사진 한 장을 줄여서 올린다. 카드뉴스는 찍자마자 뒤에서 올려 두고, 제출은 다 찍은 뒤에 한다. */
+export const uploadPhoto = async (
+  file: File,
+  storeId: string,
+  signal?: AbortSignal,
+): Promise<UploadedFile> =>
+  uploadFile({ file: await shrinkPhoto(file), storeId, assetType: 'food_photo' }, signal);
 
 /** 서버가 다시 찍으라고 했는지. */
 export const needsRetake = (result: ShotResult): boolean =>

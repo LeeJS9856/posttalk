@@ -14,8 +14,8 @@ export const buildSteps = (format: AdFormat): GenerateStep[] => [
 ];
 
 /**
- * 생성에 걸리는 시간. 아직 실측값이 아니다.
- * 생성 API 가 붙으면 진행률 응답이 단계를 알려주고, 이 값은 안내 문구에만 쓴다.
+ * 생성에 걸리는 시간. 운영 서버에서 카드뉴스 한 편이 약 58초 걸렸다(2026-11-15 실측).
+ * 서버 진행률이 추정값(estimated)이면 이 시간을 기준으로 단계를 넘긴다.
  */
 export const ESTIMATED_SECONDS = 60;
 
@@ -30,12 +30,23 @@ export const POLL_INTERVAL_MS = 2500;
 
 /**
  * 진행률 응답을 화면의 단계 번호로 바꾼다.
- * percent 가 있으면 단계 수로 구간을 나누고, 없으면 상태(queued · processing)로 짐작한다.
+ * - 서버가 실제 percent 를 주면 단계 수로 구간을 나눈다.
+ * - 서버 percent 가 추정값이거나 없으면 흐른 시간으로 짐작한다. 서버는 끝날 때까지 50%(추정)만 보내서,
+ *   그대로 쓰면 1분 내내 한 단계에 멈춰 보인다.
+ * 둘 중 앞선 쪽을 쓰고, 마지막 단계는 완료 응답이 올 때까지 넘기지 않는다.
  */
-export const stepIndexOf = (progress: GenerationProgress | null, stepCount: number): number => {
-  if (!progress) return 0;
-  if (typeof progress.percent === 'number') {
-    return Math.min(stepCount - 1, Math.floor((progress.percent / 100) * stepCount));
-  }
-  return progress.status === 'processing' ? 1 : 0;
+export const stepIndexOf = (
+  progress: GenerationProgress | null,
+  stepCount: number,
+  elapsedSeconds: number,
+): number => {
+  const last = stepCount - 1;
+  const byTime = Math.floor((elapsedSeconds / ESTIMATED_SECONDS) * stepCount);
+  const isRealPercent = typeof progress?.percent === 'number' && progress.estimated !== true;
+  const byServer = isRealPercent
+    ? Math.floor(((progress?.percent ?? 0) / 100) * stepCount)
+    : progress?.status === 'processing'
+      ? 1
+      : 0;
+  return Math.min(last, Math.max(byServer, byTime));
 };

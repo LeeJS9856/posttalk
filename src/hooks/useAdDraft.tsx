@@ -4,18 +4,28 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
 
-import type { ShotRequest } from '@/apis/posttalk';
+import { isAbortError } from '@/apis/api';
+import { uploadPhoto } from '@/apis/creation';
+import type { ShotRequest, UploadedFile } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
 import type { SuggestionThemeId } from '@/constants/themes';
+import { useWorkspace } from '@/hooks/useWorkspace';
 
 export type DraftMenu = {
   name: string;
   description: string;
 };
+
+/** 카드뉴스 사진을 뒤에서 올린 상태. 다 올라가야 제출할 수 있다. */
+export type UploadState =
+  | { status: 'uploading' }
+  | { status: 'done'; uploaded: UploadedFile }
+  | { status: 'error'; message: string };
 
 export type CapturedAsset = {
   file: File;
@@ -25,6 +35,10 @@ export type CapturedAsset = {
   /** 어떤 장면이었는지. 장면 수를 서버가 정하므로 목록이 이 이름으로 칸을 그린다. */
   shotKey: string;
   label: string;
+  /** 카드뉴스만: 찍자마자 뒤에서 올린 결과. 릴스는 서버가 받아 준 뒤에 담겨 없다. */
+  upload?: UploadState;
+  /** 카드뉴스만: 제출했더니 서버가 다시 찍으라고 한 문구. 다시 찍으면 지운다. */
+  rejection?: string;
 };
 
 /** 서버의 제작 세션. 세션을 열고 장면을 하나씩 제출하면 마지막 장에서 생성이 시작된다. */
@@ -35,6 +49,8 @@ type DraftSession = {
   /** 마지막 장을 제출하면 채워진다. */
   jobId?: string;
   submissionId?: string;
+  /** 카드뉴스만: 서버가 받아 준 장 수. 이 앞의 칸은 서버에 들어가 다시 찍을 수 없다. */
+  submittedCount?: number;
 };
 
 type AdDraft = {
@@ -44,7 +60,10 @@ type AdDraft = {
   storeName: string;
   storeDescription: string;
   menus: DraftMenu[];
-  /** 서버가 받아 준 장면만 담는다. 장면 번호를 키로 둔다. 촬영물은 메모리에만 둔다. */
+  /**
+   * 장면 번호를 키로 둔다. 촬영물은 메모리에만 둔다.
+   * 릴스는 서버가 받아 준 장면만, 카드뉴스는 찍은 장면 전부(제출 전 포함)를 담는다.
+   */
   captures: Record<number, CapturedAsset>;
   session: DraftSession | null;
 };
@@ -63,6 +82,14 @@ type AdDraftContextValue = {
   ) => void;
   /** 서버에서 다시 받아 온 다음 장 안내로 바꾼다. */
   setNextShot: (nextShot: ShotRequest | null) => void;
+  /** 카드뉴스: 찍은 사진을 칸에 넣고 바로 뒤에서 올린다. 같은 칸을 다시 찍으면 바꾼다. */
+  putPhoto: (sceneIndex: number, file: File, scene: { shotKey: string; label: string }) => void;
+  /** 카드뉴스: 올리지 못한 사진을 다시 올린다. */
+  retryUploads: () => void;
+  /** 카드뉴스: 서버가 받아 준 장 수와 다음 요청을 적는다. */
+  markSubmitted: (count: number, nextShot: ShotRequest | null) => void;
+  /** 카드뉴스: 서버가 다시 찍으라고 한 칸에 문구를 단다. */
+  rejectCapture: (sceneIndex: number, message: string) => void;
   setGeneration: (value: { jobId: string; submissionId?: string }) => void;
   resetDraft: () => void;
 };
@@ -142,6 +169,14 @@ const AdDraftContext = createContext<AdDraftContextValue | null>(null);
 
 export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
   const [draft, setDraft] = useState<AdDraft>(restoreDraft);
+  const { storeId } = useWorkspace();
+  /** 칸마다 진행 중인 업로드. 같은 칸을 다시 찍거나 초안을 버리면 끊는다. */
+  const uploadsRef = useRef(new Map<number, AbortController>());
+
+  const abortUploads = useCallback(() => {
+    uploadsRef.current.forEach((controller) => controller.abort());
+    uploadsRef.current.clear();
+  }, []);
 
   // 생성 작업이 있는 동안만 탭에 적어 둔다. 초기화되거나 새 세션을 열면 지운다.
   const { format } = draft;
@@ -150,15 +185,20 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
     writeStoredGeneration(sessionId && jobId ? { format, sessionId, jobId, submissionId } : null);
   }, [format, sessionId, jobId, submissionId]);
 
-  const setConcept = useCallback((value: { format: AdFormat; theme: SuggestionThemeId }) => {
-    setDraft((current) => ({ ...current, ...value, ...withoutSession(current) }));
-  }, []);
+  const setConcept = useCallback(
+    (value: { format: AdFormat; theme: SuggestionThemeId }) => {
+      abortUploads();
+      setDraft((current) => ({ ...current, ...value, ...withoutSession(current) }));
+    },
+    [abortUploads],
+  );
 
   const setStoreInfo = useCallback(
     (value: { storeName: string; storeDescription: string; menus: DraftMenu[] }) => {
+      abortUploads();
       setDraft((current) => ({ ...current, ...value, ...withoutSession(current) }));
     },
-    [],
+    [abortUploads],
   );
 
   const setSession = useCallback((value: { sessionId: string; nextShot: ShotRequest | null }) => {
@@ -198,6 +238,108 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
     );
   }, []);
 
+  /** 한 칸을 올린다. 끝났을 때 그 칸의 사진이 그대로일 때만 결과를 적는다(그사이 다시 찍었을 수 있다). */
+  const startUpload = useCallback(
+    (sceneIndex: number, file: File) => {
+      uploadsRef.current.get(sceneIndex)?.abort();
+      uploadsRef.current.delete(sceneIndex);
+      // 작업 공간이 아직 안 열렸으면 '올리는 중'으로 줄 세워 둔다. 열리는 순간 아래 효과가 올린다.
+      // 기기를 켜자마자 찍으면 작업 공간보다 사진이 먼저 온다.
+      if (!storeId) return;
+
+      const controller = new AbortController();
+      uploadsRef.current.set(sceneIndex, controller);
+
+      const settle = (upload: UploadState): void =>
+        setDraft((current) => {
+          const asset = current.captures[sceneIndex];
+          if (!asset || asset.file !== file) return current;
+          return { ...current, captures: { ...current.captures, [sceneIndex]: { ...asset, upload } } };
+        });
+
+      uploadPhoto(file, storeId, controller.signal)
+        .then((uploaded) => settle({ status: 'done', uploaded }))
+        .catch((cause: unknown) => {
+          if (isAbortError(cause)) return;
+          settle({
+            status: 'error',
+            message: cause instanceof Error ? cause.message : '사진을 올리지 못했어요.',
+          });
+        })
+        .finally(() => {
+          if (uploadsRef.current.get(sceneIndex) === controller) {
+            uploadsRef.current.delete(sceneIndex);
+          }
+        });
+    },
+    [storeId],
+  );
+
+  // 줄 서 있던 사진(올리는 중인데 진행 중인 요청이 없는 칸)을 작업 공간이 열리면 올린다.
+  useEffect(() => {
+    if (!storeId) return;
+    Object.entries(draft.captures).forEach(([index, asset]) => {
+      const sceneIndex = Number(index);
+      if (asset.upload?.status === 'uploading' && !uploadsRef.current.has(sceneIndex)) {
+        startUpload(sceneIndex, asset.file);
+      }
+    });
+  }, [storeId, draft.captures, startUpload]);
+
+  const putPhoto = useCallback(
+    (sceneIndex: number, file: File, scene: { shotKey: string; label: string }) => {
+      // 업데이트 함수는 StrictMode 에서 두 번 불린다. 주소는 밖에서 한 번만 만든다.
+      const previewUrl = URL.createObjectURL(file);
+      setDraft((current) => {
+        revoke(current.captures[sceneIndex]);
+        return {
+          ...current,
+          captures: {
+            ...current.captures,
+            [sceneIndex]: { file, previewUrl, kind: 'photo', ...scene, upload: { status: 'uploading' } },
+          },
+        };
+      });
+      startUpload(sceneIndex, file);
+    },
+    [startUpload],
+  );
+
+  const retryUploads = useCallback(() => {
+    const failed = Object.entries(draft.captures).filter(
+      ([, asset]) => asset.upload?.status === 'error',
+    );
+    if (failed.length === 0) return;
+    setDraft((current) => {
+      const captures = { ...current.captures };
+      failed.forEach(([index]) => {
+        const asset = captures[Number(index)];
+        if (asset) captures[Number(index)] = { ...asset, upload: { status: 'uploading' } };
+      });
+      return { ...current, captures };
+    });
+    failed.forEach(([index, asset]) => startUpload(Number(index), asset.file));
+  }, [draft.captures, startUpload]);
+
+  const markSubmitted = useCallback((count: number, nextShot: ShotRequest | null) => {
+    setDraft((current) =>
+      current.session
+        ? { ...current, session: { ...current.session, submittedCount: count, nextShot } }
+        : current,
+    );
+  }, []);
+
+  const rejectCapture = useCallback((sceneIndex: number, message: string) => {
+    setDraft((current) => {
+      const asset = current.captures[sceneIndex];
+      if (!asset) return current;
+      return {
+        ...current,
+        captures: { ...current.captures, [sceneIndex]: { ...asset, rejection: message } },
+      };
+    });
+  }, []);
+
   const setGeneration = useCallback((value: { jobId: string; submissionId?: string }) => {
     setDraft((current) =>
       current.session ? { ...current, session: { ...current.session, ...value } } : current,
@@ -205,11 +347,12 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
   }, []);
 
   const resetDraft = useCallback(() => {
+    abortUploads();
     setDraft((current) => {
       Object.values(current.captures).forEach(revoke);
       return createInitialDraft();
     });
-  }, []);
+  }, [abortUploads]);
 
   const value = useMemo<AdDraftContextValue>(
     () => ({
@@ -219,6 +362,10 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
       setSession,
       acceptCapture,
       setNextShot,
+      putPhoto,
+      retryUploads,
+      markSubmitted,
+      rejectCapture,
       setGeneration,
       resetDraft,
     }),
@@ -229,6 +376,10 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
       setSession,
       acceptCapture,
       setNextShot,
+      putPhoto,
+      retryUploads,
+      markSubmitted,
+      rejectCapture,
       setGeneration,
       resetDraft,
     ],

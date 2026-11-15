@@ -61,12 +61,14 @@ const Generating = (): React.JSX.Element => {
   const [progress, setProgress] = useState<GenerationProgress | null>(null);
   /** 조회가 잠시 끊겼는지. 생성은 서버에서 계속되므로 안내만 하고 계속 묻는다. */
   const [isOffline, setIsOffline] = useState(false);
+  /** 이 화면에서 기다린 시간(초). 서버 진행률이 어림값일 때 단계를 넘기는 기준이다. */
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const session = draft.session;
   const jobId = session?.jobId;
   // 새로고침하면 찍은 재료(메모리)는 사라지지만 생성 작업 번호는 탭에 남아 있다. 작업 번호만 있으면 이어서 기다린다.
   const hasJob = Boolean(jobId);
-  const stepIndex = stepIndexOf(progress, steps.length);
+  const stepIndex = stepIndexOf(progress, steps.length, elapsedSeconds);
 
   // 생성 중 이탈하면 결과물을 놓친다. 안드로이드 하드웨어 뒤로 버튼까지 붙잡는다.
   useEffect(() => {
@@ -98,8 +100,10 @@ const Generating = (): React.JSX.Element => {
 
     const controller = new AbortController();
     let timer: number | undefined;
+    const startedAt = Date.now();
 
     const poll = async (): Promise<void> => {
+      setElapsedSeconds((Date.now() - startedAt) / 1000);
       try {
         const next = await getGenerationProgress(jobId, controller.signal);
         setProgress(next);

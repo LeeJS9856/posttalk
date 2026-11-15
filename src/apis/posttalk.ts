@@ -144,6 +144,8 @@ export type GenerationProgress = {
   jobId?: string;
   status?: GenerationStatus | string;
   percent?: number | null;
+  /** true 면 percent 가 실제 진행이 아니라 서버의 어림값이다. */
+  estimated?: boolean;
   stage?: string | null;
   message?: string | null;
   failureReason?: string | null;

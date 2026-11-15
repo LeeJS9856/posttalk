@@ -146,3 +146,27 @@ export const sceneFromRequest = (request: ShotRequest, index: number, format: Ad
     clipSeconds: DEFAULT_CLIP_SECONDS,
   };
 };
+
+/**
+ * 카드뉴스 장면 순서. 운영 서버에서 확인한 순서다(2026-11-15).
+ * 카드뉴스는 다 찍은 뒤 한 번에 제출한다. 서버는 이 순서로만 받으므로 제출도 이 순서로 한다.
+ * 제출할 때 서버가 요구한 장면과 다르면 멈춘다(서버 순서가 바뀐 경우).
+ */
+export const CARD_NEWS_SHOT_KEYS = [
+  'card_bowl',
+  'card_zoom',
+  'card_food1',
+  'card_food2',
+  'card_store1',
+  'card_store2',
+] as const;
+
+export const CARD_NEWS_SCENES: readonly Scene[] = CARD_NEWS_SHOT_KEYS.map((shotKey, index) =>
+  sceneFromRequest({ shotKey, assetType: 'food_photo' }, index, 'card_news'),
+);
+
+/**
+ * 장면을 미리 알고 다 찍은 뒤 한 번에 제출하는 형식인지.
+ * 릴스는 메뉴 수에 따라 장면이 바뀌는데 서버 쪽 구성이 아직 정해지지 않아, 서버가 한 장씩 알려 주는 방식을 쓴다.
+ */
+export const isBatchFormat = (format: AdFormat): boolean => format === 'card_news';

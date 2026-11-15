@@ -8,7 +8,7 @@ import { getAdSession } from '@/apis/posttalk';
 import ActionSheet, { type ActionSheetItem } from '@/components/common/ActionSheet';
 import AppHeader from '@/components/layout/AppHeader';
 import { posterSrc } from '@/constants/media';
-import { sceneFromRequest, type CaptureSource, type Scene } from '@/constants/scenes';
+import { isBatchFormat, sceneFromRequest, type CaptureSource, type Scene } from '@/constants/scenes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import {
@@ -27,16 +27,17 @@ import {
   SlotLabel,
   SlotVideo,
 } from '@/pages/Capture/CaptureList.styles';
+import CardNewsCaptureList from '@/pages/Capture/CardNewsCaptureList';
 
 type LoadState = { status: 'idle' | 'loading' } | { status: 'error'; message: string };
 
 /**
- * 촬영 목록. 들어오면 서버에 제작 세션을 연다.
+ * 릴스 촬영 목록. 들어오면 서버에 제작 세션을 연다.
  * 몇 장을 어떤 순서로 찍을지는 서버가 정한다. 한 장을 받을 때마다 다음 장면을 알려 주고,
  * 다 받으면 생성 작업 번호를 준다. 그래서 목록은 "찍은 칸들 + 서버가 요구한 다음 칸 하나"로 그린다.
  * 받아 준 장면은 서버에 이미 들어가 다시 올릴 수 없다.
  */
-const CaptureList = (): React.JSX.Element => {
+const ShotByShotList = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { draft, setSession, setNextShot, setGeneration } = useAdDraft();
   const { storeId, status: workspaceStatus, error: workspaceError, retry: retryWorkspace } = useWorkspace();
@@ -234,6 +235,15 @@ const CaptureList = (): React.JSX.Element => {
       />
     </Page>
   );
+};
+
+/**
+ * 촬영 목록. 카드뉴스는 장면을 미리 알아 다 찍고 한 번에 제출하고,
+ * 릴스는 서버가 한 장씩 다음 장면을 알려 준다.
+ */
+const CaptureList = (): React.JSX.Element => {
+  const { draft } = useAdDraft();
+  return isBatchFormat(draft.format) ? <CardNewsCaptureList /> : <ShotByShotList />;
 };
 
 export default CaptureList;
