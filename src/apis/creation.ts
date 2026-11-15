@@ -26,12 +26,13 @@ type DraftInput = {
 /**
  * 정보 입력 화면의 값을 서버 필드로 옮긴다.
  * 서버는 대표 메뉴 소개(menuIntro)와 가게만의 특별함(storeSpecialty)을 글 하나씩 받는다.
- * 메뉴가 여러 개면 "이름 - 설명" 을 쉼표로 이어 보낸다.
+ * 메뉴가 여러 개면 "이름 - 설명" 을 한 줄에 하나씩 보낸다.
+ * 서버는 카드뉴스 캡션을 이 글로 그대로 만든다. 쉼표로 이으면 설명 끝 마침표와 붙어 "…요., 다음 메뉴" 처럼 읽힌다.
  */
 const toStartBody = (draft: DraftInput, storeId: string): StartSessionBody => {
   const menuIntro = draft.menus
     .map((menu) => (menu.description ? `${menu.name} - ${menu.description}` : menu.name))
-    .join(', ');
+    .join('\n');
   const base = {
     storeId,
     menuIntro,
