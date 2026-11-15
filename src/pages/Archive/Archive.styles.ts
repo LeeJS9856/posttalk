@@ -2,6 +2,23 @@ import styled from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
 import { FONT_SIZE, FONT_WEIGHT, RADIUS } from '@/constants/typography';
+import { skeleton } from '@/styles/skeleton';
+
+/** 불러오는 동안 상태 칩 자리. 칩과 같은 높이로 둔다. */
+export const SkeletonChip = styled.span<{ $width: number }>`
+  flex-shrink: 0;
+  width: ${({ $width }) => $width}px;
+  height: 36px;
+  border-radius: 999px;
+  ${skeleton}
+`;
+
+/** 불러오는 동안 격자 한 칸 자리. 사진 칸과 같은 비율로 둔다. */
+export const SkeletonTile = styled.span`
+  display: block;
+  aspect-ratio: 4 / 5;
+  ${skeleton}
+`;
 
 export const Page = styled.div`
   display: flex;

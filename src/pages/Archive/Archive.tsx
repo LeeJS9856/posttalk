@@ -27,6 +27,8 @@ import {
   PlayBadge,
   RetryButton,
   Scroll,
+  SkeletonChip,
+  SkeletonTile,
   StatusChip,
   Tab,
   TabList,
@@ -39,6 +41,11 @@ type FormatFilter = 'all' | AdFormat;
 type StatusFilter = 'all' | AdStatus;
 
 const STATUS_FILTERS: readonly string[] = ['draft', 'published'];
+
+/** 불러오는 동안 채워 둘 격자 칸 수. 한 화면을 넘기는 정도면 된다. */
+const SKELETON_TILE_COUNT = 12;
+/** 불러오는 동안 상태 칩 자리의 폭. 전체 · 보관 중 n · 올림 n 의 글자 길이에 맞춘다. */
+const SKELETON_CHIP_WIDTHS = [58, 84, 66] as const;
 
 const FORMAT_TABS: readonly { key: FormatFilter; label: string }[] = [
   { key: 'all', label: '전체' },
@@ -87,13 +94,34 @@ const Archive = (): React.JSX.Element => {
     void navigate(`/ads/${ad.id}`);
   };
 
+  const isLoading = loadStatus === 'loading';
+
+  // 형식 탭은 내용과 무관해 불러오는 동안에도 그대로 그린다. 그래야 다 불러온 뒤 화면이 밀리지 않는다.
+  const tabs = (
+    <TabList role="tablist" aria-label="형식">
+      {FORMAT_TABS.map((tab) => (
+        <Tab
+          key={tab.key}
+          type="button"
+          role="tab"
+          aria-selected={format === tab.key}
+          $on={format === tab.key}
+          onClick={() => setFormat(tab.key)}
+        >
+          {tab.key === 'all' && <LayoutGrid aria-hidden="true" />}
+          {tab.label}
+        </Tab>
+      ))}
+    </TabList>
+  );
+
   return (
     <Page aria-label="보관함">
       <AppHeader
-        title={`보관함 ${ads.length}개`}
+        title={isLoading ? '보관함' : `보관함 ${ads.length}개`}
         logo={
           <Title>
-            보관함<TitleCount>{ads.length}</TitleCount>
+            보관함{!isLoading && <TitleCount>{ads.length}</TitleCount>}
           </Title>
         }
         action={
@@ -103,8 +131,26 @@ const Archive = (): React.JSX.Element => {
         }
       />
 
-      {loadStatus === 'loading' ? (
-        <NoMatch>광고를 불러오고 있어요</NoMatch>
+      {isLoading ? (
+        <>
+          {tabs}
+          <Scroll aria-busy="true" aria-label="광고를 불러오는 중">
+            <FilterRail aria-hidden="true">
+              {SKELETON_CHIP_WIDTHS.map((width) => (
+                <SkeletonChip key={width} $width={width} />
+              ))}
+            </FilterRail>
+            <Grid aria-hidden="true">
+              {Array.from({ length: SKELETON_TILE_COUNT }, (_, order) => (
+                // 자리만 잡는 빈 칸이라 순서 말고는 구분할 것이 없다.
+                // oxlint-disable-next-line react/no-array-index-key
+                <li key={order}>
+                  <SkeletonTile />
+                </li>
+              ))}
+            </Grid>
+          </Scroll>
+        </>
       ) : loadStatus === 'error' ? (
         <EmptyWrap>
           <EmptyText>{error ?? '광고를 불러오지 못했어요.'}</EmptyText>
@@ -128,21 +174,7 @@ const Archive = (): React.JSX.Element => {
         </EmptyWrap>
       ) : (
         <>
-          <TabList role="tablist" aria-label="형식">
-            {FORMAT_TABS.map((tab) => (
-              <Tab
-                key={tab.key}
-                type="button"
-                role="tab"
-                aria-selected={format === tab.key}
-                $on={format === tab.key}
-                onClick={() => setFormat(tab.key)}
-              >
-                {tab.key === 'all' && <LayoutGrid aria-hidden="true" />}
-                {tab.label}
-              </Tab>
-            ))}
-          </TabList>
+          {tabs}
 
           <Scroll>
             <FilterRail aria-label="게시 상태 거르기">

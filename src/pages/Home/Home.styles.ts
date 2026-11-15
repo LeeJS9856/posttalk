@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import heroImage from '@/assets/market-image.png';
 import { COLORS } from '@/constants/colors';
 import { FONT_SIZE, FONT_WEIGHT, RADIUS } from '@/constants/typography';
+import { skeleton } from '@/styles/skeleton';
 
 /** 사진 위 인사가 사라지고 시트가 올라오는 속도. 둘을 맞춰야 한 동작으로 읽힌다. */
 const SHEET_EASE = '0.32s cubic-bezier(0.2, 0.85, 0.25, 1)';
@@ -330,7 +331,7 @@ export const LoadingTile = styled.span`
   display: block;
   aspect-ratio: 4 / 5;
   border-radius: ${RADIUS.card};
-  background-color: ${COLORS.background.subtle};
+  ${skeleton}
 `;
 
 export const RetryButton = styled.button`
