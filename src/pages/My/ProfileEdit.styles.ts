@@ -31,7 +31,7 @@ export const Avatar = styled.span`
   background-color: ${COLORS.brand.main};
   color: ${COLORS.text.inverse};
   font-size: ${FONT_SIZE.display};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.bold};
 `;
 
 export const Field = styled.div`
@@ -126,7 +126,7 @@ export const SaveButton = styled.button`
   background-color: ${({ disabled }) => (disabled ? '#e8e8ec' : COLORS.brand.main)};
   color: ${({ disabled }) => (disabled ? '#b2b3b9' : COLORS.text.inverse)};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
   transition: background-color 0.18s ease;
 
   &:not(:disabled):active {

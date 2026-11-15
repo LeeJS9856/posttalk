@@ -37,3 +37,26 @@ export const extensionForMimeType = (mimeType: string): string =>
  * 까만 상자가 남는다. 0.1초 지점을 가리키면 그 프레임을 그려 포스터처럼 쓸 수 있다.
  */
 export const posterSrc = (url: string): string => `${url}#t=0.1`;
+
+/**
+ * 카메라를 쓸 수 있는 주소인지. 브라우저는 https 나 localhost 가 아니면
+ * navigator.mediaDevices 자체를 감춘다. 사내망 http 주소로 폰에서 열면 여기서 걸린다.
+ */
+export const canUseCamera = (): boolean =>
+  window.isSecureContext && typeof navigator.mediaDevices?.getUserMedia === 'function';
+
+/** 카메라를 열지 못한 이유를 사람이 알아들을 말로. 이유마다 할 일이 다르다. */
+export const cameraErrorMessage = (cause: unknown): string => {
+  if (!canUseCamera()) return '이 주소에서는 카메라를 쓸 수 없어요. https 주소로 열어 주세요.';
+  const name = cause instanceof DOMException ? cause.name : '';
+  if (name === 'NotAllowedError' || name === 'SecurityError') {
+    return '카메라 권한이 필요해요. 브라우저에서 허용해 주세요.';
+  }
+  if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+    return '이 기기에서 카메라를 찾지 못했어요.';
+  }
+  if (name === 'NotReadableError' || name === 'AbortError') {
+    return '다른 앱이 카메라를 쓰고 있어요. 그 앱을 닫고 다시 열어 주세요.';
+  }
+  return '카메라를 열지 못했어요.';
+};

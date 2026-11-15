@@ -55,7 +55,7 @@ const Segment = styled.button<{ $selected: boolean }>`
   min-height: 46px;
   color: ${({ $selected }) => ($selected ? COLORS.brand.main : COLORS.text.muted)};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
   transition: color 0.2s ease;
 `;
 

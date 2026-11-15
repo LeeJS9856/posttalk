@@ -1,163 +1,121 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Folder, LayoutGrid, Play, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import AppHeader from '@/components/layout/AppHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
-import { SAMPLE_AD_DETAILS, formatPublishedAt } from '@/constants/ads';
+import {
+  AD_STATUS_LABEL,
+  AD_STATUS_SHORT_LABEL,
+  type AdItem,
+  type AdStatus,
+} from '@/constants/ads';
 import { AD_FORMAT_LABEL, type AdFormat } from '@/constants/home';
 import { posterSrc } from '@/constants/media';
-import { useShop } from '@/hooks/useShop';
+import { useAds } from '@/hooks/useAds';
 import {
-  Avatar,
-  Caption,
-  CaptionName,
-  Chip,
-  ChipRail,
-  Counter,
   CreateButton,
   EmptyAction,
   EmptyMark,
   EmptyText,
   EmptyWrap,
-  Feed,
-  HeadText,
-  MediaButton,
-  MediaImage,
-  MediaVideo,
+  FilterChip,
+  FilterRail,
+  Grid,
   NoMatch,
   Page,
-  PlayMark,
-  Post,
-  PostDate,
-  PostHead,
-  PostMeta,
-  ShopName,
-  StatusBadge,
+  PlayBadge,
+  RetryButton,
+  Scroll,
+  StatusChip,
+  Tab,
+  TabList,
+  Tile,
+  Title,
+  TitleCount,
 } from '@/pages/Archive/Archive.styles';
 
-const FolderIcon = (): React.JSX.Element => (
-  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path
-      d="M3.5 6.5h6l2 2.5h9v9.5h-17V6.5Z"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+type FormatFilter = 'all' | AdFormat;
+type StatusFilter = 'all' | AdStatus;
 
-const PlusIcon = (): React.JSX.Element => (
-  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-  </svg>
-);
+const STATUS_FILTERS: readonly string[] = ['draft', 'published'];
 
-const PlayIcon = (): React.JSX.Element => (
-  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M8 5.5l11 6.5-11 6.5v-13Z" fill="currentColor" />
-  </svg>
-);
+const FORMAT_TABS: readonly { key: FormatFilter; label: string }[] = [
+  { key: 'all', label: '전체' },
+  { key: 'card_news', label: AD_FORMAT_LABEL.card_news },
+  { key: 'reels', label: AD_FORMAT_LABEL.reels },
+];
 
-type Filter = 'all' | AdFormat;
-type StatusFilter = 'all' | 'published' | 'unpublished';
+/** 썸네일이 없는 릴스는 영상 첫 장면을 대신 세운다. */
+const AdCover = ({ ad }: { ad: AdItem }): React.JSX.Element | null => {
+  if (ad.thumbnail) return <img src={ad.thumbnail} alt="" />;
+  if (ad.videoUrl) return <video src={posterSrc(ad.videoUrl)} muted playsInline preload="metadata" />;
+  return null;
+};
 
-const LINE_BREAK = String.fromCharCode(10);
-
-/** 피드에는 캡션 첫 줄만 보여준다. 해시태그 줄은 상세에서 본다. */
-const firstLine = (caption: string): string => caption.split(LINE_BREAK)[0] ?? '';
-
+/**
+ * 보관함. 위는 형식 탭, 그 아래 상태 칩, 나머지는 사진 격자다.
+ * 광고는 한자리에서 짧은 시간에 몰아 만들기 때문에 날짜로 나누지 않는다.
+ */
 const Archive = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const { profile } = useShop();
-  const [filter, setFilter] = useState<Filter>('all');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  // 홈은 ?status=published 처럼 상태를 붙여 들어온다.
+  const [searchParams] = useSearchParams();
+  const requestedStatus = searchParams.get('status');
 
-  const ads = SAMPLE_AD_DETAILS;
-
-  const counts = useMemo(
-    () => ({
-      all: ads.length,
-      card_news: ads.filter((ad) => ad.format === 'card_news').length,
-      reels: ads.filter((ad) => ad.format === 'reels').length,
-      published: ads.filter((ad) => ad.status === 'published').length,
-      unpublished: ads.filter((ad) => ad.status !== 'published').length,
-    }),
-    [ads],
+  const [format, setFormat] = useState<FormatFilter>('all');
+  const [status, setStatus] = useState<StatusFilter>(
+    requestedStatus && STATUS_FILTERS.includes(requestedStatus)
+      ? (requestedStatus as AdStatus)
+      : 'all',
   );
 
-  const shown = useMemo(
-    () =>
-      ads
-        .filter((ad) => filter === 'all' || ad.format === filter)
-        .filter(
-          (ad) =>
-            statusFilter === 'all' ||
-            (statusFilter === 'published') === (ad.status === 'published'),
-        ),
-    [ads, filter, statusFilter],
-  );
+  const { ads, status: loadStatus, error, reload } = useAds();
 
-  const formatChips: { key: Filter; label: string }[] = [
-    { key: 'all', label: '전체' },
-    { key: 'card_news', label: AD_FORMAT_LABEL.card_news },
-    { key: 'reels', label: AD_FORMAT_LABEL.reels },
-  ];
+  // 상태 칩의 개수는 고른 형식 안에서 센다. 탭을 바꾸면 숫자도 따라 바뀐다.
+  const inFormat = ads.filter((ad) => format === 'all' || ad.format === format);
+  const countOf = (value: AdStatus): number => inFormat.filter((ad) => ad.status === value).length;
+  const shown = inFormat.filter((ad) => status === 'all' || ad.status === status);
 
   const statusChips: { key: StatusFilter; label: string }[] = [
-    { key: 'all', label: '상태 전체' },
-    { key: 'published', label: '올림' },
-    { key: 'unpublished', label: '안 올림' },
+    { key: 'all', label: '전체' },
+    { key: 'draft', label: `보관 중 ${countOf('draft')}` },
+    { key: 'published', label: `올림 ${countOf('published')}` },
   ];
+
+  const openAd = (ad: AdItem): void => {
+    void navigate(`/ads/${ad.id}`);
+  };
 
   return (
     <Page aria-label="보관함">
       <AppHeader
-        title="보관함"
+        title={`보관함 ${ads.length}개`}
+        logo={
+          <Title>
+            보관함<TitleCount>{ads.length}</TitleCount>
+          </Title>
+        }
         action={
-          <CreateButton type="button" onClick={() => navigate('/create')}>
-            <PlusIcon />
-            만들기
+          <CreateButton type="button" aria-label="새 광고 만들기" onClick={() => navigate('/create')}>
+            <Plus aria-hidden="true" />
           </CreateButton>
         }
       />
 
-      {ads.length > 0 && (
-        <>
-          <ChipRail aria-label="형식 거르기">
-            {formatChips.map((chip) => (
-              <Chip
-                key={chip.key}
-                type="button"
-                aria-pressed={filter === chip.key}
-                $on={filter === chip.key}
-                onClick={() => setFilter(chip.key)}
-              >
-                {chip.label} {counts[chip.key]}
-              </Chip>
-            ))}
-          </ChipRail>
-
-          <ChipRail aria-label="게시 상태 거르기">
-            {statusChips.map((chip) => (
-              <Chip
-                key={chip.key}
-                type="button"
-                aria-pressed={statusFilter === chip.key}
-                $on={statusFilter === chip.key}
-                onClick={() => setStatusFilter(chip.key)}
-              >
-                {chip.label}
-                {chip.key !== 'all' && ` ${counts[chip.key]}`}
-              </Chip>
-            ))}
-          </ChipRail>
-        </>
-      )}
-
-      {ads.length === 0 ? (
+      {loadStatus === 'loading' ? (
+        <NoMatch>광고를 불러오고 있어요</NoMatch>
+      ) : loadStatus === 'error' ? (
+        <EmptyWrap>
+          <EmptyText>{error ?? '광고를 불러오지 못했어요.'}</EmptyText>
+          <RetryButton type="button" onClick={reload}>
+            다시 불러오기
+          </RetryButton>
+        </EmptyWrap>
+      ) : ads.length === 0 ? (
         <EmptyWrap>
           <EmptyMark aria-hidden="true">
-            <FolderIcon />
+            <Folder />
           </EmptyMark>
           <EmptyText>
             아직 만든 광고가 없어요
@@ -169,70 +127,70 @@ const Archive = (): React.JSX.Element => {
           </EmptyAction>
         </EmptyWrap>
       ) : (
-        <Feed>
-          {shown.length === 0 && (
-            <NoMatch>
-              고른 조건에 맞는 광고가 없어요
-              <br />
-              위에서 조건을 바꿔보세요
-            </NoMatch>
-          )}
-          {shown.map((ad) => {
-            const isReels = ad.format === 'reels';
-            const isPublished = ad.status === 'published';
+        <>
+          <TabList role="tablist" aria-label="형식">
+            {FORMAT_TABS.map((tab) => (
+              <Tab
+                key={tab.key}
+                type="button"
+                role="tab"
+                aria-selected={format === tab.key}
+                $on={format === tab.key}
+                onClick={() => setFormat(tab.key)}
+              >
+                {tab.key === 'all' && <LayoutGrid aria-hidden="true" />}
+                {tab.label}
+              </Tab>
+            ))}
+          </TabList>
 
-            return (
-              <Post key={ad.adId}>
-                <PostHead>
-                  <Avatar aria-hidden="true">{profile.name.slice(0, 1)}</Avatar>
-                  <HeadText>
-                    <ShopName>{profile.name}</ShopName>
-                    <PostMeta>
-                      {AD_FORMAT_LABEL[ad.format]}
-                      {!isReels && ` · ${ad.cards.length}장`}
-                    </PostMeta>
-                  </HeadText>
-                  <StatusBadge $published={isPublished}>
-                    {isPublished ? '올림' : '안 올림'}
-                  </StatusBadge>
-                </PostHead>
-
-                <MediaButton
+          <Scroll>
+            <FilterRail aria-label="게시 상태 거르기">
+              {statusChips.map((chip) => (
+                <FilterChip
+                  key={chip.key}
                   type="button"
-                  aria-label={`${ad.title} 광고 열기`}
-                  onClick={() => navigate(`/ads/${ad.adId}`)}
+                  aria-pressed={status === chip.key}
+                  $on={status === chip.key}
+                  onClick={() => setStatus(chip.key)}
                 >
-                  {isReels ? (
-                    <>
-                      <MediaVideo
-                        src={ad.videoUrl && posterSrc(ad.videoUrl)}
-                        muted
-                        playsInline
-                        preload="metadata"
-                      />
-                      <PlayMark aria-hidden="true">
-                        <PlayIcon />
-                      </PlayMark>
-                    </>
-                  ) : (
-                    <>
-                      <MediaImage src={ad.cards[0]} alt="" />
-                      <Counter>1 / {ad.cards.length}</Counter>
-                    </>
-                  )}
-                </MediaButton>
+                  {chip.label}
+                </FilterChip>
+              ))}
+            </FilterRail>
 
-                <Caption>
-                  <CaptionName>{profile.name}</CaptionName>
-                  {firstLine(ad.caption)}
-                </Caption>
-                {ad.publishedAt && (
-                  <PostDate>{formatPublishedAt(ad.publishedAt)}에 올림</PostDate>
-                )}
-              </Post>
-            );
-          })}
-        </Feed>
+            {shown.length === 0 ? (
+              <NoMatch>
+                고른 조건에 맞는 광고가 없어요
+                <br />
+                위에서 조건을 바꿔보세요
+              </NoMatch>
+            ) : (
+              <Grid>
+                {shown.map((ad) => (
+                  <li key={ad.id}>
+                    <Tile
+                      type="button"
+                      aria-label={`${ad.title}, ${AD_FORMAT_LABEL[ad.format]}, ${AD_STATUS_LABEL[ad.status]}`}
+                      onClick={() => openAd(ad)}
+                    >
+                      <AdCover ad={ad} />
+                      {ad.format === 'reels' && (
+                        <PlayBadge aria-hidden="true">
+                          <Play fill="currentColor" strokeWidth={0} />
+                        </PlayBadge>
+                      )}
+                      {/* 올린 광고에만 글로 표시한다. 대부분이 보관 중이라 그쪽은 표시 없이 둔다. */}
+                      {ad.status === 'published' && (
+                        <StatusChip>{AD_STATUS_SHORT_LABEL[ad.status]}</StatusChip>
+                      )}
+                    </Tile>
+                  </li>
+                ))}
+              </Grid>
+            )}
+          </Scroll>
+        </>
       )}
 
       <BottomNavigation />

@@ -19,18 +19,16 @@ paths:
 
 ## 인증
 
-토큰이 없다. 모든 요청에 `userId = 1`을 싣는다. 헤더가 아니라 쿼리 또는 본문이다.
+토큰이 없다. 모든 기기가 같은 64자리 게스트 키(`src/apis/api.ts`, `VITE_GUEST_KEY`로 바꿀 수 있음)를 `x-guest-session` 헤더로 싣는다.
+`POST /api/guest-session`이 돌려준 `storeId`를 제작·조회 요청에 쓴다. 어느 기기에서든 같은 작업 공간이 열린다.
 
 ## 비동기 생성
 
-대본 생성과 광고 생성은 요청과 결과 조회가 분리되어 있다. 요청은 `202`와 작업 ID를 돌려주고, 상태는 따로 조회한다.
+광고 생성은 요청과 결과 조회가 분리되어 있다. 마지막 사진(6번째)·영상(4번째)을 제출한 응답에 `generationJobId`가 오고,
+`GET /api/generation-jobs/{jobId}/progress`를 2~3초 간격으로 조회한다. 끝나면 `GET /api/ad-sessions/{sessionId}`로 결과를 받는다.
 
-| 요청 | 조회 |
-| --- | --- |
-| `POST /api/scripts` | `GET /api/scripts/{jobId}` |
-| `POST /api/ads` | `GET /api/generations/{jobId}` |
-
-생성 상태 응답의 `progress`는 없을 수 있다. 있으면 단계를 표시하고, 없으면 진행 표시만 한다. 있다고 가정하고 접근하지 않는다.
+진행률 응답의 `percent` · `stage` · `message`는 없을 수 있다. 있다고 가정하고 접근하지 않는다.
+자세한 명세는 `docs/백엔드_API.md`.
 
 ## 취소
 

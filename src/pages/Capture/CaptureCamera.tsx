@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
+import { isAbortError } from '@/apis/api';
+import { needsRetake, retakeMessage, submitScene } from '@/apis/creation';
 import {
   MIN_CLIP_SECONDS,
   VIDEO_ASPECT_RATIO,
+  cameraErrorMessage,
+  canUseCamera,
   extensionForMimeType,
   pickVideoMimeType,
 } from '@/constants/media';
 import { goBackTo } from '@/constants/navigation';
 import { GALLERY_HINT, buildScenes, type CaptureSource } from '@/constants/scenes';
 import { useAdDraft } from '@/hooks/useAdDraft';
+import { useWorkspace } from '@/hooks/useWorkspace';
 import {
   BottomBar,
   CloseButton,
@@ -45,7 +50,8 @@ import {
   UseButton,
 } from '@/pages/Capture/CaptureCamera.styles';
 
-type Taken = { file: File; url: string; kind: 'photo' | 'video' };
+/** 찍거나 고른 것. 직접 녹화한 영상은 길이를 재 두었다가 함께 보낸다. */
+type Taken = { file: File; url: string; kind: 'photo' | 'video'; durationSeconds?: number };
 
 const CloseIcon = (): React.JSX.Element => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -81,7 +87,9 @@ const CaptureCamera = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { sceneIndex } = useParams();
   const [params] = useSearchParams();
-  const { draft, setCapture } = useAdDraft();
+  const { draft, acceptCapture, setGeneration } = useAdDraft();
+  const { storeId } = useWorkspace();
+  const submitRef = useRef<AbortController | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -96,13 +104,18 @@ const CaptureCamera = (): React.JSX.Element => {
   const [shot, setShot] = useState<Taken | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  /** 서버에 올리고 검사를 기다리는 중. */
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const scenes = useMemo(
-    () => buildScenes(draft.menus, draft.format),
-    [draft.menus, draft.format],
-  );
+  const scenes = useMemo(() => buildScenes(draft.format), [draft.format]);
   const index = Number(sceneIndex ?? 0);
-  const scene = scenes[index];
+  const session = draft.session;
+  const nextIndex = scenes.find((item) => !draft.captures[item.index])?.index;
+  // 서버는 정해진 순서대로만 받는다. 세션이 없거나 차례가 아닌 장면은 열지 않는다.
+  const scene = session && index === nextIndex ? scenes[index] : undefined;
+  // 서버가 준 안내 문구가 있으면 그쪽을 쓴다.
+  const serverPrompt = session?.nextShot?.prompt;
+  const serverHelper = session?.nextShot?.helperText;
 
   // 앞 화면 바텀시트에서 고른 경로. 직접 들어온 경우에는 장면이 권하는 쪽을 쓴다.
   const requested = params.get('source');
@@ -120,6 +133,10 @@ const CaptureCamera = (): React.JSX.Element => {
     const run = { alive: true };
 
     const open = async (): Promise<void> => {
+      if (!canUseCamera()) {
+        setError(cameraErrorMessage(null));
+        return;
+      }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: isVideo
@@ -137,11 +154,7 @@ const CaptureCamera = (): React.JSX.Element => {
         setError(null);
       } catch (cause) {
         if (!run.alive) return;
-        setError(
-          cause instanceof DOMException && cause.name === 'NotAllowedError'
-            ? '카메라 권한이 필요해요. 브라우저에서 허용해주세요.'
-            : '카메라를 열지 못했어요.',
-        );
+        setError(cameraErrorMessage(cause));
       }
     };
 
@@ -164,11 +177,12 @@ const CaptureCamera = (): React.JSX.Element => {
     if (shot) URL.revokeObjectURL(shot.url);
   }, [shot]);
 
-  // 화면을 벗어나는 순간 녹화를 끊는다. 두고 나가면 스트림이 살아남는다.
+  // 화면을 벗어나는 순간 녹화와 업로드를 끊는다. 두고 나가면 스트림이 살아남는다.
   useEffect(
     () => () => {
       window.clearTimeout(stopTimerRef.current);
       if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+      submitRef.current?.abort();
     },
     [],
   );
@@ -177,11 +191,11 @@ const CaptureCamera = (): React.JSX.Element => {
     return (
       <Stage>
         <NoticeWrap>
-          <Notice>촬영할 장면이 없어요. 앞 화면에서 메뉴를 먼저 입력해주세요.</Notice>
+          <Notice>지금 올릴 차례가 아니에요. 목록에서 다음 장면을 골라주세요.</Notice>
         </NoticeWrap>
         <BottomBar>
-          <UseButton type="button" onClick={() => navigate('/create/info')}>
-            정보 입력으로
+          <UseButton type="button" onClick={() => goBackTo(navigate, '/create/capture')}>
+            목록으로
           </UseButton>
         </BottomBar>
       </Stage>
@@ -238,7 +252,12 @@ const CaptureCamera = (): React.JSX.Element => {
 
       const blob = new Blob(chunks, { type });
       const file = new File([blob], `scene-${scene.index}.${extensionForMimeType(type)}`, { type });
-      setShot({ file, url: URL.createObjectURL(file), kind: 'video' });
+      setShot({
+        file,
+        url: URL.createObjectURL(file),
+        kind: 'video',
+        durationSeconds: Math.round(seconds * 10) / 10,
+      });
     };
 
     recorderRef.current = recorder;
@@ -249,10 +268,52 @@ const CaptureCamera = (): React.JSX.Element => {
     stopTimerRef.current = window.setTimeout(stopRecording, scene.clipSeconds * 1000);
   };
 
-  const confirm = (): void => {
-    if (!shot) return;
-    setCapture(scene.index, shot.file);
-    goBackTo(navigate, '/create/capture');
+  /**
+   * 서버에 올려 검사를 받는다.
+   * - 다시 찍으라고 하면 그 문구를 띄우고 다시 찍게 한다.
+   * - 통과하면 저장하고 목록으로 돌아간다. 마지막 장이면 바로 생성 화면으로 간다.
+   */
+  const confirm = async (): Promise<void> => {
+    if (!shot || !session || !storeId || isSubmitting) return;
+
+    const controller = new AbortController();
+    submitRef.current = controller;
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const result = await submitScene(
+        {
+          sessionId: session.sessionId,
+          storeId,
+          format: draft.format,
+          file: shot.file,
+          durationSeconds: shot.durationSeconds,
+        },
+        controller.signal,
+      );
+
+      if (needsRetake(result)) {
+        URL.revokeObjectURL(shot.url);
+        setShot(null);
+        setError(retakeMessage(result));
+        return;
+      }
+
+      acceptCapture(scene.index, shot.file, result.request ?? null);
+
+      if (result.generationJobId) {
+        setGeneration({ jobId: result.generationJobId, submissionId: result.submissionId });
+        void navigate('/create/generating', { replace: true });
+        return;
+      }
+      goBackTo(navigate, '/create/capture');
+    } catch (cause) {
+      if (isAbortError(cause)) return;
+      setError(cause instanceof Error ? cause.message : '올리지 못했어요. 다시 시도해 주세요.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const retakeLabel = isGallery ? '다시 고르기' : '다시 찍기';
@@ -275,12 +336,14 @@ const CaptureCamera = (): React.JSX.Element => {
         <Preview ref={videoRef} autoPlay playsInline muted />
       )}
 
-      {error && !shot && !isGallery && !isRecording && (
+      {error && !isRecording && (!shot || !isSubmitting) && (
         <NoticeWrap>
-          <Notice>{error}</Notice>
-          <FallbackButton type="button" onClick={openPicker}>
-            갤러리에서 고르기
-          </FallbackButton>
+          <Notice role="alert">{error}</Notice>
+          {!shot && !isGallery && (
+            <FallbackButton type="button" onClick={openPicker}>
+              갤러리에서 고르기
+            </FallbackButton>
+          )}
         </NoticeWrap>
       )}
 
@@ -305,9 +368,15 @@ const CaptureCamera = (): React.JSX.Element => {
         {!shot && (
           <>
             <Instruction>
-              {isRecording ? '그대로 들고 계세요' : isGallery ? scene.pickTitle : scene.title}
+              {isRecording
+                ? '그대로 들고 계세요'
+                : isGallery
+                  ? scene.pickTitle
+                  : (serverPrompt ?? scene.title)}
             </Instruction>
-            {!isRecording && <Hint>{isGallery ? GALLERY_HINT : scene.hint}</Hint>}
+            {!isRecording && (
+              <Hint>{isGallery ? GALLERY_HINT : (serverHelper ?? scene.hint)}</Hint>
+            )}
           </>
         )}
       </TopBar>
@@ -326,6 +395,7 @@ const CaptureCamera = (): React.JSX.Element => {
           <ConfirmRow>
             <RetakeButton
               type="button"
+              disabled={isSubmitting}
               onClick={() => {
                 URL.revokeObjectURL(shot.url);
                 setShot(null);
@@ -334,8 +404,8 @@ const CaptureCamera = (): React.JSX.Element => {
             >
               {retakeLabel}
             </RetakeButton>
-            <UseButton type="button" onClick={confirm}>
-              이걸로 할게요
+            <UseButton type="button" disabled={isSubmitting} onClick={() => void confirm()}>
+              {isSubmitting ? '확인하고 있어요' : '이걸로 할게요'}
             </UseButton>
           </ConfirmRow>
         ) : isRecording ? (

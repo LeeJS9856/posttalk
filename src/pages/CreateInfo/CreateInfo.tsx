@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 
 import AppHeader from '@/components/layout/AppHeader';
 import { createTemplateId } from '@/constants/shop';
-import { MAX_MENU_COUNT, countScenes, type StoreTemplate } from '@/constants/templates';
+import { buildScenes } from '@/constants/scenes';
+import { MAX_MENU_COUNT, type StoreTemplate } from '@/constants/templates';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useShop } from '@/hooks/useShop';
 import {
@@ -71,10 +72,14 @@ const CheckIcon = (): React.JSX.Element => (
 
 const CreateInfo = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const { setStoreInfo } = useAdDraft();
-  const { templates, addTemplate } = useShop();
+  const { draft, setStoreInfo } = useAdDraft();
+  const shotCount = buildScenes(draft.format).length;
+  const shotUnit = draft.format === 'reels' ? '영상' : '사진';
+  const { profile, setProfile, templates, addTemplate } = useShop();
 
   const [templateId, setTemplateId] = useState<string | null>(null);
+  // 가게 이름은 캡션 첫 줄과 카드뉴스에 들어간다. 한 번 적으면 프로필에 남아 다음에 채워져 있다.
+  const [storeName, setStoreName] = useState(profile.name);
   const [storeDescription, setStoreDescription] = useState('');
   const [menus, setMenus] = useState<MenuDraft[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -85,14 +90,13 @@ const CreateInfo = (): React.JSX.Element => {
 
   const applyTemplate = (template: StoreTemplate): void => {
     setTemplateId(template.templateId);
+    setStoreName(template.name);
     setStoreDescription(template.storeDescription);
     setMenus(template.menus.map((menu) => createMenu(menu.name, menu.description)));
   };
 
   const updateMenu = (key: number, patch: Partial<MenuDraft>): void => {
-    setMenus((current) =>
-      current.map((menu) => (menu.key === key ? { ...menu, ...patch } : menu)),
-    );
+    setMenus((current) => current.map((menu) => (menu.key === key ? { ...menu, ...patch } : menu)));
     detachTemplate();
   };
 
@@ -107,7 +111,8 @@ const CreateInfo = (): React.JSX.Element => {
   };
 
   const filledMenus = menus.filter((menu) => menu.name.trim().length > 0);
-  const canProceed = storeDescription.trim().length > 0 && filledMenus.length > 0;
+  const canProceed =
+    storeName.trim().length > 0 && storeDescription.trim().length > 0 && filledMenus.length > 0;
 
   const goNext = (): void => {
     const menus = filledMenus.map(({ name, description }) => ({
@@ -116,17 +121,18 @@ const CreateInfo = (): React.JSX.Element => {
     }));
 
     // 저장해두면 다음 관람객이 정보 입력에서 바로 고를 수 있다.
-    if (isSaving && templateName.trim().length > 0) {
+    if (isSaving) {
       addTemplate({
         templateId: createTemplateId(),
-        name: templateName.trim(),
+        name: templateName.trim() || storeName.trim(),
         storeDescription: storeDescription.trim(),
         menus,
       });
     }
 
+    setProfile({ ...profile, name: storeName.trim() });
     setStoreInfo({ storeDescription: storeDescription.trim(), menus });
-    navigate('/create/capture');
+    void navigate('/create/capture');
   };
 
   return (
@@ -134,28 +140,46 @@ const CreateInfo = (): React.JSX.Element => {
       <AppHeader title="무엇을 알릴까요?" onBack={() => navigate(-1)} />
 
       <Content>
-        <Label>저장된 내용</Label>
-        <ChipRail>
-          {templates.map((template) => {
-            const selected = templateId === template.templateId;
+        {templates.length > 0 && <Label>저장된 내용</Label>}
+        {templates.length > 0 && (
+          <ChipRail>
+            {templates.map((template) => {
+              const selected = templateId === template.templateId;
 
-            return (
-              <Chip
-                key={template.templateId}
-                type="button"
-                aria-pressed={selected}
-                $selected={selected}
-                onClick={() => applyTemplate(template)}
-              >
-                <ChipAvatar aria-hidden="true" $selected={selected}>
-                  {template.name.slice(0, 1)}
-                </ChipAvatar>
-                {template.name}
-                <ChipCount $selected={selected}>{template.menus.length}</ChipCount>
-              </Chip>
-            );
-          })}
-        </ChipRail>
+              return (
+                <Chip
+                  key={template.templateId}
+                  type="button"
+                  aria-pressed={selected}
+                  $selected={selected}
+                  onClick={() => applyTemplate(template)}
+                >
+                  <ChipAvatar aria-hidden="true" $selected={selected}>
+                    {template.name.slice(0, 1)}
+                  </ChipAvatar>
+                  {template.name}
+                  <ChipCount $selected={selected}>{template.menus.length}</ChipCount>
+                </Chip>
+              );
+            })}
+          </ChipRail>
+        )}
+
+        <Label as="label" htmlFor="store-name">
+          가게 이름
+        </Label>
+        <NameField>
+          <TextArea
+            id="store-name"
+            rows={1}
+            value={storeName}
+            placeholder="예) 영창식당"
+            onChange={(event) => {
+              setStoreName(event.target.value);
+              detachTemplate();
+            }}
+          />
+        </NameField>
 
         <Label as="label" htmlFor="store-description">
           어떤 가게인가요?
@@ -226,7 +250,7 @@ const CreateInfo = (): React.JSX.Element => {
                 id="template-name"
                 rows={1}
                 value={templateName}
-                placeholder="예) 창억떡집"
+                placeholder="예) 영창식당"
                 onChange={(event) => setTemplateName(event.target.value)}
               />
             </NameField>
@@ -236,7 +260,7 @@ const CreateInfo = (): React.JSX.Element => {
 
       <Footer>
         <NextButton type="button" disabled={!canProceed} onClick={goNext}>
-          {canProceed ? `다음 · 촬영 ${countScenes(filledMenus.length)}번` : '다음'}
+          {canProceed ? `다음 · ${shotUnit} ${shotCount}개 올리기` : '다음'}
         </NextButton>
       </Footer>
     </Page>

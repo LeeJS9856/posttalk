@@ -21,7 +21,7 @@ export const Question = styled.h2`
   padding: 2px 16px 18px;
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.titleLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.bold};
 `;
 
 /** 섹션 라벨. 입력란과 섞이지 않게 작고 흐리게 둔다. */
@@ -69,7 +69,7 @@ export const Chip = styled.button<{ $selected: boolean }>`
   background-color: ${({ $selected }) => ($selected ? COLORS.brand.main : 'transparent')};
   color: ${({ $selected }) => ($selected ? COLORS.text.inverse : COLORS.text.main)};
   font-size: ${FONT_SIZE.body};
-  font-weight: ${({ $selected }) => ($selected ? FONT_WEIGHT.medium : FONT_WEIGHT.regular)};
+  font-weight: ${({ $selected }) => ($selected ? FONT_WEIGHT.semibold : FONT_WEIGHT.medium)};
   transition:
     background-color 0.18s ease,
     border-color 0.18s ease,
@@ -86,7 +86,7 @@ export const ChipAvatar = styled.span<{ $selected: boolean }>`
   background-color: ${({ $selected }) => ($selected ? 'rgba(255, 255, 255, 0.25)' : COLORS.background.subtle)};
   color: ${({ $selected }) => ($selected ? COLORS.text.inverse : COLORS.text.grey)};
   font-size: ${FONT_SIZE.caption};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const ChipCount = styled.span<{ $selected: boolean }>`
@@ -152,7 +152,7 @@ export const MenuNameInput = styled.input`
   background: none;
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.body};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 
   &::placeholder {
     color: #b9bac0;
@@ -207,7 +207,7 @@ export const AddMenuButton = styled.button`
   border-radius: 12px;
   color: ${COLORS.brand.main};
   font-size: ${FONT_SIZE.body};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 
   svg {
     width: 16px;
@@ -266,7 +266,7 @@ export const NextButton = styled.button`
   background-color: ${({ disabled }) => (disabled ? '#e8e8ec' : COLORS.brand.main)};
   color: ${({ disabled }) => (disabled ? '#b2b3b9' : COLORS.text.inverse)};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
   transition:
     background-color 0.18s ease,
     transform 0.18s cubic-bezier(0.2, 0.85, 0.25, 1);

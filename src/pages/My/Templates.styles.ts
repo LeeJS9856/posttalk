@@ -46,7 +46,7 @@ export const Item = styled.li`
 export const TemplateName = styled.p`
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const TemplateMenus = styled.p`

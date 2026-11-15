@@ -1,19 +1,17 @@
+import { Archive, House, PenTool, User, type LucideIcon } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
-import archiveIcon from '@/assets/icons/archive.svg?raw';
-import campaignIcon from '@/assets/icons/campaign.svg?raw';
-import homeIcon from '@/assets/icons/home.svg?raw';
-import myIcon from '@/assets/icons/my.svg?raw';
 import { COLORS } from '@/constants/colors';
 import { NAV_ITEMS, type NavItemId } from '@/constants/navigation';
 import { FONT_SIZE, FONT_WEIGHT } from '@/constants/typography';
 
-const ICONS: Record<NavItemId, string> = {
-  home: homeIcon,
-  create: campaignIcon,
-  archive: archiveIcon,
-  my: myIcon,
+/* 아이콘은 Lucide 한 벌에서 고른다. 선 굵기를 맞춰야 탭끼리 무게가 같다. */
+const ICONS: Record<NavItemId, LucideIcon> = {
+  home: House,
+  create: PenTool,
+  archive: Archive,
+  my: User,
 };
 
 const BottomNavigation = (): React.JSX.Element => {
@@ -29,6 +27,7 @@ const BottomNavigation = (): React.JSX.Element => {
     <Navigation aria-label="주요 메뉴">
       {NAV_ITEMS.map(({ id, label, path }) => {
         const isActive = pathname === path;
+        const Icon = ICONS[id];
 
         return (
           <NavButton
@@ -38,7 +37,9 @@ const BottomNavigation = (): React.JSX.Element => {
             aria-current={isActive ? 'page' : undefined}
             onClick={() => handleSelect(path)}
           >
-            <NavIcon aria-hidden="true" dangerouslySetInnerHTML={{ __html: ICONS[id] }} />
+            <NavIcon aria-hidden="true">
+              <Icon strokeWidth={isActive ? 2 : 1.7} />
+            </NavIcon>
             <NavLabel>{label}</NavLabel>
           </NavButton>
         );
@@ -78,9 +79,10 @@ const NavIcon = styled.span`
   }
 `;
 
+/* 탭 글자는 본문보다 한 단계 작게 둔다. 크면 아이콘보다 글자가 먼저 읽힌다. */
 const NavLabel = styled.span`
-  font-size: ${FONT_SIZE.label};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-size: ${FONT_SIZE.caption};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export default BottomNavigation;

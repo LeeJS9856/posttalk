@@ -7,7 +7,6 @@ import Create from '@/pages/Create/Create';
 import CaptureCamera from '@/pages/Capture/CaptureCamera';
 import CaptureList from '@/pages/Capture/CaptureList';
 import CreateInfo from '@/pages/CreateInfo/CreateInfo';
-import CreateScript from '@/pages/CreateScript/CreateScript';
 import Generating from '@/pages/Generating/Generating';
 import Home from '@/pages/Home/Home';
 import My from '@/pages/My/My';
@@ -28,7 +27,6 @@ const App = (): React.JSX.Element => {
           <Route path="/create/info" element={<CreateInfo />} />
           <Route path="/create/capture" element={<CaptureList />} />
           <Route path="/create/capture/:sceneIndex" element={<CaptureCamera />} />
-          <Route path="/create/script" element={<CreateScript />} />
           <Route path="/create/generating" element={<Generating />} />
           <Route path="/ads/:adId" element={<AdDetail />} />
           <Route path="/archive" element={<Archive />} />

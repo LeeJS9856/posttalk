@@ -13,20 +13,11 @@ import {
   Form,
   Label,
   Line,
-  LockedNote,
-  LockedValue,
   Page,
   SaveButton,
   TextArea,
   TextInput,
 } from '@/pages/My/ProfileEdit.styles';
-
-const LockIcon = (): React.JSX.Element => (
-  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5" stroke="currentColor" strokeWidth="1.7" />
-    <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" strokeWidth="1.7" />
-  </svg>
-);
 
 const ProfileEdit = (): React.JSX.Element => {
   const navigate = useNavigate();
@@ -50,7 +41,7 @@ const ProfileEdit = (): React.JSX.Element => {
       <AppHeader title="프로필 수정" onBack={() => navigate(-1)} />
 
       <Form onSubmit={handleSubmit}>
-        <Avatar aria-hidden="true">{(name.trim() || profile.name).slice(0, 1)}</Avatar>
+        <Avatar aria-hidden="true">{(name.trim() || profile.name).slice(0, 1) || '가'}</Avatar>
 
         <Field>
           <Label htmlFor="shop-name">가게 이름</Label>
@@ -79,15 +70,6 @@ const ProfileEdit = (): React.JSX.Element => {
           <Count $full={description.length >= MAX_SHOP_DESCRIPTION}>
             {description.length} / {MAX_SHOP_DESCRIPTION}자
           </Count>
-        </Field>
-
-        <Field>
-          <Label as="p">인스타그램</Label>
-          <Line>
-            <LockedValue>{profile.instagram}</LockedValue>
-            <LockIcon />
-          </Line>
-          <LockedNote>운영자가 미리 연결해 둔 계정이에요</LockedNote>
         </Field>
 
         <Footer>

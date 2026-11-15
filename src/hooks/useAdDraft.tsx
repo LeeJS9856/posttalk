@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
+import type { ShotRequest } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
-import type { ScriptLine } from '@/constants/script';
 import type { SuggestionThemeId } from '@/constants/themes';
 
 export type DraftMenu = {
@@ -16,24 +16,34 @@ export type CapturedAsset = {
   kind: 'photo' | 'video';
 };
 
+/** 서버의 제작 세션. 세션을 열고 장면을 하나씩 제출하면 마지막 장에서 생성이 시작된다. */
+type DraftSession = {
+  sessionId: string;
+  /** 서버가 요구하는 다음 장. 서버 안내 문구를 카메라 화면에 띄운다. */
+  nextShot: ShotRequest | null;
+  /** 마지막 장을 제출하면 채워진다. */
+  jobId?: string;
+  submissionId?: string;
+};
+
 type AdDraft = {
   format: AdFormat;
   theme: SuggestionThemeId;
   storeDescription: string;
   menus: DraftMenu[];
-  /** 장면 번호를 키로 둔다. 촬영물은 메모리에만 두고 기기에 저장하지 않는다. */
+  /** 서버가 받아 준 장면만 담는다. 장면 번호를 키로 둔다. 촬영물은 메모리에만 둔다. */
   captures: Record<number, CapturedAsset>;
-  /** 자막. 재료를 찍는 동안 AI 가 만들어 두고, 생성 전에 고칠 수 있다. */
-  script: ScriptLine[];
+  session: DraftSession | null;
 };
 
 type AdDraftContextValue = {
   draft: AdDraft;
   setConcept: (value: { format: AdFormat; theme: SuggestionThemeId }) => void;
   setStoreInfo: (value: { storeDescription: string; menus: DraftMenu[] }) => void;
-  setCapture: (sceneIndex: number, file: File) => void;
-  setScript: (lines: ScriptLine[]) => void;
-  setScriptLine: (sceneIndex: number, text: string) => void;
+  setSession: (value: { sessionId: string; nextShot: ShotRequest | null }) => void;
+  /** 서버가 통과시킨 장면을 저장하고 다음 장 안내를 갱신한다. */
+  acceptCapture: (sceneIndex: number, file: File, nextShot: ShotRequest | null) => void;
+  setGeneration: (value: { jobId: string; submissionId?: string }) => void;
   resetDraft: () => void;
 };
 
@@ -43,11 +53,17 @@ const createInitialDraft = (): AdDraft => ({
   storeDescription: '',
   menus: [],
   captures: {},
-  script: [],
+  session: null,
 });
 
 const revoke = (asset?: CapturedAsset): void => {
   if (asset?.previewUrl.startsWith('blob:')) URL.revokeObjectURL(asset.previewUrl);
+};
+
+/** 형식·콘셉트·소개가 바뀌면 이미 연 세션은 쓸 수 없다. 찍어둔 재료와 함께 버린다. */
+const withoutSession = (current: AdDraft): Pick<AdDraft, 'captures' | 'session'> => {
+  Object.values(current.captures).forEach(revoke);
+  return { captures: {}, session: null };
 };
 
 const AdDraftContext = createContext<AdDraftContextValue | null>(null);
@@ -56,45 +72,42 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
   const [draft, setDraft] = useState<AdDraft>(createInitialDraft);
 
   const setConcept = useCallback((value: { format: AdFormat; theme: SuggestionThemeId }) => {
-    setDraft((current) => ({ ...current, ...value }));
+    setDraft((current) => ({ ...current, ...value, ...withoutSession(current) }));
   }, []);
 
   const setStoreInfo = useCallback((value: { storeDescription: string; menus: DraftMenu[] }) => {
-    setDraft((current) => {
-      // 메뉴가 바뀌면 장면 구성이 달라지므로 찍어둔 재료와 자막을 비운다.
-      Object.values(current.captures).forEach(revoke);
-      return { ...current, ...value, captures: {}, script: [] };
-    });
+    setDraft((current) => ({ ...current, ...value, ...withoutSession(current) }));
   }, []);
 
-  const setCapture = useCallback((sceneIndex: number, file: File) => {
-    setDraft((current) => {
-      revoke(current.captures[sceneIndex]);
-      return {
-        ...current,
-        captures: {
-          ...current.captures,
-          [sceneIndex]: {
-            file,
-            previewUrl: URL.createObjectURL(file),
-            kind: file.type.startsWith('video/') ? 'video' : 'photo',
+  const setSession = useCallback((value: { sessionId: string; nextShot: ShotRequest | null }) => {
+    setDraft((current) => ({ ...current, session: { ...value } }));
+  }, []);
+
+  const acceptCapture = useCallback(
+    (sceneIndex: number, file: File, nextShot: ShotRequest | null) => {
+      setDraft((current) => {
+        revoke(current.captures[sceneIndex]);
+        return {
+          ...current,
+          captures: {
+            ...current.captures,
+            [sceneIndex]: {
+              file,
+              previewUrl: URL.createObjectURL(file),
+              kind: file.type.startsWith('video/') ? 'video' : 'photo',
+            },
           },
-        },
-      };
-    });
-  }, []);
+          session: current.session ? { ...current.session, nextShot } : current.session,
+        };
+      });
+    },
+    [],
+  );
 
-  const setScript = useCallback((lines: ScriptLine[]) => {
-    setDraft((current) => ({ ...current, script: lines }));
-  }, []);
-
-  const setScriptLine = useCallback((sceneIndex: number, text: string) => {
-    setDraft((current) => ({
-      ...current,
-      script: current.script.map((line) =>
-        line.sceneIndex === sceneIndex ? { ...line, text } : line,
-      ),
-    }));
+  const setGeneration = useCallback((value: { jobId: string; submissionId?: string }) => {
+    setDraft((current) =>
+      current.session ? { ...current, session: { ...current.session, ...value } } : current,
+    );
   }, []);
 
   const resetDraft = useCallback(() => {
@@ -105,8 +118,16 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
   }, []);
 
   const value = useMemo<AdDraftContextValue>(
-    () => ({ draft, setConcept, setStoreInfo, setCapture, setScript, setScriptLine, resetDraft }),
-    [draft, setConcept, setStoreInfo, setCapture, setScript, setScriptLine, resetDraft],
+    () => ({
+      draft,
+      setConcept,
+      setStoreInfo,
+      setSession,
+      acceptCapture,
+      setGeneration,
+      resetDraft,
+    }),
+    [draft, setConcept, setStoreInfo, setSession, acceptCapture, setGeneration, resetDraft],
   );
 
   return <AdDraftContext.Provider value={value}>{children}</AdDraftContext.Provider>;

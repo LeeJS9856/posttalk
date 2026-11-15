@@ -1,13 +1,11 @@
 /**
  * 전시용 고정 계정. 토큰 인증이 없고 프론트가 직접 맞춰본다.
- * 백엔드에는 사용자 하나만 두고 모든 요청에 이 번호를 보낸다.
+ * 백엔드 요청은 로그인 뒤 여는 게스트 작업 공간(storeId)으로 구분한다.
  */
 export const FIXED_ACCOUNT = {
   username: '1234',
   password: '1234',
 } as const;
-
-export const FIXED_USER_ID = 1;
 
 /**
  * 로그인 상태를 담는 키.

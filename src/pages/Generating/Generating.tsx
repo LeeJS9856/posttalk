@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { isAbortError } from '@/apis/api';
+import { getGenerationProgress, type GenerationProgress } from '@/apis/posttalk';
 import {
   ESTIMATED_SECONDS,
-  SAMPLE_GENERATED_AD_ID,
+  GENERATION_FAILED_NOTICE,
+  POLL_INTERVAL_MS,
   SLIDE_INTERVAL_MS,
   buildSteps,
+  stepIndexOf,
 } from '@/constants/generating';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import {
@@ -41,7 +45,7 @@ const CheckIcon = (): React.JSX.Element => (
 
 const Generating = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const { draft } = useAdDraft();
+  const { draft, resetDraft } = useAdDraft();
 
   const steps = useMemo(() => buildSteps(draft.format), [draft.format]);
   const assets = useMemo(
@@ -54,9 +58,14 @@ const Generating = (): React.JSX.Element => {
   );
 
   const [slide, setSlide] = useState(0);
-  const [stepIndex, setStepIndex] = useState(0);
+  const [progress, setProgress] = useState<GenerationProgress | null>(null);
+  /** 조회가 잠시 끊겼는지. 생성은 서버에서 계속되므로 안내만 하고 계속 묻는다. */
+  const [isOffline, setIsOffline] = useState(false);
 
-  const hasAssets = assets.length > 0;
+  const session = draft.session;
+  const jobId = session?.jobId;
+  const hasAssets = assets.length > 0 && Boolean(jobId);
+  const stepIndex = stepIndexOf(progress, steps.length);
 
   // 생성 중 이탈하면 결과물을 놓친다. 안드로이드 하드웨어 뒤로 버튼까지 붙잡는다.
   useEffect(() => {
@@ -80,25 +89,50 @@ const Generating = (): React.JSX.Element => {
   }, [assets.length]);
 
   /**
-   * 단계 진행. 지금은 시간으로 넘긴다.
-   * 생성 API 가 붙으면 진행률 응답의 단계로 이 값을 채운다.
-   * 퍼센트만 온다면 단계 수로 구간을 나눠 같은 자리에 넣는다.
+   * 진행률 조회. 끝날 때까지 정해진 간격으로 묻는다.
+   * 생성은 서버에서 돌아가므로 조회가 실패해도 다시 요청을 보내지 않고 다음 조회만 기다린다.
    */
   useEffect(() => {
-    if (!hasAssets) return;
+    if (!jobId) return;
 
-    const perStep = (ESTIMATED_SECONDS * 1000) / steps.length;
-    const timer = window.setInterval(() => {
-      setStepIndex((current) => current + 1);
-    }, perStep);
+    const controller = new AbortController();
+    let timer: number | undefined;
 
-    return () => window.clearInterval(timer);
-  }, [hasAssets, steps.length]);
+    const poll = async (): Promise<void> => {
+      try {
+        const next = await getGenerationProgress(jobId, controller.signal);
+        setProgress(next);
+        setIsOffline(false);
 
-  useEffect(() => {
-    if (stepIndex < steps.length) return;
-    navigate(`/ads/${SAMPLE_GENERATED_AD_ID}?from=create`, { replace: true });
-  }, [stepIndex, steps.length, navigate]);
+        if (next.status === 'completed') {
+          const target = session?.submissionId ?? session?.sessionId;
+          void navigate(`/ads/${target}?from=create&session=${session?.sessionId}`, {
+            replace: true,
+          });
+          return;
+        }
+        if (next.status === 'failed') {
+          // 같은 재료로 다시 돌리는 API 가 없다. 재료를 비우고 홈에서 실패를 알린다.
+          resetDraft();
+          void navigate('/', { replace: true, state: { notice: GENERATION_FAILED_NOTICE } });
+          return;
+        }
+      } catch (cause) {
+        if (isAbortError(cause)) return;
+        setIsOffline(true);
+      }
+      timer = window.setTimeout(() => void poll(), POLL_INTERVAL_MS);
+    };
+
+    void poll();
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+    // 세션 값은 생성이 시작된 뒤 바뀌지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobId]);
 
   if (!hasAssets) {
     return (
@@ -141,7 +175,11 @@ const Generating = (): React.JSX.Element => {
         <br />
         광고를 만들고 있어요
       </Heading>
-      <Note>{ESTIMATED_SECONDS}초쯤 걸려요. 화면을 끄지 말아주세요</Note>
+      <Note role="status">
+        {isOffline
+          ? '연결이 잠시 끊겼어요. 다시 확인하고 있어요'
+          : (progress?.message ?? `${ESTIMATED_SECONDS}초쯤 걸려요. 화면을 끄지 말아주세요`)}
+      </Note>
 
       <Steps aria-live="polite">
         {steps.map((step, order) => {

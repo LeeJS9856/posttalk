@@ -1,32 +1,15 @@
-import photoSample from '@/assets/photo-ex1.jpg';
-import videoSample from '@/assets/video-ex.mp4';
-
 import type { AdFormat } from '@/constants/home';
 
 export type AdFormatOption = {
   id: AdFormat;
   label: string;
-  description: string;
-  sample: string;
-  sampleKind: 'image' | 'video';
+  /** 무엇을 찍고 무엇을 받는지. 형식의 차이를 한 줄로 알린다. 백엔드 명세의 장수 그대로다. */
+  flow: string;
 };
 
-/** 결과물 샘플은 이전 프로젝트의 산출물을 쓴다. 콘셉트별 샘플이 나오면 교체한다. */
 export const AD_FORMAT_OPTIONS: readonly AdFormatOption[] = [
-  {
-    id: 'card_news',
-    label: '카드뉴스',
-    description: '사진 여러 장으로',
-    sample: photoSample,
-    sampleKind: 'image',
-  },
-  {
-    id: 'reels',
-    label: '릴스',
-    description: '짧은 영상으로',
-    sample: videoSample,
-    sampleKind: 'video',
-  },
+  { id: 'card_news', label: '카드뉴스', flow: '사진 6장 → 카드 3장' },
+  { id: 'reels', label: '릴스', flow: '영상 4개 → 13초 영상' },
 ];
 
 export const DEFAULT_AD_FORMAT: AdFormat = 'card_news';

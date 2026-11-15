@@ -41,7 +41,7 @@ export const EditButton = styled.button`
   background-color: ${COLORS.background.main};
   color: ${COLORS.brand.main};
   font-size: ${FONT_SIZE.label};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const Avatar = styled.span`
@@ -55,13 +55,13 @@ export const Avatar = styled.span`
   background-color: ${COLORS.brand.main};
   color: ${COLORS.text.inverse};
   font-size: ${FONT_SIZE.title};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.bold};
 `;
 
 export const ShopName = styled.p`
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const ShopDescription = styled.p`
@@ -87,7 +87,7 @@ export const CountBox = styled.div`
 export const CountValue = styled.p`
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.display};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.bold};
 `;
 
 export const CountLabel = styled.p`

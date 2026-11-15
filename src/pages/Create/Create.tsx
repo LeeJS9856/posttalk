@@ -1,137 +1,152 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import SegmentedToggle from '@/components/common/SegmentedToggle';
 import AppHeader from '@/components/layout/AppHeader';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 import { AD_FORMAT_OPTIONS, DEFAULT_AD_FORMAT } from '@/constants/create';
-import type { AdFormat } from '@/constants/home';
-import { SUGGESTION_THEMES } from '@/constants/themes';
+import { AD_FORMAT_LABEL, type AdFormat } from '@/constants/home';
+import { SUGGESTION_THEMES, type SuggestionThemeId } from '@/constants/themes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import {
-  ConceptCaption,
-  ConceptCard,
-  ConceptDescription,
-  ConceptItem,
-  ConceptLabel,
-  ConceptMedia,
-  ConceptRail,
-  ConceptScrim,
+  CardMain,
+  CardSide,
+  CardStage,
   Content,
-  Dot,
-  Dots,
   Footer,
-  FormatBar,
+  FormatFlow,
+  FormatLabel,
+  FormatOption,
+  MoodLabel,
+  MoodOption,
+  MoodThumb,
   NextButton,
+  OptionGrid,
   Page,
+  PageDot,
+  PageDots,
+  Phone,
+  PhoneTime,
+  Preview,
+  PreviewLabel,
+  ReelsStage,
+  ReelsTag,
+  ReelsTags,
+  SectionLabel,
 } from '@/pages/Create/Create.styles';
 
-const FORMAT_SEGMENTS = AD_FORMAT_OPTIONS.map(({ id, label }) => ({ id, label }));
+/** 릴스 미리보기 옆에 붙이는 이름표. 카드뉴스에는 없는, 릴스에만 들어가는 것들이다. */
+const REELS_EXTRAS = ['자막', '배경음악', '장면 전환'] as const;
 
+/**
+ * 광고 만들기의 첫 화면. 형식과 분위기를 한 화면에서 고른다.
+ * 무엇을 고르든 위의 미리보기가 그 조합의 결과물 모양으로 바뀐다.
+ * 형식 버튼에는 찍을 것 → 받을 것을 적어, 카드뉴스와 릴스의 차이를 이름만으로 짐작하지 않게 한다.
+ */
 const Create = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const railRef = useRef<HTMLUListElement>(null);
   const { setConcept } = useAdDraft();
 
-  const requestedTheme = searchParams.get('theme');
-  const initialIndex = Math.max(
-    SUGGESTION_THEMES.findIndex((theme) => theme.id === requestedTheme),
-    0,
-  );
-
+  // 형식과 콘셉트는 이 화면에서 한 번만 고른다. 홈에서 미리 고르게 하지 않는다.
   const [format, setFormat] = useState<AdFormat>(DEFAULT_AD_FORMAT);
-  const [index, setIndex] = useState(initialIndex);
+  const [themeId, setThemeId] = useState<SuggestionThemeId>(SUGGESTION_THEMES[0].id);
 
-  // 홈에서 고른 콘셉트가 처음부터 가운데 오도록 레일을 옮겨둔다.
-  useEffect(() => {
-    const rail = railRef.current;
-    if (!rail || initialIndex === 0) return;
-
-    const target = rail.children[initialIndex] as HTMLElement | undefined;
-    if (target) rail.scrollLeft = target.offsetLeft - rail.offsetLeft;
-  }, [initialIndex]);
-
-  const handleScroll = (): void => {
-    const rail = railRef.current;
-    if (!rail) return;
-
-    const step = rail.scrollWidth / SUGGESTION_THEMES.length;
-    const next = Math.min(
-      Math.round(rail.scrollLeft / step),
-      SUGGESTION_THEMES.length - 1,
-    );
-    if (next !== index) setIndex(next);
-  };
-
-  const scrollTo = (order: number): void => {
-    const rail = railRef.current;
-    const target = rail?.children[order] as HTMLElement | undefined;
-    if (!rail || !target) return;
-
-    rail.scrollTo({ left: target.offsetLeft - rail.offsetLeft, behavior: 'smooth' });
-  };
-
-  const concept = SUGGESTION_THEMES[index];
+  const theme = SUGGESTION_THEMES.find((item) => item.id === themeId) ?? SUGGESTION_THEMES[0];
+  const [mainCard, leftCard, rightCard] = theme.preview.cards;
+  const combo = `${theme.label} ${AD_FORMAT_LABEL[format]}`;
 
   const goNext = (): void => {
-    setConcept({ format, theme: concept.id });
+    setConcept({ format, theme: theme.id });
     navigate('/create/info');
   };
 
   return (
-    <Page aria-label="광고 형식과 콘셉트 선택">
-      <AppHeader title="어떤 광고를 만들까요?" onBack={() => navigate('/')} />
+    <Page aria-label="광고 형식과 분위기 선택">
+      {/* 하단 메뉴의 한 탭이라 뒤로 버튼을 두지 않는다. 다른 탭(보관함·마이)과 머리를 맞춘다. */}
+      <AppHeader title="새 광고" />
 
       <Content>
+        <Preview aria-label={`${combo} 미리보기`}>
+          <PreviewLabel>{combo} 예시</PreviewLabel>
 
-        <FormatBar>
-          <SegmentedToggle
-            ariaLabel="광고 형식"
-            options={FORMAT_SEGMENTS}
-            value={format}
-            onChange={setFormat}
-          />
-        </FormatBar>
+          {format === 'card_news' ? (
+            <>
+              <CardStage aria-hidden="true">
+                <CardSide src={leftCard} alt="" />
+                <CardMain src={mainCard} alt="" />
+                <CardSide src={rightCard} alt="" />
+              </CardStage>
+              <PageDots aria-hidden="true">
+                <PageDot />
+                <PageDot $active />
+                <PageDot />
+              </PageDots>
+            </>
+          ) : (
+            <ReelsStage aria-hidden="true">
+              <Phone>
+                <video
+                  key={theme.id}
+                  src={theme.preview.reels.video}
+                  poster={theme.preview.reels.poster}
+                  muted
+                  loop
+                  playsInline
+                  autoPlay
+                />
+                <PhoneTime>0:13</PhoneTime>
+              </Phone>
+              <ReelsTags>
+                {REELS_EXTRAS.map((extra) => (
+                  <ReelsTag key={extra}>{extra}</ReelsTag>
+                ))}
+              </ReelsTags>
+            </ReelsStage>
+          )}
+        </Preview>
 
-        <ConceptRail ref={railRef} onScroll={handleScroll} aria-label="광고 콘셉트">
-          {SUGGESTION_THEMES.map((theme, order) => (
-            <ConceptItem key={theme.id}>
-              <ConceptCard
-                type="button"
-                aria-label={`${theme.label} 콘셉트 선택`}
-                aria-pressed={order === index}
-                $selected={order === index}
-                onClick={() => scrollTo(order)}
-              >
-                <ConceptMedia $surface={theme.tone.surface}>
-                  {format === 'reels' ? (
-                    <video src={theme.sample.reels} muted loop playsInline autoPlay />
-                  ) : (
-                    <img src={theme.sample.card_news} alt="" />
-                  )}
-                </ConceptMedia>
-                <ConceptScrim aria-hidden="true" />
-                <ConceptCaption>
-                  <ConceptLabel>{theme.label}</ConceptLabel>
-                  <ConceptDescription>{theme.description}</ConceptDescription>
-                </ConceptCaption>
-              </ConceptCard>
-            </ConceptItem>
+        <SectionLabel id="format-label">형식</SectionLabel>
+        <OptionGrid role="radiogroup" aria-labelledby="format-label">
+          {AD_FORMAT_OPTIONS.map((option) => (
+            <FormatOption
+              key={option.id}
+              type="button"
+              role="radio"
+              aria-checked={format === option.id}
+              $selected={format === option.id}
+              onClick={() => setFormat(option.id)}
+            >
+              <FormatLabel>{option.label}</FormatLabel>
+              <FormatFlow>{option.flow}</FormatFlow>
+            </FormatOption>
           ))}
-        </ConceptRail>
+        </OptionGrid>
 
-        <Dots aria-hidden="true">
-          {SUGGESTION_THEMES.map((theme, order) => (
-            <Dot key={theme.id} $active={order === index} />
+        <SectionLabel id="mood-label">분위기</SectionLabel>
+        <OptionGrid role="radiogroup" aria-labelledby="mood-label">
+          {SUGGESTION_THEMES.map((item) => (
+            <MoodOption
+              key={item.id}
+              type="button"
+              role="radio"
+              aria-checked={themeId === item.id}
+              $selected={themeId === item.id}
+              onClick={() => setThemeId(item.id)}
+            >
+              <MoodThumb src={item.thumb} alt="" />
+              <MoodLabel>{item.label}</MoodLabel>
+            </MoodOption>
           ))}
-        </Dots>
+        </OptionGrid>
       </Content>
 
       <Footer>
         <NextButton type="button" onClick={goNext}>
-          {concept.label} 광고 만들기
+          {combo} 만들기
         </NextButton>
       </Footer>
+
+      {/* 제작 흐름의 입구까지만 하단 메뉴를 둔다. 다음 화면부터는 이탈을 막으려 감춘다. */}
+      <BottomNavigation />
     </Page>
   );
 };

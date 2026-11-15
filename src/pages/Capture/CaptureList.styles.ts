@@ -26,7 +26,7 @@ export const TitleRow = styled.div`
 export const Title = styled.h2`
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.titleLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.bold};
 `;
 
 export const Progress = styled.span`
@@ -121,14 +121,14 @@ export const SlotBadge = styled.span`
 
 export const SlotAction = styled.span`
   font-size: ${FONT_SIZE.caption};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const SlotLabel = styled.p<{ $done: boolean }>`
   margin-top: 7px;
   color: ${({ $done }) => ($done ? COLORS.text.main : COLORS.text.muted)};
   font-size: ${FONT_SIZE.label};
-  font-weight: ${({ $done }) => ($done ? FONT_WEIGHT.medium : FONT_WEIGHT.regular)};
+  font-weight: ${({ $done }) => ($done ? FONT_WEIGHT.semibold : FONT_WEIGHT.medium)};
 `;
 
 export const Footer = styled.div`
@@ -148,10 +148,19 @@ export const NextButton = styled.button`
   background-color: ${({ disabled }) => (disabled ? '#e8e8ec' : COLORS.brand.main)};
   color: ${({ disabled }) => (disabled ? '#b2b3b9' : COLORS.text.inverse)};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
   transition: background-color 0.18s ease;
 
   &:not(:disabled):active {
     transform: scale(0.98);
   }
+`;
+
+/** 세션을 열지 못했을 때 버튼 위에 띄우는 안내. */
+export const ErrorText = styled.p`
+  margin-bottom: 10px;
+  color: ${COLORS.status.failed};
+  font-size: ${FONT_SIZE.body};
+  font-weight: ${FONT_WEIGHT.semibold};
+  text-align: center;
 `;

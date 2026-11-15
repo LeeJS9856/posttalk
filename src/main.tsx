@@ -5,6 +5,7 @@ import App from '@/App';
 import { AdDraftProvider } from '@/hooks/useAdDraft';
 import { AuthProvider } from '@/hooks/useAuth';
 import { ShopProvider } from '@/hooks/useShop';
+import { WorkspaceProvider } from '@/hooks/useWorkspace';
 import GlobalStyle from '@/styles/GlobalStyle';
 
 createRoot(document.getElementById('root')!).render(
@@ -12,9 +13,11 @@ createRoot(document.getElementById('root')!).render(
     <GlobalStyle />
     <AuthProvider>
       <ShopProvider>
-        <AdDraftProvider>
-          <App />
-        </AdDraftProvider>
+        <WorkspaceProvider>
+          <AdDraftProvider>
+            <App />
+          </AdDraftProvider>
+        </WorkspaceProvider>
       </ShopProvider>
     </AuthProvider>
   </StrictMode>,

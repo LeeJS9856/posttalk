@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import AppHeader from '@/components/layout/AppHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import SettingsButton from '@/components/layout/SettingsButton';
-import { SAMPLE_AD_DETAILS } from '@/constants/ads';
+import { useAds } from '@/hooks/useAds';
 import { useShop } from '@/hooks/useShop';
 import {
   Avatar,
@@ -15,7 +15,6 @@ import {
   Counts,
   EditButton,
   EmptyRow,
-  LinkedMark,
   Page,
   Row,
   RowBody,
@@ -30,14 +29,6 @@ import {
   ShopText,
 } from '@/pages/My/My.styles';
 
-const InstagramIcon = (): React.JSX.Element => (
-  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="currentColor" strokeWidth="1.7" />
-    <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.7" />
-    <circle cx="17" cy="7" r="1.1" fill="currentColor" />
-  </svg>
-);
-
 const StoreIcon = (): React.JSX.Element => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path
@@ -49,31 +40,15 @@ const StoreIcon = (): React.JSX.Element => (
   </svg>
 );
 
-const CheckIcon = (): React.JSX.Element => (
-  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path
-      d="M5 12.5l4.5 4.5L19 7.5"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
 const My = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { profile, templates } = useShop();
 
-  // 광고 목록 API 가 붙으면 그 응답에서 센다.
+  const { ads } = useAds();
   const counts = useMemo(() => {
-    const published = SAMPLE_AD_DETAILS.filter((ad) => ad.status === 'published').length;
-    return {
-      made: SAMPLE_AD_DETAILS.length,
-      published,
-      waiting: SAMPLE_AD_DETAILS.length - published,
-    };
-  }, []);
+    const published = ads.filter((ad) => ad.status === 'published').length;
+    return { made: ads.length, published, waiting: ads.length - published };
+  }, [ads]);
 
   return (
     <Page aria-label="마이">
@@ -82,10 +57,10 @@ const My = (): React.JSX.Element => {
       <Content>
         <ShopCard>
           <ShopRow>
-            <Avatar aria-hidden="true">{profile.name.slice(0, 1)}</Avatar>
+            <Avatar aria-hidden="true">{profile.name.slice(0, 1) || '가'}</Avatar>
             <ShopText>
-              <ShopName>{profile.name}</ShopName>
-              <ShopDescription>{profile.description}</ShopDescription>
+              <ShopName>{profile.name || '가게 이름을 적어주세요'}</ShopName>
+              <ShopDescription>{profile.description || '수정을 눌러 가게를 소개해 주세요'}</ShopDescription>
             </ShopText>
             <EditButton type="button" onClick={() => navigate('/my/edit')}>
               수정
@@ -103,25 +78,12 @@ const My = (): React.JSX.Element => {
             </CountBox>
             <CountBox>
               <CountValue>{counts.waiting}</CountValue>
-              <CountLabel>안 올린 광고</CountLabel>
+              <CountLabel>보관 중</CountLabel>
             </CountBox>
           </Counts>
         </ShopCard>
 
-        <SectionTitle>연결된 계정</SectionTitle>
-        <Row>
-          <RowIcon aria-hidden="true">
-            <InstagramIcon />
-          </RowIcon>
-          <RowBody>
-            <RowTitle>인스타그램</RowTitle>
-            <RowNote>{profile.instagram}</RowNote>
-          </RowBody>
-          <LinkedMark aria-label="연결됨">
-            <CheckIcon />
-          </LinkedMark>
-        </Row>
-
+        {/* 인스타그램 연결 정보는 백엔드가 아직 주지 않는다. 게시 기능을 켤 때 다시 둔다. */}
         <SectionTitle>저장된 내용 {templates.length}개</SectionTitle>
         {templates.length === 0 ? (
           <EmptyRow>정보를 입력할 때 저장해두면 여기 쌓여요</EmptyRow>

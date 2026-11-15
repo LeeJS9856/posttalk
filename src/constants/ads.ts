@@ -1,93 +1,113 @@
-import food from '@/assets/food.webp';
-import photoEx1 from '@/assets/photo-ex1.jpg';
-import photoEx2 from '@/assets/photo-ex2.jpg';
-import photoEx3 from '@/assets/photo-ex3.jpg';
-import photoEx4 from '@/assets/photo-ex4.jpg';
-import videoEx from '@/assets/video-ex.mp4';
+import type { AdSession, ArchiveItem } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
 
-export type AdStatus = 'unpublished' | 'published' | 'failed';
+/**
+ * 광고 상태. 백엔드 이름을 그대로 쓴다.
+ * 게시 기능이 꺼져 있는 동안은 만든 광고가 모두 '보관 중'이다.
+ */
+export type AdStatus = 'draft' | 'published';
 
 export const AD_STATUS_LABEL: Record<AdStatus, string> = {
-  unpublished: '아직 안 올렸어요',
+  draft: '보관 중이에요',
   published: '올렸어요',
-  failed: '만들지 못했어요',
 };
 
-/** 인스타그램 본문 제한. 넘기면 게시 단계에서 거절당한다. */
-export const MAX_CAPTION_LENGTH = 2200;
-export const MAX_HASHTAG_COUNT = 30;
+/** 썸네일 위와 보관함 필터에 쓰는 짧은 이름. */
+export const AD_STATUS_SHORT_LABEL: Record<AdStatus, string> = {
+  draft: '보관 중',
+  published: '올림',
+};
 
-export const countHashtags = (caption: string): number =>
-  (caption.match(/#[^\s#]+/g) ?? []).length;
-
-export type AdDetail = {
-  adId: string;
+/** 화면이 쓰는 광고 한 건. 보관함 응답과 제작 결과 응답을 모두 이 모양으로 바꿔 쓴다. */
+export type AdItem = {
+  /** 보관함 항목 번호(submissionId). 상세 주소에 쓴다. */
+  id: string;
   title: string;
   format: AdFormat;
   status: AdStatus;
-  caption: string;
-  /** 카드뉴스의 카드들. 릴스는 비운다. */
+  /** 목록 썸네일. 없으면 카드 첫 장, 그것도 없으면 영상을 대신 세운다. */
+  thumbnail?: string;
+  /** 카드뉴스 PNG. 릴스는 비운다. */
   cards: string[];
-  /** 릴스 영상. 카드뉴스는 비운다. */
+  /** 릴스 MP4. 카드뉴스는 비운다. */
   videoUrl?: string;
-  /** 올린 날짜. 올린 광고만 있다. */
-  publishedAt?: string;
-  /** 올라간 게시물 주소. 올린 광고만 있다. */
-  postUrl?: string;
+  caption: string;
+  hashtags: string[];
+  createdAt?: string;
+  permalink?: string;
 };
 
+const formatOf = (mediaType: string | undefined): AdFormat =>
+  mediaType === 'video' ? 'reels' : 'card_news';
+
+const nonEmpty = (values: (string | null | undefined)[]): string[] =>
+  values.filter((value): value is string => Boolean(value));
+
+/** 보관함 항목 → 화면 모양. 서명 URL 은 조회할 때마다 새로 받으므로 저장하지 않는다. */
+export const fromArchiveItem = (item: ArchiveItem): AdItem => {
+  const format = formatOf(item.mediaType);
+  const previews = [...(item.previewAssets ?? [])]
+    .sort((a, b) => (a.sortOrder ?? a.index ?? 0) - (b.sortOrder ?? b.index ?? 0))
+    .map((asset) => asset.url);
+  const cards = format === 'card_news' ? nonEmpty(previews.length > 0 ? previews : [item.generatedAssetUrl]) : [];
+
+  return {
+    id: item.submissionId,
+    title: item.title ?? '광고',
+    format,
+    status: item.status === 'published' ? 'published' : 'draft',
+    thumbnail: item.thumbnailUrl ?? cards[0] ?? undefined,
+    cards,
+    videoUrl: format === 'reels' ? (item.generatedAssetUrl ?? undefined) : undefined,
+    caption: item.publishCaption ?? '',
+    hashtags: [],
+    createdAt: item.createdAt,
+    permalink: item.instagramPermalink ?? undefined,
+  };
+};
+
+/** 제작 결과 → 화면 모양. 생성 직후 결과 화면에서 쓴다. */
+export const fromAdSession = (session: AdSession): AdItem | null => {
+  const submissionId = session.submission?.submissionId;
+  if (!submissionId) return null;
+
+  const format = formatOf(session.adType);
+  const cards =
+    format === 'card_news'
+      ? nonEmpty((session.generation?.generatedAssets ?? []).map((asset) => asset.url))
+      : [];
+
+  return {
+    id: submissionId,
+    title: session.intro?.menuIntro || session.store?.primarySubject || '광고',
+    format,
+    status: session.submission?.status === 'published' ? 'published' : 'draft',
+    thumbnail: cards[0],
+    cards,
+    videoUrl: format === 'reels' ? (session.generation?.resultUrl ?? undefined) : undefined,
+    caption: session.submission?.caption ?? '',
+    hashtags: session.submission?.hashtags ?? [],
+    createdAt: session.createdAt,
+  };
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 /**
- * 광고 상세 조회 API 가 붙기 전까지 쓰는 표본.
- * 이전 프로젝트의 결과물 샘플을 그대로 쓴다.
+ * 만든 날짜를 오늘 기준으로 짧게. 목록에서 같은 메뉴 광고끼리 구분하는 데 쓴다.
+ * 오늘 · 어제 · N일 전(일주일 안) · M월 D일.
  */
-export const SAMPLE_AD_DETAILS: readonly AdDetail[] = [
-  {
-    adId: 'sample-1',
-    title: '창억떡',
-    format: 'card_news',
-    status: 'unpublished',
-    caption:
-      '매일 아침 직접 쪄내는 떡, 창억떡집에서 만나보세요 🧧\n#창억떡 #떡집 #동네맛집',
-    cards: [photoEx1, photoEx2, photoEx3, photoEx4, food],
-  },
-  {
-    adId: 'sample-2',
-    title: '버터쿠키',
-    format: 'reels',
-    status: 'unpublished',
-    caption: '버터를 아끼지 않고 구웠어요 🍪\n#버터쿠키 #수제쿠키',
-    cards: [],
-    videoUrl: videoEx,
-  },
-  {
-    adId: 'sample-3',
-    title: '소금빵',
-    format: 'card_news',
-    status: 'published',
-    caption: '겉은 바삭 속은 촉촉한 소금빵 🥐\n#소금빵 #동네빵집',
-    cards: [photoEx3, photoEx1, photoEx2],
-    publishedAt: '2026-11-10',
-    postUrl: 'https://www.instagram.com/',
-  },
-  {
-    adId: 'sample-4',
-    title: '쑥떡',
-    format: 'reels',
-    status: 'published',
-    caption: '봄 쑥으로 빚은 쑥떡 🌿\n#쑥떡 #떡집',
-    cards: [],
-    videoUrl: videoEx,
-    publishedAt: '2026-11-08',
-    postUrl: 'https://www.instagram.com/',
-  },
-];
+export const formatRelativeDate = (value: string | undefined, now: Date = new Date()): string => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
 
-export const findAdDetail = (adId: string | undefined): AdDetail | undefined =>
-  SAMPLE_AD_DETAILS.find((ad) => ad.adId === adId);
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const days = Math.round((today.getTime() - target.getTime()) / DAY_MS);
 
-/** 2026-11-10 을 11월 10일로. 연도는 전시 기간 안이라 적지 않는다. */
-export const formatPublishedAt = (value: string): string => {
-  const [, month, day] = value.split('-');
-  return `${Number(month)}월 ${Number(day)}일`;
+  if (days <= 0) return '오늘';
+  if (days === 1) return '어제';
+  if (days < 7) return `${days}일 전`;
+  return `${date.getMonth() + 1}월 ${date.getDate()}일`;
 };

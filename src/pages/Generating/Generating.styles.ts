@@ -63,7 +63,7 @@ export const Heading = styled.h2`
   margin-top: 20px;
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.titleLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.bold};
   line-height: 1.45;
 `;
 
@@ -149,5 +149,5 @@ export const BackButton = styled.button`
   border-radius: ${RADIUS.card};
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;

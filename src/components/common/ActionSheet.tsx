@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 
 import { COLORS } from '@/constants/colors';
@@ -9,17 +9,23 @@ export type ActionSheetItem = {
   key: string;
   icon: React.ReactNode;
   label: string;
-  description: string;
+  /** 항목 아래 한 줄. 이름만으로 뜻이 분명하면 비운다. */
+  description?: string;
   /** 권하는 쪽. 하나만 두고, 작은 표시로만 알린다. */
   recommended?: boolean;
+  /** 되돌리기 어려운 동작(로그아웃, 삭제). 글자와 아이콘을 경고색으로 둔다. */
+  danger?: boolean;
   onSelect: () => void;
 };
 
 type ActionSheetProps = {
   open: boolean;
   title: string;
-  description: string;
-  items: readonly ActionSheetItem[];
+  description?: string;
+  /** 고를 항목들. 확인창처럼 버튼만 둘 때는 비우고 children 을 쓴다. */
+  items?: readonly ActionSheetItem[];
+  /** 항목 목록 대신 놓을 내용(확인 버튼 등). */
+  children?: React.ReactNode;
   onClose: () => void;
 };
 
@@ -27,13 +33,15 @@ const ActionSheet = ({
   open,
   title,
   description,
-  items,
+  items = [],
+  children,
   onClose,
 }: ActionSheetProps): React.JSX.Element | null => {
   // 닫힐 때도 애니메이션을 보여주려면 사라지는 동안 한 번 더 그려야 한다.
   const [leaving, setLeaving] = useState(false);
   const [mounted, setMounted] = useState(open);
   const [wasOpen, setWasOpen] = useState(open);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // open 이 바뀐 순간을 렌더 중에 처리한다. 이펙트로 미루면 한 프레임 어긋난다.
   if (wasOpen !== open) {
@@ -45,6 +53,11 @@ const ActionSheet = ({
       setLeaving(true);
     }
   }
+
+  // 열리면 시트 안으로 포커스를 옮긴다. 키보드와 화면 읽기 사용자가 뒤 화면에 남지 않게 한다.
+  useEffect(() => {
+    if (open && mounted) panelRef.current?.focus({ preventScroll: true });
+  }, [open, mounted]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -73,28 +86,42 @@ const ActionSheet = ({
       }}
     >
       <Backdrop type="button" aria-label="닫기" onClick={onClose} />
-      <Panel role="dialog" aria-modal="true" aria-label={title} $leaving={leaving}>
+      <Panel
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
+        $leaving={leaving}
+      >
         <Handle aria-hidden="true" />
         <Title>{title}</Title>
-        <Description>{description}</Description>
+        {description && <Description>{description}</Description>}
+        {children}
+        {items.length > 0 && (
         <List>
           {items.map((item) => (
             <li key={item.key}>
               <Option type="button" onClick={item.onSelect}>
-                <OptionIcon $accent={Boolean(item.recommended)} aria-hidden="true">
+                <OptionIcon
+                  $accent={Boolean(item.recommended)}
+                  $danger={Boolean(item.danger)}
+                  aria-hidden="true"
+                >
                   {item.icon}
                 </OptionIcon>
                 <OptionText>
-                  <OptionLabel>
+                  <OptionLabel $danger={Boolean(item.danger)}>
                     {item.label}
                     {item.recommended && <Badge>추천</Badge>}
                   </OptionLabel>
-                  <OptionDescription>{item.description}</OptionDescription>
+                  {item.description && <OptionDescription>{item.description}</OptionDescription>}
                 </OptionText>
               </Option>
             </li>
           ))}
         </List>
+        )}
       </Panel>
     </Layer>
   );
@@ -152,6 +179,11 @@ const Panel = styled.div<{ $leaving: boolean }>`
   background-color: ${COLORS.background.main};
   animation: ${({ $leaving }) => ($leaving ? slideDown : slideUp)} 0.26s
     cubic-bezier(0.2, 0.85, 0.25, 1) forwards;
+
+  /* 포커스는 시트 자체로 받는다. 테두리는 그리지 않고 안의 버튼부터 테두리를 보인다. */
+  &:focus {
+    outline: none;
+  }
 `;
 
 const Handle = styled.div`
@@ -162,10 +194,10 @@ const Handle = styled.div`
   background-color: ${COLORS.border.strong};
 `;
 
-const Title = styled.p`
+const Title = styled.h2`
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.titleSmall};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.bold};
 `;
 
 const Description = styled.p`
@@ -198,7 +230,17 @@ const Option = styled.button`
   }
 `;
 
-const OptionIcon = styled.span<{ $accent: boolean }>`
+const iconBackground = ({ $accent, $danger }: { $accent: boolean; $danger: boolean }): string => {
+  if ($danger) return COLORS.statusSoft.failed;
+  return $accent ? COLORS.brand.main : COLORS.brand.soft;
+};
+
+const iconColor = ({ $accent, $danger }: { $accent: boolean; $danger: boolean }): string => {
+  if ($danger) return COLORS.status.failed;
+  return $accent ? COLORS.text.inverse : COLORS.brand.main;
+};
+
+const OptionIcon = styled.span<{ $accent: boolean; $danger: boolean }>`
   display: flex;
   flex-shrink: 0;
   align-items: center;
@@ -206,8 +248,8 @@ const OptionIcon = styled.span<{ $accent: boolean }>`
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background-color: ${({ $accent }) => ($accent ? COLORS.brand.main : COLORS.brand.soft)};
-  color: ${({ $accent }) => ($accent ? COLORS.text.inverse : COLORS.brand.main)};
+  background-color: ${iconBackground};
+  color: ${iconColor};
 
   svg {
     width: 18px;
@@ -221,13 +263,13 @@ const OptionText = styled.span`
   min-width: 0;
 `;
 
-const OptionLabel = styled.span`
+const OptionLabel = styled.span<{ $danger: boolean }>`
   display: flex;
   align-items: center;
   gap: 6px;
-  color: ${COLORS.text.main};
+  color: ${({ $danger }) => ($danger ? COLORS.status.failed : COLORS.text.main)};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 const Badge = styled.span`
@@ -236,7 +278,7 @@ const Badge = styled.span`
   background-color: ${COLORS.brand.soft};
   color: ${COLORS.brand.main};
   font-size: ${FONT_SIZE.caption};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 const OptionDescription = styled.span`

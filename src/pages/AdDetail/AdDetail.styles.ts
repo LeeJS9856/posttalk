@@ -159,7 +159,7 @@ export const Meta = styled.div`
   padding: 16px 16px 0;
 `;
 
-export const StatusBadge = styled.span<{ $status: 'unpublished' | 'published' | 'failed' }>`
+export const StatusBadge = styled.span<{ $status: 'draft' | 'published' }>`
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -259,7 +259,7 @@ export const PrimaryButton = styled.button`
   background-color: ${({ disabled }) => (disabled ? '#e8e8ec' : COLORS.brand.main)};
   color: ${({ disabled }) => (disabled ? '#b2b3b9' : COLORS.text.inverse)};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
   transition: background-color 0.18s ease;
 
   &:not(:disabled):active {
@@ -283,7 +283,7 @@ export const SecondaryButton = styled.a`
   border-radius: ${RADIUS.card};
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 
   svg {
     width: 16px;
@@ -302,8 +302,15 @@ export const MissingWrap = styled.div`
 `;
 
 export const MissingText = styled.p`
+  white-space: pre-line;
   color: ${COLORS.text.grey};
   font-size: ${FONT_SIZE.bodyLarge};
   line-height: 1.7;
   text-align: center;
+`;
+
+/** 캡션 속 해시태그. 인스타그램처럼 파란 글씨로 구분한다. */
+export const CaptionHashtag = styled.span`
+  color: ${COLORS.hashtag};
+  font-weight: ${FONT_WEIGHT.medium};
 `;

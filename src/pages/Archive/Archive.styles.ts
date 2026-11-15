@@ -10,35 +10,153 @@ export const Page = styled.div`
   background-color: ${COLORS.background.main};
 `;
 
-export const ChipRail = styled.div`
-  display: flex;
-  flex-shrink: 0;
+/* 머리 제목. 옆에 전체 개수를 옅게 붙인다. */
+export const Title = styled.span`
+  display: inline-flex;
+  align-items: baseline;
   gap: 6px;
-  padding: 0 16px 8px;
-  overflow-x: auto;
-  scroll-padding-left: 16px;
+`;
 
-  &:last-of-type {
-    padding-bottom: 14px;
-  }
+export const TitleCount = styled.span`
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.titleSmall};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const CreateButton = styled.button`
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 4px;
-  min-height: 44px;
-  margin-right: -6px;
-  padding: 0 6px;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
   color: ${COLORS.brand.main};
-  font-size: ${FONT_SIZE.body};
-  font-weight: ${FONT_WEIGHT.medium};
 
   svg {
-    width: 15px;
-    height: 15px;
+    width: 24px;
+    height: 24px;
+    stroke-width: 2.2;
   }
+`;
+
+/** 형식 탭. 고른 탭은 아래 굵은 선으로 표시한다. */
+export const TabList = styled.div`
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 1px solid ${COLORS.border.main};
+`;
+
+export const Tab = styled.button<{ $on: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  margin-bottom: -1px;
+  border-bottom: 2px solid ${({ $on }) => ($on ? COLORS.text.main : 'transparent')};
+  color: ${({ $on }) => ($on ? COLORS.text.main : COLORS.text.muted)};
+  font-size: ${FONT_SIZE.body};
+  font-weight: ${({ $on }) => ($on ? FONT_WEIGHT.bold : FONT_WEIGHT.semibold)};
+  transition: color 0.18s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
+/** 탭 아래로는 칩과 격자가 함께 스크롤된다. */
+export const Scroll = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+`;
+
+export const FilterRail = styled.div`
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+/* 상태 칩. 색으로 상태를 칠하지 않고, 고른 칩만 진하게 채운다. */
+export const FilterChip = styled.button<{ $on: boolean }>`
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid ${({ $on }) => ($on ? COLORS.text.main : COLORS.border.strong)};
+  border-radius: 999px;
+  background-color: ${({ $on }) => ($on ? COLORS.text.main : COLORS.background.main)};
+  color: ${({ $on }) => ($on ? COLORS.text.inverse : COLORS.text.grey)};
+  font-size: ${FONT_SIZE.label};
+  font-weight: ${({ $on }) => ($on ? FONT_WEIGHT.bold : FONT_WEIGHT.semibold)};
+  white-space: nowrap;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+`;
+
+/** 세 칸 사진 격자. 간격은 2px 로 좁혀 사진이 주인공이 되게 한다. */
+export const Grid = styled.ul`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  list-style: none;
+`;
+
+export const Tile = styled.button`
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background-color: ${COLORS.background.subtle};
+
+  img,
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &:active img {
+    opacity: 0.85;
+  }
+`;
+
+export const PlayBadge = styled.span`
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  color: ${COLORS.white};
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
+/* 할 일이 남은 광고에만 얹는 글. 사진 속 글씨와 섞이지 않게 어두운 막 위에 둔다. */
+export const StatusChip = styled.span`
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: ${COLORS.overlay};
+  color: ${COLORS.white};
+  font-size: ${FONT_SIZE.caption};
+  font-weight: ${FONT_WEIGHT.semibold};
+  line-height: 1.4;
 `;
 
 /** 필터를 걸었는데 남는 게 없을 때. 아예 비어 있는 것과 다른 말을 한다. */
@@ -48,155 +166,6 @@ export const NoMatch = styled.p`
   font-size: ${FONT_SIZE.bodyLarge};
   line-height: 1.7;
   text-align: center;
-`;
-
-export const Chip = styled.button<{ $on: boolean }>`
-  flex-shrink: 0;
-  padding: 7px 13px;
-  border-radius: 999px;
-  background-color: ${({ $on }) => ($on ? COLORS.brand.main : COLORS.background.subtle)};
-  color: ${({ $on }) => ($on ? COLORS.text.inverse : COLORS.text.grey)};
-  font-size: ${FONT_SIZE.body};
-  font-weight: ${({ $on }) => ($on ? FONT_WEIGHT.medium : FONT_WEIGHT.regular)};
-  white-space: nowrap;
-  transition: background-color 0.18s ease;
-`;
-
-export const Feed = styled.ul`
-  flex: 1;
-  min-height: 0;
-  list-style: none;
-  overflow-y: auto;
-`;
-
-export const Post = styled.li`
-  & + & {
-    margin-top: 6px;
-    border-top: 0.5px solid ${COLORS.border.main};
-    padding-top: 14px;
-  }
-`;
-
-/** 게시물 머리. 가게 아바타와 이름, 오른쪽에 올렸는지 여부. */
-export const PostHead = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 16px 9px;
-`;
-
-export const Avatar = styled.span`
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: ${RADIUS.round};
-  background-color: ${COLORS.brand.main};
-  color: ${COLORS.text.inverse};
-  font-size: ${FONT_SIZE.body};
-  font-weight: ${FONT_WEIGHT.medium};
-`;
-
-export const HeadText = styled.div`
-  flex: 1;
-  min-width: 0;
-`;
-
-export const ShopName = styled.p`
-  color: ${COLORS.text.main};
-  font-size: ${FONT_SIZE.body};
-  font-weight: ${FONT_WEIGHT.medium};
-`;
-
-export const PostMeta = styled.p`
-  margin-top: 1px;
-  color: ${COLORS.text.muted};
-  font-size: ${FONT_SIZE.label};
-`;
-
-export const StatusBadge = styled.span<{ $published: boolean }>`
-  flex-shrink: 0;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background-color: ${({ $published }) =>
-    $published ? COLORS.statusSoft.published : COLORS.statusSoft.unpublished};
-  color: ${({ $published }) =>
-    $published ? COLORS.status.published : COLORS.status.unpublished};
-  font-size: ${FONT_SIZE.label};
-`;
-
-/** 인스타처럼 좌우 여백 없이 화면 끝까지 채운다. */
-export const MediaButton = styled.button`
-  position: relative;
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  background-color: ${COLORS.background.subtle};
-  overflow: hidden;
-`;
-
-export const MediaImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-export const MediaVideo = styled.video`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-export const Counter = styled.span`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background-color: ${COLORS.scrim};
-  color: ${COLORS.text.inverse};
-  font-size: ${FONT_SIZE.label};
-`;
-
-export const PlayMark = styled.span`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 46px;
-  height: 46px;
-  border-radius: ${RADIUS.round};
-  background-color: rgba(255, 255, 255, 0.88);
-  color: ${COLORS.text.main};
-  transform: translate(-50%, -50%);
-
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-`;
-
-export const Caption = styled.p`
-  padding: 10px 16px 14px;
-  color: ${COLORS.text.main};
-  font-size: ${FONT_SIZE.body};
-  line-height: 1.6;
-`;
-
-export const CaptionName = styled.span`
-  margin-right: 5px;
-  font-weight: ${FONT_WEIGHT.medium};
-`;
-
-export const PostDate = styled.p`
-  margin-top: -8px;
-  padding: 0 16px 14px;
-  color: ${COLORS.text.muted};
-  font-size: ${FONT_SIZE.label};
 `;
 
 export const EmptyWrap = styled.div`
@@ -217,7 +186,7 @@ export const EmptyMark = styled.span`
   height: 48px;
   border-radius: ${RADIUS.chip};
   background-color: ${COLORS.background.subtle};
-  color: #b2b3b9;
+  color: ${COLORS.text.muted};
 
   svg {
     width: 21px;
@@ -242,5 +211,15 @@ export const EmptyAction = styled.button`
   background-color: ${COLORS.brand.main};
   color: ${COLORS.text.inverse};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
+`;
+
+export const RetryButton = styled.button`
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background-color: ${COLORS.background.subtle};
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.body};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;

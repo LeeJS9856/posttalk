@@ -4,6 +4,7 @@ import gabarito from '@/assets/fonts/Gabarito.woff2';
 import pretendard from '@/assets/fonts/PretendardVariable.woff2';
 import { COLORS } from '@/constants/colors';
 import { MAX_APP_WIDTH } from '@/constants/layout';
+import { FONT_WEIGHT } from '@/constants/typography';
 
 const GlobalStyle = createGlobalStyle`
   /* 본문용. 한글 자소 간격이 고른 가변 폰트 하나로 굵기를 모두 덮는다. */
@@ -38,7 +39,10 @@ const GlobalStyle = createGlobalStyle`
   body {
     color: ${COLORS.text.main};
     background-color: ${COLORS.background.main};
+    /* 한글은 400 이면 실제 폰에서 가늘게 읽힌다. 따로 정하지 않은 글은 500 으로 둔다. */
+    font-weight: ${FONT_WEIGHT.medium};
     line-height: 1.5;
+    letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -67,6 +71,17 @@ const GlobalStyle = createGlobalStyle`
   img, video {
     display: block;
     max-width: 100%;
+  }
+
+  /* 브라우저 기본 포커스 테두리 대신 브랜드 색으로 그린다. 키보드로 움직일 때만 보인다. */
+  :focus-visible {
+    outline: 2px solid ${COLORS.brand.main};
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: ${COLORS.brand.soft};
+    color: ${COLORS.text.main};
   }
 
   /* 전시 기기에서 스크롤바가 보이지 않게 한다 */

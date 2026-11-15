@@ -60,8 +60,8 @@ export const Counter = styled.span`
 export const Instruction = styled.p`
   margin-top: 12px;
   color: ${COLORS.white};
-  font-size: 15px;
-  font-weight: ${FONT_WEIGHT.medium};
+  font-size: ${FONT_SIZE.bodyLarge};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const Hint = styled.p`
@@ -261,7 +261,7 @@ export const RetakeButton = styled.button`
   border-radius: 13px;
   color: ${COLORS.white};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const UseButton = styled.button`
@@ -273,7 +273,7 @@ export const UseButton = styled.button`
   background-color: ${COLORS.white};
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const NoticeWrap = styled.div`
@@ -303,7 +303,7 @@ export const FallbackButton = styled.button`
   border-radius: 13px;
   color: ${COLORS.white};
   font-size: ${FONT_SIZE.bodyLarge};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 /**
@@ -344,7 +344,7 @@ export const PickArea = styled.button`
 export const PickText = styled.span`
   color: ${COLORS.white};
   font-size: ${FONT_SIZE.titleSmall};
-  font-weight: ${FONT_WEIGHT.medium};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const PickHint = styled.span`
