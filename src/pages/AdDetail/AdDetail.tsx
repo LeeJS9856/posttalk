@@ -6,6 +6,7 @@ import { isAbortError } from '@/apis/api';
 import { getAdSession, getArchive, type ApiAdType } from '@/apis/posttalk';
 import AppHeader from '@/components/layout/AppHeader';
 import { AD_STATUS_LABEL, fromAdSession, fromArchiveItem, type AdItem } from '@/constants/ads';
+import { posterSrc } from '@/constants/media';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import {
@@ -195,7 +196,8 @@ const AdDetail = (): React.JSX.Element => {
             <>
               <CardVideo
                 ref={videoRef}
-                src={ad.videoUrl}
+                // 크롬은 preload=metadata 만으로는 첫 장면을 그리지 않아 검은 상자로 남는다.
+                src={ad.videoUrl ? posterSrc(ad.videoUrl) : undefined}
                 controls={isPlaying}
                 playsInline
                 preload="metadata"
