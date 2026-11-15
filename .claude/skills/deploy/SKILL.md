@@ -22,7 +22,10 @@ Vercel 프로젝트 설정에 들어가 있어야 하는 값.
 
 | 키 | 용도 |
 | --- | --- |
-| `VITE_API_BASE_URL` | 백엔드 주소 |
+| `VITE_API_BASE_URL` | 비워 둔다. `vercel.json`이 `/api/*`를 운영 백엔드로 넘긴다 |
+
+백엔드 CORS는 `posttalk.vercel.app`만 연다. 브라우저가 백엔드를 직접 부르면 미리보기 주소에서 막히므로,
+개발 서버(Vite 프록시)와 같게 같은 주소의 `/api`로 부르고 Vercel이 전달하게 한다. 백엔드 주소가 바뀌면 `vercel.json`을 고친다.
 
 `.env`는 저장소에 올리지 않는다. 값이 바뀌면 Vercel 대시보드에서 바꾸고 재배포한다.
 
