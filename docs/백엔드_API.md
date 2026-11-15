@@ -5,7 +5,7 @@
 아직 답을 받지 못한 질문은 [백엔드_요청사항.md](./백엔드_요청사항.md)에 있다.
 
 - 운영 API: `https://postalkbackend-production.up.railway.app`
-- 프론트 환경 변수: `VITE_API_BASE_URL` (원문에는 Next.js 이름인 `NEXT_PUBLIC_API_BASE_URL` 로 적혀 있다)
+- 프론트는 백엔드 주소를 환경 변수로 받지 않는다. 항상 같은 주소의 `/api` 로 부르고, 개발 서버는 Vite 프록시가, 배포는 `vercel.json` 이 백엔드로 넘긴다.
   - 배포(Vercel)에서는 이 값을 백엔드 주소로 채운다.
   - 개발 서버에서는 비워 둔다. Vite 프록시가 `/api` 를 운영 백엔드로 넘겨 CORS 에 걸리지 않는다(`VITE_DEV_API_TARGET` 으로 바꿀 수 있다).
 - CORS 허용: `https://posttalk.vercel.app`

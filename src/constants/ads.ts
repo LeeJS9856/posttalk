@@ -43,22 +43,44 @@ const formatOf = (mediaType: string | undefined): AdFormat =>
 const nonEmpty = (values: (string | null | undefined)[]): string[] =>
   values.filter((value): value is string => Boolean(value));
 
-/** 보관함 항목 → 화면 모양. 서명 URL 은 조회할 때마다 새로 받으므로 저장하지 않는다. */
+/** 주소가 영상 파일인지. 서명 URL 은 뒤에 ?token= 이 붙는다. */
+const isVideoUrl = (url: string | null | undefined): url is string =>
+  Boolean(url && /\.(mp4|webm|mov)(\?|#|$)/i.test(url));
+
+/**
+ * 보관함 항목 → 화면 모양. 서명 URL 은 조회할 때마다 새로 받으므로 저장하지 않는다.
+ * 릴스는 서버 필드 이름이 뒤바뀌어 온다(thumbnailUrl 에 mp4, generatedAssetUrl 에 jpg, 2026-11-15 확인).
+ * 그래서 previewAssets 의 assetType 으로 영상과 썸네일을 고르고, 없으면 확장자로 가린다.
+ */
 export const fromArchiveItem = (item: ArchiveItem): AdItem => {
   const format = formatOf(item.mediaType);
-  const previews = [...(item.previewAssets ?? [])]
-    .sort((a, b) => (a.sortOrder ?? a.index ?? 0) - (b.sortOrder ?? b.index ?? 0))
-    .map((asset) => asset.url);
-  const cards = format === 'card_news' ? nonEmpty(previews.length > 0 ? previews : [item.generatedAssetUrl]) : [];
+  const assets = [...(item.previewAssets ?? [])].sort(
+    (a, b) => (a.sortOrder ?? a.index ?? 0) - (b.sortOrder ?? b.index ?? 0),
+  );
+  const urlOf = (assetType: string): string | undefined =>
+    assets.find((asset) => asset.assetType === assetType)?.url;
+  const topLevel = [item.thumbnailUrl, item.generatedAssetUrl];
+
+  const previews = assets.map((asset) => asset.url).filter((url) => !isVideoUrl(url));
+  const cards =
+    format === 'card_news'
+      ? nonEmpty(previews.length > 0 ? previews : [item.generatedAssetUrl])
+      : [];
+  const videoUrl =
+    format === 'reels' ? (urlOf('generated_video') ?? topLevel.find(isVideoUrl)) : undefined;
+  const thumbnail =
+    urlOf('video_thumbnail') ??
+    topLevel.find((url): url is string => Boolean(url) && !isVideoUrl(url)) ??
+    cards[0];
 
   return {
     id: item.submissionId,
     title: item.title ?? '광고',
     format,
     status: item.status === 'published' ? 'published' : 'draft',
-    thumbnail: item.thumbnailUrl ?? cards[0] ?? undefined,
+    thumbnail,
     cards,
-    videoUrl: format === 'reels' ? (item.generatedAssetUrl ?? undefined) : undefined,
+    videoUrl,
     caption: item.publishCaption ?? '',
     hashtags: [],
     createdAt: item.createdAt,

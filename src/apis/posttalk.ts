@@ -169,7 +169,8 @@ export type ArchiveItem = {
   instagramPermalink?: string | null;
   mediaType?: ApiAdType;
   createdAt?: string;
-  previewAssets?: { index?: number; sortOrder?: number; url?: string }[];
+  /** 릴스는 generated_video(영상)와 video_thumbnail(썸네일)이 함께 온다. */
+  previewAssets?: { index?: number; sortOrder?: number; url?: string; assetType?: string }[];
 };
 
 export type ArchiveData = {

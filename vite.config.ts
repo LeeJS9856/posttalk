@@ -16,7 +16,7 @@ export default defineConfig({
     // 전시용 기기에서 임시 도메인으로 접속하는 경우를 허용합니다.
     allowedHosts: true,
     // 개발 중에는 /api 를 백엔드로 넘긴다. 백엔드 CORS 가 배포 주소만 열려 있어서다.
-    // VITE_API_BASE_URL 을 비워 두면 이 프록시를 탄다.
+    // 배포에서는 vercel.json 이 같은 일을 한다. 백엔드가 바뀌면 둘 다 고친다.
     proxy: {
       '/api': {
         target: process.env.VITE_DEV_API_TARGET ?? 'https://postalkbackend-production.up.railway.app',
