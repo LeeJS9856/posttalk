@@ -192,6 +192,16 @@ export const CaptionCount = styled.p<{ $over: boolean }>`
   text-align: right;
 `;
 
+/**
+ * 포맷·장수·만든 날짜. 게시 기능이 꺼져 있어 모든 광고가 '보관 중'이라
+ * 상태 뱃지는 아무 말도 하지 못한다. 그 자리에 알아볼 수 있는 것을 둔다.
+ */
+export const MetaLine = styled.p`
+  margin-bottom: 14px;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.body};
+`;
+
 export const MetaRow = styled.div`
   display: flex;
   align-items: center;

@@ -90,6 +90,13 @@ const Archive = (): React.JSX.Element => {
     { key: 'published', label: `올림 ${countOf('published')}` },
   ];
 
+  /**
+   * 올린 광고가 하나도 없으면 상태 칩을 감춘다.
+   * 게시 기능이 꺼져 있는 동안 '올림'은 눌러도 늘 빈 화면이고 '보관 중'은 '전체'와 같다.
+   * 게시가 돌아오면 저절로 다시 나타난다.
+   */
+  const hasPublished = ads.some((ad) => ad.status === 'published');
+
   const openAd = (ad: AdItem): void => {
     void navigate(`/ads/${ad.id}`);
   };
@@ -177,19 +184,21 @@ const Archive = (): React.JSX.Element => {
           {tabs}
 
           <Scroll>
-            <FilterRail aria-label="게시 상태 거르기">
-              {statusChips.map((chip) => (
-                <FilterChip
-                  key={chip.key}
-                  type="button"
-                  aria-pressed={status === chip.key}
-                  $on={status === chip.key}
-                  onClick={() => setStatus(chip.key)}
-                >
-                  {chip.label}
-                </FilterChip>
-              ))}
-            </FilterRail>
+            {hasPublished && (
+              <FilterRail aria-label="게시 상태 거르기">
+                {statusChips.map((chip) => (
+                  <FilterChip
+                    key={chip.key}
+                    type="button"
+                    aria-pressed={status === chip.key}
+                    $on={status === chip.key}
+                    onClick={() => setStatus(chip.key)}
+                  >
+                    {chip.label}
+                  </FilterChip>
+                ))}
+              </FilterRail>
+            )}
 
             {shown.length === 0 ? (
               <NoMatch>
@@ -203,7 +212,9 @@ const Archive = (): React.JSX.Element => {
                   <li key={ad.id}>
                     <Tile
                       type="button"
-                      aria-label={`${ad.title}, ${AD_FORMAT_LABEL[ad.format]}, ${AD_STATUS_LABEL[ad.status]}`}
+                      aria-label={[ad.title, AD_FORMAT_LABEL[ad.format], ad.status === 'published' ? AD_STATUS_LABEL[ad.status] : null]
+                        .filter(Boolean)
+                        .join(', ')}
                       onClick={() => openAd(ad)}
                     >
                       <AdCover ad={ad} />

@@ -5,7 +5,14 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { isAbortError } from '@/apis/api';
 import { getAdSession, getArchive, type ApiAdType } from '@/apis/posttalk';
 import AppHeader from '@/components/layout/AppHeader';
-import { AD_STATUS_LABEL, fromAdSession, fromArchiveItem, type AdItem } from '@/constants/ads';
+import {
+  AD_STATUS_LABEL,
+  formatRelativeDate,
+  fromAdSession,
+  fromArchiveItem,
+  type AdItem,
+} from '@/constants/ads';
+import { AD_FORMAT_LABEL } from '@/constants/home';
 import { posterSrc } from '@/constants/media';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useWorkspace } from '@/hooks/useWorkspace';
@@ -21,6 +28,7 @@ import {
   Footer,
   Meta,
   MetaLabel,
+  MetaLine,
   MetaRow,
   MissingText,
   MissingWrap,
@@ -160,7 +168,11 @@ const AdDetail = (): React.JSX.Element => {
       }
     />
   ) : (
-    <AppHeader title="광고" onBack={() => void navigate(-1)} />
+    // 홈과 보관함에서 이름으로 부르던 광고다. 열었다고 '광고'가 되면 안 된다.
+    <AppHeader
+      title={state.status === 'ready' ? state.ad.title : '광고'}
+      onBack={() => void navigate(-1)}
+    />
   );
 
   if (state.status !== 'ready') {
@@ -258,10 +270,23 @@ const AdDetail = (): React.JSX.Element => {
         )}
 
         <Meta>
-          <StatusBadge $status={ad.status}>
-            {ad.status === 'published' && <Check aria-hidden="true" />}
-            {AD_STATUS_LABEL[ad.status]}
-          </StatusBadge>
+          {/* 올린 광고에만 뱃지를 단다. 전부 '보관 중'인 동안은 달아 봐야 구분이 안 된다. */}
+          {ad.status === 'published' && (
+            <StatusBadge $status={ad.status}>
+              <Check aria-hidden="true" />
+              {AD_STATUS_LABEL[ad.status]}
+            </StatusBadge>
+          )}
+
+          <MetaLine>
+            {[
+              AD_FORMAT_LABEL[ad.format],
+              ad.cards.length > 1 ? `${ad.cards.length}장` : null,
+              formatRelativeDate(ad.createdAt),
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </MetaLine>
 
           {caption && (
             <>
