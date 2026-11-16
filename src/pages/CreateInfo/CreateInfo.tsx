@@ -309,7 +309,7 @@ const CreateInfo = (): React.JSX.Element => {
                 id="template-name"
                 rows={1}
                 value={templateName}
-                placeholder="예) 영창식당"
+                placeholder="예) 겨울 대표 메뉴"
                 onChange={(event) => setTemplateName(event.target.value)}
               />
             </NameField>

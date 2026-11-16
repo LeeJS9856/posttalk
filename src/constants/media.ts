@@ -1,8 +1,8 @@
 /**
- * 한 장면을 몇 초 녹화할지. 아직 확정이 아니다.
+ * 한 장면을 최대 몇 초까지 녹화할지. 관람객이 멈추기 전에 이 시간이 되면 저절로 멈춘다.
  * 장면마다 다르게 둘 수 있도록 Scene 이 값을 들고 다니고, 여기는 기본값만 둔다.
  */
-export const DEFAULT_CLIP_SECONDS = 3;
+export const DEFAULT_CLIP_SECONDS = 10;
 
 /** 이보다 짧으면 쓰지 않는다. 생성 단계에서 실패하느니 그 자리에서 다시 찍는 게 싸다. */
 export const MIN_CLIP_SECONDS = 1;

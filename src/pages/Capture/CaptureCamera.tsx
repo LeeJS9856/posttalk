@@ -42,7 +42,13 @@ import {
   ReviewVideo,
   Ring,
   SampleFrame,
+  SampleImage,
   SampleLabel,
+  SampleViewer,
+  SampleViewerHint,
+  SampleVideo,
+  SampleViewerImage,
+  SampleViewerVideo,
   SampleWrap,
   Shot,
   Shutter,
@@ -112,6 +118,7 @@ const CaptureCamera = (): React.JSX.Element => {
   const [isRecording, setIsRecording] = useState(false);
   /** 서버에 올리고 검사를 기다리는 중. */
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSampleOpen, setIsSampleOpen] = useState(false);
 
   const index = Number(sceneIndex ?? 0);
   const session = draft.session;
@@ -362,7 +369,7 @@ const CaptureCamera = (): React.JSX.Element => {
         <PickArea type="button" onClick={openPicker}>
           <PhotoIcon />
           <PickText>탭해서 {isVideo ? '영상' : '사진'} 고르기</PickText>
-          <PickHint>{isVideo ? `${scene.clipSeconds}초 안팎이면 좋아요` : 'jpg 또는 png'}</PickHint>
+          <PickHint>{isVideo ? `${scene.clipSeconds}초 이내면 좋아요` : 'jpg 또는 png'}</PickHint>
         </PickArea>
       ) : (
         <Preview ref={videoRef} autoPlay playsInline muted />
@@ -413,13 +420,45 @@ const CaptureCamera = (): React.JSX.Element => {
         )}
       </TopBar>
 
-      {!shot && !isGallery && !isRecording && (
-        <SampleWrap>
+      {/* 예시 사진이 있는 장면만 띄운다. 빈 칸을 크게 두면 카메라 화면만 가린다. */}
+      {!shot && !isGallery && !isRecording && scene.sample && (
+        <SampleWrap
+          type="button"
+          aria-label="예시 크게 보기"
+          onClick={() => setIsSampleOpen(true)}
+        >
           <SampleFrame>
-            <PhotoIcon />
+            {isVideo ? (
+              <SampleVideo src={scene.sample} autoPlay muted loop playsInline />
+            ) : (
+              <SampleImage src={scene.sample} alt="" />
+            )}
           </SampleFrame>
-          <SampleLabel>이렇게</SampleLabel>
+          <SampleLabel>이렇게 찍어요</SampleLabel>
         </SampleWrap>
+      )}
+
+      {/* 크게 본 예시. 아무 데나 누르면 닫혀 바로 찍을 수 있다. */}
+      {isSampleOpen && scene.sample && !shot && !isRecording && (
+        <SampleViewer
+          type="button"
+          aria-label="예시 닫기"
+          onClick={() => setIsSampleOpen(false)}
+        >
+          {isVideo ? (
+            <SampleViewerVideo
+              src={scene.sample}
+              aria-label={`${scene.label} 예시`}
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          ) : (
+            <SampleViewerImage src={scene.sample} alt={`${scene.label} 예시`} />
+          )}
+          <SampleViewerHint>누르면 닫혀요</SampleViewerHint>
+        </SampleViewer>
       )}
 
       <BottomBar>
@@ -460,7 +499,7 @@ const CaptureCamera = (): React.JSX.Element => {
             {isVideo ? (
               <RecordButton
                 type="button"
-                aria-label={`${scene.clipSeconds}초 녹화하기`}
+                aria-label={`녹화하기, 최대 ${scene.clipSeconds}초`}
                 onClick={startRecording}
               />
             ) : (
