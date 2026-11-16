@@ -179,13 +179,6 @@ export const FormatLabel = styled.span`
   font-weight: ${FONT_WEIGHT.bold};
 `;
 
-export const FormatFlow = styled.span`
-  margin-top: 2px;
-  color: ${COLORS.text.grey};
-  font-size: ${FONT_SIZE.caption};
-  font-weight: ${FONT_WEIGHT.medium};
-`;
-
 export const MoodOption = styled.button<{ $selected: boolean }>`
   display: flex;
   align-items: center;

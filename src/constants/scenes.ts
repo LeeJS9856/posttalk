@@ -28,6 +28,18 @@ export type Scene = {
   clipSeconds: number;
 };
 
+/**
+ * 받침에 맞는 조사를 붙인다. "제육볶음을" · "꽃게탕을" · "잔치국수를".
+ * 메뉴 이름은 관람객이 적는 값이라 미리 정해 둘 수 없다.
+ */
+const withParticle = (word: string, withFinal: string, withoutFinal: string): string => {
+  const last = word.trim().slice(-1);
+  const code = last.charCodeAt(0);
+  // 한글 음절이 아니면(영문·숫자) 받침 판단을 포기하고 받침 없는 쪽을 쓴다.
+  if (Number.isNaN(code) || code < 0xac00 || code > 0xd7a3) return `${word}${withoutFinal}`;
+  return `${word}${(code - 0xac00) % 28 > 0 ? withFinal : withoutFinal}`;
+};
+
 /** 갤러리로 고를 때는 구도를 안내할 게 없다. 장면과 무관하게 같은 문구를 쓴다. */
 export const GALLERY_HINT = '미리 준비된 것 중에서 고르면 돼요';
 
@@ -214,19 +226,19 @@ export const buildReelsScenes = (menus: readonly { name: string }[]): Scene[] =>
   used.forEach((menu, order) => {
     scenes.push(
       reelsScene(REELS_SHOT_ORDER[1 + order * 2], scenes.length, {
-        label: menu.name,
-        title: `${menu.name}을(를) 찍어주세요`,
-        pickTitle: `${menu.name} 영상을 골라주세요`,
-        hint: '음식을 가까이에서 천천히 비춰주세요',
+        label: `${menu.name} 전체`,
+        title: `${withParticle(menu.name, '을', '를')} 그릇째 찍어주세요`,
+        pickTitle: `${menu.name} 전체가 보이는 영상을 골라주세요`,
+        hint: '음식 전체가 화면에 들어오게',
         recommended: 'camera',
       }),
     );
     scenes.push(
       reelsScene(REELS_SHOT_ORDER[2 + order * 2], scenes.length, {
-        label: `${menu.name} 단면`,
-        title: `${menu.name}의 단면이나 질감을 보여주세요`,
-        pickTitle: `${menu.name} 단면 영상을 골라주세요`,
-        hint: '자르거나 집어 올려 속이 보이게',
+        label: `${menu.name} 가까이`,
+        title: `${withParticle(menu.name, '을', '를')} 가까이 찍어주세요`,
+        pickTitle: `${menu.name} 가까이 찍은 영상을 골라주세요`,
+        hint: '들어올리거나 숟가락으로 떠서, 속이 보이게',
         recommended: 'camera',
       }),
     );

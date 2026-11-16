@@ -13,9 +13,9 @@ import {
 } from '@/constants/media';
 import { goBackTo } from '@/constants/navigation';
 import {
-  CARD_NEWS_SCENES,
   GALLERY_HINT,
   isBatchFormat,
+  scenesFor,
   sceneFromRequest,
   type CaptureSource,
 } from '@/constants/scenes';
@@ -120,9 +120,11 @@ const CaptureCamera = (): React.JSX.Element => {
   // 릴스는 서버가 요구한 다음 장면만 연다. 차례가 아닌 장면이면 목록으로 돌려보낸다.
   const isBatch = isBatchFormat(draft.format);
   const submitted = session?.submittedCount ?? 0;
+  // 장면 목록은 포맷과 메뉴 수가 정한다. 릴스는 메뉴 1·2·3개에 영상 4·6·8개다.
+  const scenes = scenesFor(draft.format, draft.menus);
   const scene = isBatch
     ? !session?.jobId && index >= submitted
-      ? CARD_NEWS_SCENES[index]
+      ? scenes[index]
       : undefined
     : session?.nextShot && !session.jobId && index === doneCount
       ? sceneFromRequest(session.nextShot, index, draft.format)
