@@ -20,7 +20,8 @@ export const ACCOUNTS: readonly ExhibitionAccount[] = [
   {
     username: '1111',
     password: '1111',
-    guestKey: '800b4944737ed598e135331979b7b59eb8d9c1f307b16a285087bd35bcd84ff9',
+    // 계정이 1234 하나뿐이던 시절의 키다. 그때 만든 광고가 이 계정에 남아 있다.
+    guestKey: 'bb3883e3a1329827d2887aa939bbf85d7a0359a3e6f885a9cc33053467f3bfa2',
     shop: {
       name: '연남떡볶이',
       marketName: '망원시장',
