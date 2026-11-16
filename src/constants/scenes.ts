@@ -176,6 +176,76 @@ export const sceneFromRequest = (request: ShotRequest, index: number, format: Ad
 };
 
 /**
+ * 릴스 장면. 인트로 1 + 메뉴당 2 + 아웃트로 1 이라 메뉴 1·2·3개에 영상 4·6·8개다.
+ *
+ * shotKey 는 서버가 요구하는 순서 그대로다(2026-11-16 실측). 서버 쪽 이름은 아직
+ * 기획과 다르지만(간판·사이드메뉴·조리), 개수와 자리가 정확히 맞아 그 자리에
+ * 기획에서 정한 안내를 붙인다. 서버가 이름을 바꾸면 이 배열만 고친다.
+ */
+const REELS_SHOT_ORDER = [
+  'video_storefront_sign',
+  'video_signature_menu',
+  'video_signature_interaction',
+  'video_side_menu',
+  'video_side_menu_interaction',
+  'video_cooking_scene',
+  'video_menu_board',
+  'video_storefront_entry',
+] as const;
+
+const reelsScene = (
+  shotKey: string,
+  index: number,
+  copy: Pick<Scene, 'label' | 'title' | 'pickTitle' | 'hint' | 'recommended'>,
+): Scene => ({ index, shotKey, kind: 'video', clipSeconds: DEFAULT_CLIP_SECONDS, ...copy });
+
+export const buildReelsScenes = (menus: readonly { name: string }[]): Scene[] => {
+  const used = menus.slice(0, 3);
+  const scenes: Scene[] = [
+    reelsScene(REELS_SHOT_ORDER[0], 0, {
+      label: '인트로 · 메뉴판',
+      title: '메뉴판을 찍어주세요',
+      pickTitle: '메뉴판 영상을 골라주세요',
+      hint: '글씨가 읽히도록 천천히',
+      recommended: 'camera',
+    }),
+  ];
+
+  used.forEach((menu, order) => {
+    scenes.push(
+      reelsScene(REELS_SHOT_ORDER[1 + order * 2], scenes.length, {
+        label: menu.name,
+        title: `${menu.name}을(를) 찍어주세요`,
+        pickTitle: `${menu.name} 영상을 골라주세요`,
+        hint: '음식을 가까이에서 천천히 비춰주세요',
+        recommended: 'camera',
+      }),
+    );
+    scenes.push(
+      reelsScene(REELS_SHOT_ORDER[2 + order * 2], scenes.length, {
+        label: `${menu.name} 단면`,
+        title: `${menu.name}의 단면이나 질감을 보여주세요`,
+        pickTitle: `${menu.name} 단면 영상을 골라주세요`,
+        hint: '자르거나 집어 올려 속이 보이게',
+        recommended: 'camera',
+      }),
+    );
+  });
+
+  scenes.push(
+    reelsScene(REELS_SHOT_ORDER[7], scenes.length, {
+      label: '아웃트로 · 가게',
+      title: '가게 모습을 찍어주세요',
+      pickTitle: '가게 영상을 골라주세요',
+      hint: '가게 전체가 보이게 한 바퀴',
+      recommended: 'camera',
+    }),
+  );
+
+  return scenes;
+};
+
+/**
  * 카드뉴스 장면 순서. 운영 서버에서 확인한 순서다(2026-11-15).
  * 카드뉴스는 다 찍은 뒤 한 번에 제출한다. 서버는 이 순서로만 받으므로 제출도 이 순서로 한다.
  * 제출할 때 서버가 요구한 장면과 다르면 멈춘다(서버 순서가 바뀐 경우).
@@ -197,4 +267,9 @@ export const CARD_NEWS_SCENES: readonly Scene[] = CARD_NEWS_SHOT_KEYS.map((shotK
  * 장면을 미리 알고 다 찍은 뒤 한 번에 제출하는 형식인지.
  * 릴스는 메뉴 수에 따라 장면이 바뀌는데 서버 쪽 구성이 아직 정해지지 않아, 서버가 한 장씩 알려 주는 방식을 쓴다.
  */
-export const isBatchFormat = (format: AdFormat): boolean => format === 'card_news';
+/** 장면을 미리 알고 다 찍은 뒤 한 번에 제출하는 형식인지. 이제 둘 다 그렇다. */
+export const isBatchFormat = (_format: AdFormat): boolean => true;
+
+/** 포맷에 맞는 장면 목록. */
+export const scenesFor = (format: AdFormat, menus: readonly { name: string }[]): readonly Scene[] =>
+  format === 'reels' ? buildReelsScenes(menus) : CARD_NEWS_SCENES;

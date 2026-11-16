@@ -27,7 +27,7 @@ import {
   SlotLabel,
   SlotVideo,
 } from '@/pages/Capture/CaptureList.styles';
-import CardNewsCaptureList from '@/pages/Capture/CardNewsCaptureList';
+import BatchCaptureList from '@/pages/Capture/BatchCaptureList';
 
 type LoadState = { status: 'idle' | 'loading' } | { status: 'error'; message: string };
 
@@ -243,7 +243,7 @@ const ShotByShotList = (): React.JSX.Element => {
  */
 const CaptureList = (): React.JSX.Element => {
   const { draft } = useAdDraft();
-  return isBatchFormat(draft.format) ? <CardNewsCaptureList /> : <ShotByShotList />;
+  return isBatchFormat(draft.format) ? <BatchCaptureList /> : <ShotByShotList />;
 };
 
 export default CaptureList;

@@ -10,7 +10,7 @@ import {
 } from 'react';
 
 import { isAbortError } from '@/apis/api';
-import { uploadPhoto } from '@/apis/creation';
+import { uploadAsset } from '@/apis/creation';
 import type { ShotRequest, UploadedFile } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
 import type { SuggestionThemeId } from '@/constants/themes';
@@ -273,13 +273,13 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
           return { ...current, captures: { ...current.captures, [sceneIndex]: { ...asset, upload } } };
         });
 
-      uploadPhoto(file, storeId, controller.signal)
+      uploadAsset(file, storeId, controller.signal)
         .then((uploaded) => settle({ status: 'done', uploaded }))
         .catch((cause: unknown) => {
           if (isAbortError(cause)) return;
           settle({
             status: 'error',
-            message: cause instanceof Error ? cause.message : '사진을 올리지 못했어요.',
+            message: cause instanceof Error ? cause.message : '올리지 못했어요.',
           });
         })
         .finally(() => {

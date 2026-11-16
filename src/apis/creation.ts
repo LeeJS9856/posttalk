@@ -136,13 +136,25 @@ export const submitScene = async (
   );
 };
 
-/** 사진 한 장을 줄여서 올린다. 카드뉴스는 찍자마자 뒤에서 올려 두고, 제출은 다 찍은 뒤에 한다. */
-export const uploadPhoto = async (
+/**
+ * 재료 하나를 올린다. 찍자마자 뒤에서 올려 두고 제출은 다 찍은 뒤에 한다.
+ * 사진은 줄여서 보낸다. 원본이 크면 업로드가 오래 걸리고 413 으로 막힌다.
+ */
+export const uploadAsset = async (
   file: File,
   storeId: string,
   signal?: AbortSignal,
-): Promise<UploadedFile> =>
-  uploadFile({ file: await shrinkPhoto(file), storeId, assetType: 'food_photo' }, signal);
+): Promise<UploadedFile> => {
+  const isVideo = file.type.startsWith('video/');
+  return uploadFile(
+    {
+      file: isVideo ? file : await shrinkPhoto(file),
+      storeId,
+      assetType: isVideo ? 'video_clip' : 'food_photo',
+    },
+    signal,
+  );
+};
 
 /** 서버가 다시 찍으라고 했는지. */
 export const needsRetake = (result: ShotResult): boolean =>
