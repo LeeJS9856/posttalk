@@ -1,7 +1,21 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
-import { DEFAULT_SHOP_PROFILE, DEFAULT_TEMPLATES, type ShopProfile } from '@/constants/shop';
+import {
+  DEFAULT_SHOP_PROFILE,
+  DEFAULT_TEMPLATES,
+  SHOP_STORAGE_KEY,
+  type ShopProfile,
+} from '@/constants/shop';
 import type { StoreTemplate } from '@/constants/templates';
+import { useAuth } from '@/hooks/useAuth';
 
 type ShopContextValue = {
   profile: ShopProfile;
@@ -13,13 +27,65 @@ type ShopContextValue = {
 
 const ShopContext = createContext<ShopContextValue | null>(null);
 
+type StoredShop = { profile?: Partial<ShopProfile>; templates?: StoreTemplate[] };
+
+/** 계정마다 따로 남긴다. 한 기기에서 계정을 갈아타도 가게가 섞이지 않는다. */
+const storageKeyFor = (username: string | undefined): string =>
+  username ? `${SHOP_STORAGE_KEY}:${username}` : SHOP_STORAGE_KEY;
+
+/** 저장소를 못 쓰거나 값이 깨졌으면 처음 값으로 시작한다. */
+const readStoredShop = (username: string | undefined): StoredShop => {
+  try {
+    const raw = window.localStorage.getItem(storageKeyFor(username));
+    return raw ? (JSON.parse(raw) as StoredShop) : {};
+  } catch {
+    return {};
+  }
+};
+
 /**
- * 가게 정보와 저장된 내용. 아직 API 가 없어 하드코딩한 값에서 시작한다.
- * 고친 값은 메모리에만 남는다. 새로고침하면 처음 값으로 돌아간다.
+ * 가게 정보와 저장된 내용. 조회 API 가 없어 이 기기에 남긴다.
+ * 계정이 곧 내 가게라, 한 번 적은 가게 정보는 다음 광고에도 채워져 있어야 한다.
  */
 export const ShopProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
-  const [profile, setProfile] = useState<ShopProfile>(DEFAULT_SHOP_PROFILE);
-  const [templates, setTemplates] = useState<StoreTemplate[]>(() => [...DEFAULT_TEMPLATES]);
+  const { account } = useAuth();
+  const username = account?.username;
+
+  const initialProfile = (): ShopProfile => ({
+    ...DEFAULT_SHOP_PROFILE,
+    ...account?.shop,
+    ...readStoredShop(username).profile,
+  });
+  const initialTemplates = (): StoreTemplate[] => {
+    const stored = readStoredShop(username).templates;
+    return Array.isArray(stored) ? stored : [...DEFAULT_TEMPLATES];
+  };
+
+  const [loaded, setLoaded] = useState(() => username ?? '');
+  const [profile, setProfile] = useState<ShopProfile>(initialProfile);
+  const [templates, setTemplates] = useState<StoreTemplate[]>(initialTemplates);
+
+  /**
+   * 계정이 바뀌면 그 계정의 가게로 갈아끼운다. 렌더 중에 처리해야 한 프레임 어긋나지 않는다.
+   * 그 기기에서 고친 적이 있으면 고친 값을, 없으면 계정에 적어 둔 값을 쓴다.
+   */
+  if (loaded !== (username ?? '')) {
+    setLoaded(username ?? '');
+    setProfile(initialProfile());
+    setTemplates(initialTemplates());
+  }
+
+  useEffect(() => {
+    if (!username) return;
+    try {
+      window.localStorage.setItem(
+        storageKeyFor(username),
+        JSON.stringify({ profile, templates }),
+      );
+    } catch {
+      // 저장소를 못 쓰면 이번 탭에서만 남는다.
+    }
+  }, [username, profile, templates]);
 
   const addTemplate = useCallback((template: StoreTemplate) => {
     setTemplates((current) => [template, ...current]);

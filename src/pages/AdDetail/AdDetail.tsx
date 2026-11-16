@@ -1,12 +1,20 @@
-import { Check, Copy, ExternalLink, Play, X } from 'lucide-react';
+import { Check, Copy, ExternalLink, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { isAbortError } from '@/apis/api';
-import { getAdSession, getArchive, type ApiAdType } from '@/apis/posttalk';
+import { getAdSession, getArchive, publishAd, type ApiAdType } from '@/apis/posttalk';
 import AppHeader from '@/components/layout/AppHeader';
-import { AD_STATUS_LABEL, fromAdSession, fromArchiveItem, type AdItem } from '@/constants/ads';
+import {
+  AD_STATUS_LABEL,
+  formatRelativeDate,
+  fromAdSession,
+  fromArchiveItem,
+  type AdItem,
+} from '@/constants/ads';
+import { AD_FORMAT_LABEL } from '@/constants/home';
 import { posterSrc } from '@/constants/media';
+import { useAds } from '@/hooks/useAds';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import {
@@ -19,8 +27,10 @@ import {
   Counter,
   EditButton,
   Footer,
+  FooterNotice,
   Meta,
   MetaLabel,
+  MetaLine,
   MetaRow,
   MissingText,
   MissingWrap,
@@ -29,6 +39,7 @@ import {
   PlayOverlay,
   PrimaryButton,
   SecondaryButton,
+  SkipButton,
   StatusBadge,
   Strip,
   Thumb,
@@ -78,19 +89,39 @@ const AdDetail = (): React.JSX.Element => {
   const { adId } = useParams();
   const [params] = useSearchParams();
   const { resetDraft } = useAdDraft();
+  const { invalidate } = useAds();
   const { storeId } = useWorkspace();
 
   const fromCreate = params.get('from') === 'create';
   const sessionId = params.get('session');
 
-  const [state, setState] = useState<LoadState>({ status: 'loading' });
+  /**
+   * 받아 둔 결과에 어느 요청의 것인지 붙여 둔다.
+   * 이펙트 안에서 loading 으로 되돌리면 렌더가 한 번 더 돌고, 주소가 바뀌는 사이
+   * 앞선 광고의 결과가 잠깐 보일 수 있다. 키가 다르면 그냥 로딩으로 친다.
+   */
+  const [loaded, setLoaded] = useState<{ key: string; state: LoadState } | null>(null);
+  const requestKey = adId ? `${adId}:${sessionId ?? ''}:${storeId ?? ''}` : '';
+  const state: LoadState = loaded?.key === requestKey ? loaded.state : { status: 'loading' };
   const [cardIndex, setCardIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
+  /** 게시 진행. 제작 직후에만 쓴다. */
+  const [publishState, setPublishState] = useState<
+    { step: 'idle' } | { step: 'sending' } | { step: 'failed'; message: string }
+  >({ step: 'idle' });
   const videoRef = useRef<HTMLVideoElement>(null);
   const copiedTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => () => window.clearTimeout(copiedTimerRef.current), []);
+
+  /**
+   * 방금 만든 광고다. 들고 있던 목록에는 없으므로 낡은 것으로 표시해 둔다.
+   * 홈이나 보관함으로 돌아가면 그때 다시 받는다.
+   */
+  useEffect(() => {
+    if (fromCreate) invalidate();
+  }, [fromCreate, invalidate]);
 
   useEffect(() => {
     if (!adId) return;
@@ -114,25 +145,28 @@ const AdDetail = (): React.JSX.Element => {
       return null;
     };
 
-    setState({ status: 'loading' });
     load()
       .then((ad) =>
-        setState(
-          ad
+        setLoaded({
+          key: requestKey,
+          state: ad
             ? { status: 'ready', ad }
             : { status: 'error', message: '광고를 찾지 못했어요.\n보관함에서 다시 골라주세요.' },
-        ),
+        }),
       )
       .catch((cause: unknown) => {
         if (isAbortError(cause)) return;
-        setState({
-          status: 'error',
-          message: cause instanceof Error ? cause.message : '광고를 불러오지 못했어요.',
+        setLoaded({
+          key: requestKey,
+          state: {
+            status: 'error',
+            message: cause instanceof Error ? cause.message : '광고를 불러오지 못했어요.',
+          },
         });
       });
 
     return () => controller.abort();
-  }, [adId, sessionId, storeId]);
+  }, [adId, sessionId, storeId, requestKey]);
 
   /** 체험이 끝나면 다음 관람객을 위해 입력값을 비운다. */
   const finish = (): void => {
@@ -140,17 +174,34 @@ const AdDetail = (): React.JSX.Element => {
     void navigate('/', { replace: true });
   };
 
+  /**
+   * 올리고 나서 홈으로 보낸다. 제작 직후에는 이 버튼이 유일한 출구다.
+   * 올리지 않고 빠져나가면 만든 광고가 올라가지 않은 채 다음 관람객 차례가 된다.
+   */
+  const publish = async (): Promise<void> => {
+    if (state.status !== 'ready') return;
+
+    setPublishState({ step: 'sending' });
+    try {
+      await publishAd(state.ad.id);
+      finish();
+    } catch (cause) {
+      setPublishState({
+        step: 'failed',
+        message: cause instanceof Error ? cause.message : '올리지 못했어요.',
+      });
+    }
+  };
+
   const header = fromCreate ? (
-    <AppHeader
-      title="다 만들었어요"
-      action={
-        <TopAction type="button" aria-label="닫기" onClick={finish}>
-          <X aria-hidden="true" />
-        </TopAction>
-      }
-    />
+    // 닫기를 두지 않는다. 올리기 버튼이 유일한 출구다.
+    <AppHeader title="다 만들었어요" />
   ) : (
-    <AppHeader title="광고" onBack={() => void navigate(-1)} />
+    // 홈과 보관함에서 이름으로 부르던 광고다. 열었다고 '광고'가 되면 안 된다.
+    <AppHeader
+      title={state.status === 'ready' ? state.ad.title : '광고'}
+      onBack={() => void navigate(-1)}
+    />
   );
 
   if (state.status !== 'ready') {
@@ -248,10 +299,23 @@ const AdDetail = (): React.JSX.Element => {
         )}
 
         <Meta>
-          <StatusBadge $status={ad.status}>
-            {ad.status === 'published' && <Check aria-hidden="true" />}
-            {AD_STATUS_LABEL[ad.status]}
-          </StatusBadge>
+          {/* 올린 광고에만 뱃지를 단다. 전부 '보관 중'인 동안은 달아 봐야 구분이 안 된다. */}
+          {ad.status === 'published' && (
+            <StatusBadge $status={ad.status}>
+              <Check aria-hidden="true" />
+              {AD_STATUS_LABEL[ad.status]}
+            </StatusBadge>
+          )}
+
+          <MetaLine>
+            {[
+              AD_FORMAT_LABEL[ad.format],
+              ad.cards.length > 1 ? `${ad.cards.length}장` : null,
+              formatRelativeDate(ad.createdAt),
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </MetaLine>
 
           {caption && (
             <>
@@ -273,9 +337,28 @@ const AdDetail = (): React.JSX.Element => {
       {(fromCreate || ad.permalink) && (
         <Footer>
           {fromCreate ? (
-            <PrimaryButton type="button" onClick={finish}>
-              확인했어요
-            </PrimaryButton>
+            <>
+              {publishState.step === 'failed' && (
+                <FooterNotice role="alert">{publishState.message}</FooterNotice>
+              )}
+              <PrimaryButton
+                type="button"
+                disabled={publishState.step === 'sending'}
+                onClick={() => void publish()}
+              >
+                {publishState.step === 'sending'
+                  ? '올리는 중이에요'
+                  : publishState.step === 'failed'
+                    ? '다시 올리기'
+                    : '인스타그램에 올리기'}
+              </PrimaryButton>
+              {/* 올리지 못해 갇히는 것을 막는다. 실패했을 때만 연다. */}
+              {publishState.step === 'failed' && (
+                <SkipButton type="button" onClick={finish}>
+                  나중에 올릴게요
+                </SkipButton>
+              )}
+            </>
           ) : (
             <SecondaryButton href={ad.permalink} target="_blank" rel="noreferrer">
               <ExternalLink aria-hidden="true" />

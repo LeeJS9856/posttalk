@@ -13,7 +13,6 @@ import {
   CardStage,
   Content,
   Footer,
-  FormatFlow,
   FormatLabel,
   FormatOption,
   MoodLabel,
@@ -116,7 +115,6 @@ const Create = (): React.JSX.Element => {
               onClick={() => setFormat(option.id)}
             >
               <FormatLabel>{option.label}</FormatLabel>
-              <FormatFlow>{option.flow}</FormatFlow>
             </FormatOption>
           ))}
         </OptionGrid>

@@ -10,7 +10,7 @@ import {
 } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
 import { shrinkPhoto } from '@/constants/media';
-import type { SuggestionThemeId } from '@/constants/themes';
+import { MAX_CARD_NEWS_STYLE, SUGGESTION_THEMES, type SuggestionThemeId } from '@/constants/themes';
 
 /**
  * 제작 흐름에서 화면이 부르는 묶음. 화면은 서버의 필드 이름을 몰라도 된다.
@@ -19,8 +19,12 @@ import type { SuggestionThemeId } from '@/constants/themes';
 type DraftInput = {
   format: AdFormat;
   theme: SuggestionThemeId;
+  storeName: string;
+  marketName: string;
   storeDescription: string;
   menus: { name: string; description: string }[];
+  /** 관람객이 쓴 카드뉴스 디자인 요청. 비어 있으면 콘셉트 기본 문장을 쓴다. */
+  cardNewsStyle: string;
 };
 
 /**
@@ -45,22 +49,37 @@ const toStartBody = (draft: DraftInput, storeId: string): StartSessionBody => {
       ...base,
       adType: 'video',
       reelsConcept: draft.theme === 'minimal' ? 'simple' : 'christmas',
+      // 메뉴를 배열로 보내야 메뉴 수만큼 장면이 늘어난다(1·2·3개 → 영상 4·6·8개).
+      // 보내지 않으면 서버가 menuIntro 를 메뉴 한 개로 치고 4개만 요구한다.
+      reelsMenus: draft.menus.map((menu) => ({ name: menu.name })),
     };
   }
-  return { ...base, adType: 'photo', cardNewsTheme: draft.theme };
+  // 관람객이 쓴 요청을 그대로 보내고, 비워 뒀으면 콘셉트에 맞춰 정해 둔 문장을 대신 보낸다.
+  const theme = SUGGESTION_THEMES.find((item) => item.id === draft.theme);
+  const style = draft.cardNewsStyle.trim() || theme?.cardNewsStyle || '';
+  return {
+    ...base,
+    adType: 'photo',
+    cardNewsTheme: draft.theme,
+    ...(style ? { cardNewsStyle: style.slice(0, MAX_CARD_NEWS_STYLE) } : {}),
+  };
 };
 
 /**
- * 제작 세션을 연다. 그 전에 가게 이름을 작업 공간에 다시 보낸다.
- * 같은 키로 보내면 서버의 가게 이름이 바뀐다. 보내지 않으면 서버가 "가게"를 넣어 캡션 첫 줄이 된다.
+ * 제작 세션을 연다. 그 전에 가게 이름과 시장·지역을 작업 공간에 다시 보낸다.
+ * 같은 키로 보내면 서버 값이 바뀐다. 보내지 않으면 서버가 "가게" · "전통시장"을 넣는다.
  */
 export const startSession = async (
   draft: DraftInput,
   storeId: string,
-  storeName: string,
   signal?: AbortSignal,
 ): Promise<StartedSession> => {
-  if (storeName) await openGuestSession({ storeName }, signal);
+  // 시장·지역은 카드뉴스 AI 의 지역(area)이 된다. 빈 값은 보내지 않는다(서버 값이 지워지지 않게).
+  const store = {
+    ...(draft.storeName ? { storeName: draft.storeName } : {}),
+    ...(draft.marketName ? { marketName: draft.marketName } : {}),
+  };
+  if (Object.keys(store).length > 0) await openGuestSession(store, signal);
   return startAdSession(toStartBody(draft, storeId), signal);
 };
 
@@ -117,13 +136,25 @@ export const submitScene = async (
   );
 };
 
-/** 사진 한 장을 줄여서 올린다. 카드뉴스는 찍자마자 뒤에서 올려 두고, 제출은 다 찍은 뒤에 한다. */
-export const uploadPhoto = async (
+/**
+ * 재료 하나를 올린다. 찍자마자 뒤에서 올려 두고 제출은 다 찍은 뒤에 한다.
+ * 사진은 줄여서 보낸다. 원본이 크면 업로드가 오래 걸리고 413 으로 막힌다.
+ */
+export const uploadAsset = async (
   file: File,
   storeId: string,
   signal?: AbortSignal,
-): Promise<UploadedFile> =>
-  uploadFile({ file: await shrinkPhoto(file), storeId, assetType: 'food_photo' }, signal);
+): Promise<UploadedFile> => {
+  const isVideo = file.type.startsWith('video/');
+  return uploadFile(
+    {
+      file: isVideo ? file : await shrinkPhoto(file),
+      storeId,
+      assetType: isVideo ? 'video_clip' : 'food_photo',
+    },
+    signal,
+  );
+};
 
 /** 서버가 다시 찍으라고 했는지. */
 export const needsRetake = (result: ShotResult): boolean =>

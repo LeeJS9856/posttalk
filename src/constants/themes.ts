@@ -14,10 +14,16 @@ import reelsSample from '@/assets/video-ex.mp4';
  * preview 는 형식별 결과물 미리보기다. 콘셉트별 결과물 샘플이 나오기 전까지 임시 자료를 쓴다.
  * 릴스는 두 콘셉트가 같은 영상을 공유하고 정지 화면만 다르다.
  */
+/** 카드뉴스 디자인 요청 길이. 서버가 500자까지 받는다. */
+export const MAX_CARD_NEWS_STYLE = 500;
+
 export const SUGGESTION_THEMES = [
   {
     id: 'christmas',
     label: '크리스마스',
+    /** 카드뉴스 디자인 방향(cardNewsStyle, 500자 이하). 서버가 카드뉴스 AI 의 direction 으로 넘긴다. */
+    cardNewsStyle:
+      '따뜻한 겨울 분위기, 빨강과 초록 포인트, 손글씨처럼 정겨운 문구. 음식이 먹음직스럽게 보이도록 사진을 크게 쓰고, 가게 이름과 대표 메뉴가 잘 보이게.',
     thumb: photoEx2,
     preview: {
       /** 가운데 카드, 왼쪽, 오른쪽 순서. */
@@ -28,6 +34,8 @@ export const SUGGESTION_THEMES = [
   {
     id: 'minimal',
     label: '미니멀',
+    cardNewsStyle:
+      '여백이 넉넉한 깔끔한 레이아웃, 차분한 무채색 톤, 짧고 담백한 문구. 음식 사진이 주인공이 되도록 장식을 줄이고, 가게 이름과 대표 메뉴가 잘 보이게.',
     thumb: photoEx4,
     preview: {
       cards: [photoEx4, photoEx3, photoEx1],

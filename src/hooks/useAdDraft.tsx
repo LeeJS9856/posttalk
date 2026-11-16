@@ -10,7 +10,7 @@ import {
 } from 'react';
 
 import { isAbortError } from '@/apis/api';
-import { uploadPhoto } from '@/apis/creation';
+import { uploadAsset } from '@/apis/creation';
 import type { ShotRequest, UploadedFile } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
 import type { SuggestionThemeId } from '@/constants/themes';
@@ -26,6 +26,16 @@ export type UploadState =
   | { status: 'uploading' }
   | { status: 'done'; uploaded: UploadedFile }
   | { status: 'error'; message: string };
+
+/** 정보 입력 화면이 넘기는 값. */
+export type StoreInfo = {
+  storeName: string;
+  marketName: string;
+  storeDescription: string;
+  menus: DraftMenu[];
+  /** 카드뉴스 디자인 요청. 비우면 콘셉트에 맞춰 정해 둔 문장을 보낸다. 릴스는 쓰지 않는다. */
+  cardNewsStyle: string;
+};
 
 export type CapturedAsset = {
   file: File;
@@ -58,8 +68,12 @@ type AdDraft = {
   theme: SuggestionThemeId;
   /** 이번 광고의 가게 이름. 관람객마다 다르므로 프로필이 아니라 초안에 둔다. */
   storeName: string;
+  /** 시장·지역. 비우면 서버 기본값(전통시장)이 들어간다. */
+  marketName: string;
   storeDescription: string;
   menus: DraftMenu[];
+  /** 카드뉴스 디자인 요청. 비우면 콘셉트 기본 문장이 나간다. 릴스는 쓰지 않는다. */
+  cardNewsStyle: string;
   /**
    * 장면 번호를 키로 둔다. 촬영물은 메모리에만 둔다.
    * 릴스는 서버가 받아 준 장면만, 카드뉴스는 찍은 장면 전부(제출 전 포함)를 담는다.
@@ -71,7 +85,7 @@ type AdDraft = {
 type AdDraftContextValue = {
   draft: AdDraft;
   setConcept: (value: { format: AdFormat; theme: SuggestionThemeId }) => void;
-  setStoreInfo: (value: { storeName: string; storeDescription: string; menus: DraftMenu[] }) => void;
+  setStoreInfo: (value: StoreInfo) => void;
   setSession: (value: { sessionId: string; nextShot: ShotRequest | null }) => void;
   /** 서버가 통과시킨 장면을 저장하고 다음 장 안내를 갱신한다. */
   acceptCapture: (
@@ -133,7 +147,9 @@ const createInitialDraft = (): AdDraft => ({
   format: 'card_news',
   theme: 'christmas',
   storeName: '',
+  marketName: '',
   storeDescription: '',
+  cardNewsStyle: '',
   menus: [],
   captures: {},
   session: null,
@@ -194,7 +210,7 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
   );
 
   const setStoreInfo = useCallback(
-    (value: { storeName: string; storeDescription: string; menus: DraftMenu[] }) => {
+    (value: StoreInfo) => {
       abortUploads();
       setDraft((current) => ({ ...current, ...value, ...withoutSession(current) }));
     },
@@ -257,13 +273,13 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
           return { ...current, captures: { ...current.captures, [sceneIndex]: { ...asset, upload } } };
         });
 
-      uploadPhoto(file, storeId, controller.signal)
+      uploadAsset(file, storeId, controller.signal)
         .then((uploaded) => settle({ status: 'done', uploaded }))
         .catch((cause: unknown) => {
           if (isAbortError(cause)) return;
           settle({
             status: 'error',
-            message: cause instanceof Error ? cause.message : '사진을 올리지 못했어요.',
+            message: cause instanceof Error ? cause.message : '올리지 못했어요.',
           });
         })
         .finally(() => {

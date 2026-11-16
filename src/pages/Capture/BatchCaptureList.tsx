@@ -7,7 +7,7 @@ import { needsRetake, retakeMessage, startSession } from '@/apis/creation';
 import { getAdSession, submitShot, type ShotRequest } from '@/apis/posttalk';
 import ActionSheet, { type ActionSheetItem } from '@/components/common/ActionSheet';
 import AppHeader from '@/components/layout/AppHeader';
-import { CARD_NEWS_SCENES, type CaptureSource, type Scene } from '@/constants/scenes';
+import { scenesFor, type CaptureSource, type Scene } from '@/constants/scenes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import {
@@ -29,7 +29,7 @@ import {
   Track,
 } from '@/pages/Capture/CaptureList.styles';
 
-const ORDER_MISMATCH_MESSAGE = '사진 순서가 서버와 맞지 않아요. 처음부터 다시 해주세요.';
+const ORDER_MISMATCH_MESSAGE = '순서가 서버와 맞지 않아요. 처음부터 다시 해주세요.';
 
 type FooterAction = 'info' | 'generating' | 'workspace' | 'retryUploads' | 'submit';
 type FooterState = { label: string; action?: FooterAction };
@@ -42,7 +42,7 @@ type SlotState = { tone: 'muted' | 'danger'; text: string } | null;
  * 서버가 어느 장을 다시 찍으라고 하면 그 칸에 표시하고, 다시 찍으면 그 장부터 이어서 제출한다.
  * 이미 서버가 받아 준 칸은 다시 찍을 수 없다.
  */
-const CardNewsCaptureList = (): React.JSX.Element => {
+const BatchCaptureList = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { draft, setSession, markSubmitted, rejectCapture, setGeneration, retryUploads } =
     useAdDraft();
@@ -62,7 +62,9 @@ const CardNewsCaptureList = (): React.JSX.Element => {
   const [asking, setAsking] = useState<Scene | null>(null);
   const [isAsking, setIsAsking] = useState(false);
 
-  const scenes = CARD_NEWS_SCENES;
+  const isReels = draft.format === 'reels';
+  // 장면은 포맷과 메뉴 수로 정해진다. 릴스는 메뉴 1·2·3개에 영상 4·6·8개다.
+  const scenes = scenesFor(draft.format, draft.menus);
   const session = draft.session;
   const submitted = session?.submittedCount ?? 0;
   const assets = scenes.map((scene) => draft.captures[scene.index]);
@@ -84,8 +86,8 @@ const CardNewsCaptureList = (): React.JSX.Element => {
         {
           key: 'camera',
           icon: <Camera />,
-          label: '지금 찍기',
-          description: '카메라가 열려요',
+          label: isReels ? '지금 녹화하기' : '지금 찍기',
+          description: isReels ? `${asking.clipSeconds}초만 찍으면 돼요` : '카메라가 열려요',
           recommended: asking.recommended === 'camera',
           onSelect: () => go(asking, 'camera'),
         },
@@ -93,7 +95,7 @@ const CardNewsCaptureList = (): React.JSX.Element => {
           key: 'gallery',
           icon: <Image />,
           label: '갤러리에서 고르기',
-          description: '기기에 있는 사진 중에서',
+          description: isReels ? '기기에 있는 영상 중에서' : '기기에 있는 사진 중에서',
           recommended: asking.recommended === 'gallery',
           onSelect: () => go(asking, 'gallery'),
         },
@@ -116,7 +118,7 @@ const CardNewsCaptureList = (): React.JSX.Element => {
       let sessionId = session?.sessionId;
       let next: ShotRequest | null = session?.nextShot ?? null;
       if (!sessionId) {
-        const started = await startSession(draft, storeId, draft.storeName, signal);
+        const started = await startSession(draft, storeId, signal);
         sessionId = started.sessionId;
         next = started.currentRequest ?? null;
         setSession({ sessionId, nextShot: next });
@@ -125,10 +127,10 @@ const CardNewsCaptureList = (): React.JSX.Element => {
       for (let index = submitted; index < scenes.length; index += 1) {
         const scene = scenes[index];
         const upload = draft.captures[index]?.upload;
-        if (upload?.status !== 'done') throw new Error('아직 올라가지 않은 사진이 있어요.');
+        if (upload?.status !== 'done') throw new Error('아직 올라가지 않은 게 있어요.');
         if (next && next.shotKey !== scene.shotKey) throw new Error(ORDER_MISMATCH_MESSAGE);
 
-        const result = await submitShot(sessionId, 'photo', upload.uploaded, signal);
+        const result = await submitShot(sessionId, isReels ? 'video' : 'photo', upload.uploaded, signal);
 
         if (needsRetake(result)) {
           rejectCapture(index, retakeMessage(result));
@@ -182,10 +184,13 @@ const CardNewsCaptureList = (): React.JSX.Element => {
     if (!hasInfo) return { label: '정보 입력으로', action: 'info' };
     if (session?.jobId) return { label: '광고 만들기', action: 'generating' };
     if (workspaceFailed) return { label: '다시 시도하기', action: 'workspace' };
-    if (takenCount < scenes.length) return { label: `${scenes.length - takenCount}장 더 올려주세요` };
+    if (takenCount < scenes.length) {
+      const unit = isReels ? '개' : '장';
+      return { label: `${scenes.length - takenCount}${unit} 더 올려주세요` };
+    }
     if (rejected) return { label: `${rejected.label} 다시 올려주세요` };
     if (failedCount > 0) return { label: '다시 올리기', action: 'retryUploads' };
-    if (uploadingCount > 0) return { label: '사진을 올리고 있어요' };
+    if (uploadingCount > 0) return { label: '올리고 있어요' };
     if (isSubmitting) return { label: '광고 만들기를 시작하고 있어요' };
     return { label: '광고 만들기', action: storeId ? 'submit' : undefined };
   };
@@ -202,7 +207,7 @@ const CardNewsCaptureList = (): React.JSX.Element => {
   return (
     <Page aria-label="촬영 목록">
       <AppHeader
-        title="사진을 올려주세요"
+        title={isReels ? '영상을 올려주세요' : '사진을 올려주세요'}
         onBack={() => void navigate(-1)}
         action={
           <Progress>
@@ -291,4 +296,4 @@ const CardNewsCaptureList = (): React.JSX.Element => {
   );
 };
 
-export default CardNewsCaptureList;
+export default BatchCaptureList;

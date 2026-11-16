@@ -32,6 +32,13 @@ export const Label = styled.p`
   letter-spacing: 0.03em;
 `;
 
+/** 입력칸 아래 붙이는 한 줄 설명. */
+export const HelpText = styled.p`
+  padding: 6px 16px 0;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.label};
+`;
+
 export const LabelRow = styled.div`
   display: flex;
   align-items: baseline;

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import AppHeader from '@/components/layout/AppHeader';
 import { goBackTo } from '@/constants/navigation';
-import { MAX_SHOP_DESCRIPTION } from '@/constants/shop';
+import { MAX_MARKET_NAME, MAX_SHOP_DESCRIPTION } from '@/constants/shop';
 import { useShop } from '@/hooks/useShop';
 import {
   Avatar,
@@ -24,6 +24,7 @@ const ProfileEdit = (): React.JSX.Element => {
   const { profile, setProfile } = useShop();
 
   const [name, setName] = useState(profile.name);
+  const [marketName, setMarketName] = useState(profile.marketName);
   const [description, setDescription] = useState(profile.description);
 
   const canSave = name.trim().length > 0;
@@ -32,7 +33,12 @@ const ProfileEdit = (): React.JSX.Element => {
     event.preventDefault();
     if (!canSave) return;
 
-    setProfile({ ...profile, name: name.trim(), description: description.trim() });
+    setProfile({
+      ...profile,
+      name: name.trim(),
+      marketName: marketName.trim(),
+      description: description.trim(),
+    });
     goBackTo(navigate, '/my');
   };
 
@@ -56,14 +62,27 @@ const ProfileEdit = (): React.JSX.Element => {
         </Field>
 
         <Field>
+          <Label htmlFor="shop-market">가게 주소</Label>
+          <Line>
+            <TextInput
+              id="shop-market"
+              value={marketName}
+              maxLength={MAX_MARKET_NAME}
+              placeholder="예) 양동시장, 전남대 후문"
+              onChange={(event) => setMarketName(event.target.value)}
+            />
+          </Line>
+        </Field>
+
+        <Field>
           <Label htmlFor="shop-description">가게 소개</Label>
           <Line>
             <TextArea
               id="shop-description"
-              rows={2}
+              rows={5}
               value={description}
               maxLength={MAX_SHOP_DESCRIPTION}
-              placeholder="어떤 가게인지 한 줄로 적어주세요"
+              placeholder="어떤 가게인지 자세히 적을수록 광고가 좋아져요"
               onChange={(event) => setDescription(event.target.value)}
             />
           </Line>

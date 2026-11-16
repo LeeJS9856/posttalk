@@ -1,3 +1,5 @@
+import { GUEST_KEY_STORAGE_KEY } from '@/constants/auth';
+
 /**
  * 백엔드 호출의 공통 부분. 주소, 게스트 작업 공간 키, 응답 껍데기 풀기를 맡는다.
  *
@@ -9,16 +11,20 @@
 const API_BASE_URL = '';
 
 /**
- * 모든 기기가 함께 쓰는 64자리 작업 공간 키.
- * 고정 계정(1234)으로 로그인한 기기는 어디서든 같은 작업 공간(같은 storeId, 같은 보관함)을 연다.
- * 백엔드가 storeId 를 숫자로 받지 않아, "storeId = 1" 을 이 고정 키로 대신한다.
- * 다른 작업 공간을 쓰고 싶으면 VITE_GUEST_KEY 로 바꾼다.
+ * 작업 공간 키. 로그인한 계정이 정한다(constants/auth.ts).
+ * 같은 계정이면 어느 기기에서든 같은 보관함이 열리고, 다른 계정이면 완전히 갈린다.
+ * 백엔드가 storeId 를 숫자로 받지 않아 이 키가 그 자리를 대신한다.
+ * 개발 중 특정 작업 공간으로 고정하려면 VITE_GUEST_KEY 로 덮어쓴다.
  */
-const SHARED_GUEST_KEY =
-  import.meta.env.VITE_GUEST_KEY ??
-  'bb3883e3a1329827d2887aa939bbf85d7a0359a3e6f885a9cc33053467f3bfa2';
-
-export const getGuestKey = (): string => SHARED_GUEST_KEY;
+export const getGuestKey = (): string => {
+  const override = import.meta.env.VITE_GUEST_KEY;
+  if (override) return override;
+  try {
+    return window.localStorage.getItem(GUEST_KEY_STORAGE_KEY) ?? '';
+  } catch {
+    return '';
+  }
+};
 
 export class ApiError extends Error {
   readonly status: number;

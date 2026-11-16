@@ -24,6 +24,8 @@ export const Avatar = styled.span`
   align-self: center;
   align-items: center;
   justify-content: center;
+  /* 세로 플렉스 안이라 자리가 모자라면 높이가 눌려 타원이 된다. */
+  flex-shrink: 0;
   width: 62px;
   height: 62px;
   margin: 6px 0 22px;

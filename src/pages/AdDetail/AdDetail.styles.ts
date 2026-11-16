@@ -192,6 +192,16 @@ export const CaptionCount = styled.p<{ $over: boolean }>`
   text-align: right;
 `;
 
+/**
+ * 포맷·장수·만든 날짜. 게시 기능이 꺼져 있어 모든 광고가 '보관 중'이라
+ * 상태 뱃지는 아무 말도 하지 못한다. 그 자리에 알아볼 수 있는 것을 둔다.
+ */
+export const MetaLine = styled.p`
+  margin-bottom: 14px;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.body};
+`;
+
 export const MetaRow = styled.div`
   display: flex;
   align-items: center;
@@ -289,6 +299,24 @@ export const SecondaryButton = styled.a`
     width: 16px;
     height: 16px;
   }
+`;
+
+export const FooterNotice = styled.p`
+  margin-bottom: 10px;
+  color: ${COLORS.status.failed};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.5;
+  text-align: center;
+`;
+
+/** 올리지 못했을 때만 여는 출구. 평소에는 올리기 버튼 하나만 둔다. */
+export const SkipButton = styled.button`
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 0;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.body};
 `;
 
 export const MissingWrap = styled.div`
