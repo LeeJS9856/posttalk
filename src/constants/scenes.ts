@@ -1,7 +1,8 @@
 import type { ShotRequest } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
 import foodBowlSample from '@/assets/card-ex/food-bowl.jpg';
-import foodPlateSample from '@/assets/card-ex/food-plate.jpg';
+import foodTopSample1 from '@/assets/card-ex/food-top1.jpg';
+import foodTopSample2 from '@/assets/card-ex/food-top2.jpg';
 import foodZoomSample from '@/assets/card-ex/food-zoom.jpg';
 import storeInsideSample from '@/assets/card-ex/store-inside.jpg';
 import storeOutsideSample from '@/assets/card-ex/store-outside.jpg';
@@ -84,20 +85,22 @@ const KNOWN_SCENES: Readonly<Record<string, SceneCopy>> = {
     pickTitle: '음식 사진을 골라주세요',
     hint: '접시를 위에서 내려찍어주세요',
     recommended: 'camera',
-    sample: foodPlateSample,
+    sample: foodTopSample1,
   },
   card_food2: {
     label: '음식 사진 2',
     title: '음식을 한 장 더 찍어주세요',
     pickTitle: '음식 사진을 골라주세요',
-    hint: '앞 사진과 다른 구도면 좋아요',
+    hint: '접시를 위에서 내려찍어주세요',
     recommended: 'camera',
+    // 구도는 음식 사진 1과 같아도 된다. 같은 구도로 다른 메뉴를 찍는다.
+    sample: foodTopSample2,
   },
   card_store1: {
     label: '가게 밖',
     title: '가게 밖을 찍어주세요',
     pickTitle: '가게 밖 사진을 골라주세요',
-    hint: '간판이 함께 보이면 좋아요',
+    hint: '입구나 간판이 보이게',
     recommended: 'gallery',
     sample: storeOutsideSample,
   },
