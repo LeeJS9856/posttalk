@@ -83,7 +83,14 @@ const AdDetail = (): React.JSX.Element => {
   const fromCreate = params.get('from') === 'create';
   const sessionId = params.get('session');
 
-  const [state, setState] = useState<LoadState>({ status: 'loading' });
+  /**
+   * 받아 둔 결과에 어느 요청의 것인지 붙여 둔다.
+   * 이펙트 안에서 loading 으로 되돌리면 렌더가 한 번 더 돌고, 주소가 바뀌는 사이
+   * 앞선 광고의 결과가 잠깐 보일 수 있다. 키가 다르면 그냥 로딩으로 친다.
+   */
+  const [loaded, setLoaded] = useState<{ key: string; state: LoadState } | null>(null);
+  const requestKey = adId ? `${adId}:${sessionId ?? ''}:${storeId ?? ''}` : '';
+  const state: LoadState = loaded?.key === requestKey ? loaded.state : { status: 'loading' };
   const [cardIndex, setCardIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -114,25 +121,28 @@ const AdDetail = (): React.JSX.Element => {
       return null;
     };
 
-    setState({ status: 'loading' });
     load()
       .then((ad) =>
-        setState(
-          ad
+        setLoaded({
+          key: requestKey,
+          state: ad
             ? { status: 'ready', ad }
             : { status: 'error', message: '광고를 찾지 못했어요.\n보관함에서 다시 골라주세요.' },
-        ),
+        }),
       )
       .catch((cause: unknown) => {
         if (isAbortError(cause)) return;
-        setState({
-          status: 'error',
-          message: cause instanceof Error ? cause.message : '광고를 불러오지 못했어요.',
+        setLoaded({
+          key: requestKey,
+          state: {
+            status: 'error',
+            message: cause instanceof Error ? cause.message : '광고를 불러오지 못했어요.',
+          },
         });
       });
 
     return () => controller.abort();
-  }, [adId, sessionId, storeId]);
+  }, [adId, sessionId, storeId, requestKey]);
 
   /** 체험이 끝나면 다음 관람객을 위해 입력값을 비운다. */
   const finish = (): void => {
