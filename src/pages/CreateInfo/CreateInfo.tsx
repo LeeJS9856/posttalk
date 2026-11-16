@@ -201,7 +201,7 @@ const CreateInfo = (): React.JSX.Element => {
         </NameField>
 
         <Label as="label" htmlFor="store-market">
-          어디에 있나요?
+          가게 주소
         </Label>
         <NameField>
           <TextArea

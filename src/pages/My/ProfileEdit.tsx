@@ -62,7 +62,7 @@ const ProfileEdit = (): React.JSX.Element => {
         </Field>
 
         <Field>
-          <Label htmlFor="shop-market">어디에 있나요?</Label>
+          <Label htmlFor="shop-market">가게 주소</Label>
           <Line>
             <TextInput
               id="shop-market"
