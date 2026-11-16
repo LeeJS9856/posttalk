@@ -1,9 +1,9 @@
-import { Check, Copy, ExternalLink, Play, X } from 'lucide-react';
+import { Check, Copy, ExternalLink, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { isAbortError } from '@/apis/api';
-import { getAdSession, getArchive, type ApiAdType } from '@/apis/posttalk';
+import { getAdSession, getArchive, publishAd, type ApiAdType } from '@/apis/posttalk';
 import AppHeader from '@/components/layout/AppHeader';
 import {
   AD_STATUS_LABEL,
@@ -27,6 +27,7 @@ import {
   Counter,
   EditButton,
   Footer,
+  FooterNotice,
   Meta,
   MetaLabel,
   MetaLine,
@@ -38,6 +39,7 @@ import {
   PlayOverlay,
   PrimaryButton,
   SecondaryButton,
+  SkipButton,
   StatusBadge,
   Strip,
   Thumb,
@@ -104,6 +106,10 @@ const AdDetail = (): React.JSX.Element => {
   const [cardIndex, setCardIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
+  /** 게시 진행. 제작 직후에만 쓴다. */
+  const [publishState, setPublishState] = useState<
+    { step: 'idle' } | { step: 'sending' } | { step: 'failed'; message: string }
+  >({ step: 'idle' });
   const videoRef = useRef<HTMLVideoElement>(null);
   const copiedTimerRef = useRef<number | undefined>(undefined);
 
@@ -168,15 +174,28 @@ const AdDetail = (): React.JSX.Element => {
     void navigate('/', { replace: true });
   };
 
+  /**
+   * 올리고 나서 홈으로 보낸다. 제작 직후에는 이 버튼이 유일한 출구다.
+   * 올리지 않고 빠져나가면 만든 광고가 올라가지 않은 채 다음 관람객 차례가 된다.
+   */
+  const publish = async (): Promise<void> => {
+    if (state.status !== 'ready') return;
+
+    setPublishState({ step: 'sending' });
+    try {
+      await publishAd(state.ad.id);
+      finish();
+    } catch (cause) {
+      setPublishState({
+        step: 'failed',
+        message: cause instanceof Error ? cause.message : '올리지 못했어요.',
+      });
+    }
+  };
+
   const header = fromCreate ? (
-    <AppHeader
-      title="다 만들었어요"
-      action={
-        <TopAction type="button" aria-label="닫기" onClick={finish}>
-          <X aria-hidden="true" />
-        </TopAction>
-      }
-    />
+    // 닫기를 두지 않는다. 올리기 버튼이 유일한 출구다.
+    <AppHeader title="다 만들었어요" />
   ) : (
     // 홈과 보관함에서 이름으로 부르던 광고다. 열었다고 '광고'가 되면 안 된다.
     <AppHeader
@@ -318,9 +337,28 @@ const AdDetail = (): React.JSX.Element => {
       {(fromCreate || ad.permalink) && (
         <Footer>
           {fromCreate ? (
-            <PrimaryButton type="button" onClick={finish}>
-              확인했어요
-            </PrimaryButton>
+            <>
+              {publishState.step === 'failed' && (
+                <FooterNotice role="alert">{publishState.message}</FooterNotice>
+              )}
+              <PrimaryButton
+                type="button"
+                disabled={publishState.step === 'sending'}
+                onClick={() => void publish()}
+              >
+                {publishState.step === 'sending'
+                  ? '올리는 중이에요'
+                  : publishState.step === 'failed'
+                    ? '다시 올리기'
+                    : '인스타그램에 올리기'}
+              </PrimaryButton>
+              {/* 올리지 못해 갇히는 것을 막는다. 실패했을 때만 연다. */}
+              {publishState.step === 'failed' && (
+                <SkipButton type="button" onClick={finish}>
+                  나중에 올릴게요
+                </SkipButton>
+              )}
+            </>
           ) : (
             <SecondaryButton href={ad.permalink} target="_blank" rel="noreferrer">
               <ExternalLink aria-hidden="true" />

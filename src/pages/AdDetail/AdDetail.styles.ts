@@ -301,6 +301,24 @@ export const SecondaryButton = styled.a`
   }
 `;
 
+export const FooterNotice = styled.p`
+  margin-bottom: 10px;
+  color: ${COLORS.status.failed};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.5;
+  text-align: center;
+`;
+
+/** 올리지 못했을 때만 여는 출구. 평소에는 올리기 버튼 하나만 둔다. */
+export const SkipButton = styled.button`
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 0;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.body};
+`;
+
 export const MissingWrap = styled.div`
   display: flex;
   flex: 1;

@@ -188,3 +188,19 @@ export const getArchive = (
   },
   signal?: AbortSignal,
 ): Promise<ArchiveData> => request('/api/archive', { query, signal });
+
+/**
+ * 인스타그램 게시.
+ *
+ * 주소와 본문 모양이 아직 명세에 없다(2026-11-16). 백엔드가 알려 주면 이 함수만 고친다.
+ * 게시는 외부 서비스를 거쳐 오래 걸릴 수 있어 업로드와 같은 시간 제한을 쓴다.
+ */
+export const publishAd = (
+  submissionId: string,
+  signal?: AbortSignal,
+): Promise<{ status?: ApiSubmissionStatus; instagramPermalink?: string }> =>
+  request(`/api/submissions/${submissionId}/publish`, {
+    method: 'POST',
+    signal,
+    timeoutMs: UPLOAD_TIMEOUT_MS,
+  });
