@@ -14,6 +14,7 @@ import {
 } from '@/constants/ads';
 import { AD_FORMAT_LABEL } from '@/constants/home';
 import { posterSrc } from '@/constants/media';
+import { useAds } from '@/hooks/useAds';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import {
@@ -86,6 +87,7 @@ const AdDetail = (): React.JSX.Element => {
   const { adId } = useParams();
   const [params] = useSearchParams();
   const { resetDraft } = useAdDraft();
+  const { invalidate } = useAds();
   const { storeId } = useWorkspace();
 
   const fromCreate = params.get('from') === 'create';
@@ -106,6 +108,14 @@ const AdDetail = (): React.JSX.Element => {
   const copiedTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => () => window.clearTimeout(copiedTimerRef.current), []);
+
+  /**
+   * 방금 만든 광고다. 들고 있던 목록에는 없으므로 낡은 것으로 표시해 둔다.
+   * 홈이나 보관함으로 돌아가면 그때 다시 받는다.
+   */
+  useEffect(() => {
+    if (fromCreate) invalidate();
+  }, [fromCreate, invalidate]);
 
   useEffect(() => {
     if (!adId) return;

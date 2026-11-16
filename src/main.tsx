@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import App from '@/App';
+import { AdsProvider } from '@/hooks/useAds';
 import { AdDraftProvider } from '@/hooks/useAdDraft';
 import { AuthProvider } from '@/hooks/useAuth';
 import { ShopProvider } from '@/hooks/useShop';
@@ -14,9 +15,11 @@ createRoot(document.getElementById('root')!).render(
     <AuthProvider>
       <ShopProvider>
         <WorkspaceProvider>
-          <AdDraftProvider>
-            <App />
-          </AdDraftProvider>
+          <AdsProvider>
+            <AdDraftProvider>
+              <App />
+            </AdDraftProvider>
+          </AdsProvider>
         </WorkspaceProvider>
       </ShopProvider>
     </AuthProvider>
