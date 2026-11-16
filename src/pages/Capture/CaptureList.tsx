@@ -69,7 +69,7 @@ const ShotByShotList = (): React.JSX.Element => {
 
     const run = async (): Promise<void> => {
       if (!session) {
-        const started = await startSession(draft, storeId, draft.storeName, controller.signal);
+        const started = await startSession(draft, storeId, controller.signal);
         setSession({ sessionId: started.sessionId, nextShot: started.currentRequest ?? null });
         return;
       }

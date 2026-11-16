@@ -27,6 +27,14 @@ export type UploadState =
   | { status: 'done'; uploaded: UploadedFile }
   | { status: 'error'; message: string };
 
+/** 정보 입력 화면이 넘기는 값. */
+export type StoreInfo = {
+  storeName: string;
+  marketName: string;
+  storeDescription: string;
+  menus: DraftMenu[];
+};
+
 export type CapturedAsset = {
   file: File;
   previewUrl: string;
@@ -58,6 +66,8 @@ type AdDraft = {
   theme: SuggestionThemeId;
   /** 이번 광고의 가게 이름. 관람객마다 다르므로 프로필이 아니라 초안에 둔다. */
   storeName: string;
+  /** 시장·지역. 비우면 서버 기본값(전통시장)이 들어간다. */
+  marketName: string;
   storeDescription: string;
   menus: DraftMenu[];
   /**
@@ -71,7 +81,7 @@ type AdDraft = {
 type AdDraftContextValue = {
   draft: AdDraft;
   setConcept: (value: { format: AdFormat; theme: SuggestionThemeId }) => void;
-  setStoreInfo: (value: { storeName: string; storeDescription: string; menus: DraftMenu[] }) => void;
+  setStoreInfo: (value: StoreInfo) => void;
   setSession: (value: { sessionId: string; nextShot: ShotRequest | null }) => void;
   /** 서버가 통과시킨 장면을 저장하고 다음 장 안내를 갱신한다. */
   acceptCapture: (
@@ -133,6 +143,7 @@ const createInitialDraft = (): AdDraft => ({
   format: 'card_news',
   theme: 'christmas',
   storeName: '',
+  marketName: '',
   storeDescription: '',
   menus: [],
   captures: {},
@@ -194,7 +205,7 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
   );
 
   const setStoreInfo = useCallback(
-    (value: { storeName: string; storeDescription: string; menus: DraftMenu[] }) => {
+    (value: StoreInfo) => {
       abortUploads();
       setDraft((current) => ({ ...current, ...value, ...withoutSession(current) }));
     },

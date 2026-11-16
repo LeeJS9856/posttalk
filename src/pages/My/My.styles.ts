@@ -64,11 +64,16 @@ export const ShopName = styled.p`
   font-weight: ${FONT_WEIGHT.semibold};
 `;
 
+/** 소개가 길 수 있어 두 줄까지만 보인다. 전체는 프로필 수정에서 본다. */
 export const ShopDescription = styled.p`
+  display: -webkit-box;
   margin-top: 2px;
+  overflow: hidden;
   color: ${COLORS.text.grey};
   font-size: ${FONT_SIZE.label};
   line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 `;
 
 export const Counts = styled.div`

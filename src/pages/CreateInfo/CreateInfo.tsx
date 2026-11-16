@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import AppHeader from '@/components/layout/AppHeader';
-import { createTemplateId } from '@/constants/shop';
+import { MAX_MARKET_NAME, MAX_SHOP_DESCRIPTION, createTemplateId } from '@/constants/shop';
 import { MAX_MENU_COUNT, type StoreTemplate } from '@/constants/templates';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useShop } from '@/hooks/useShop';
@@ -74,13 +74,13 @@ const CreateInfo = (): React.JSX.Element => {
   const { draft, setStoreInfo } = useAdDraft();
   // 몇 장을 찍을지는 서버가 정한다. 개수 대신 무엇을 올리는지만 알린다.
   const shotUnit = draft.format === 'reels' ? '영상' : '사진';
-  const { profile, templates, addTemplate } = useShop();
+  const { profile, setProfile, templates, addTemplate } = useShop();
 
   const [templateId, setTemplateId] = useState<string | null>(null);
-  // 가게 이름은 캡션 첫 줄과 카드뉴스에 들어간다. 운영자가 마이에서 정한 이름만 미리 채운다.
-  // 관람객이 적은 이름은 프로필에 남기지 않는다. 남기면 다음 관람객 칸에 앞사람 가게가 채워져 있다.
+  // 계정이 곧 내 가게다. 가게 정보는 마이에 저장된 값으로 채우고, 여기서 고치면 마이에도 남긴다.
   const [storeName, setStoreName] = useState(profile.name);
-  const [storeDescription, setStoreDescription] = useState('');
+  const [marketName, setMarketName] = useState(profile.marketName);
+  const [storeDescription, setStoreDescription] = useState(profile.description);
   const [menus, setMenus] = useState<MenuDraft[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [templateName, setTemplateName] = useState('');
@@ -91,6 +91,7 @@ const CreateInfo = (): React.JSX.Element => {
   const applyTemplate = (template: StoreTemplate): void => {
     setTemplateId(template.templateId);
     setStoreName(template.name);
+    setMarketName(template.marketName ?? '');
     setStoreDescription(template.storeDescription);
     setMenus(template.menus.map((menu) => createMenu(menu.name, menu.description)));
   };
@@ -125,12 +126,24 @@ const CreateInfo = (): React.JSX.Element => {
       addTemplate({
         templateId: createTemplateId(),
         name: templateName.trim() || storeName.trim(),
+        marketName: marketName.trim(),
         storeDescription: storeDescription.trim(),
         menus,
       });
     }
 
-    setStoreInfo({ storeName: storeName.trim(), storeDescription: storeDescription.trim(), menus });
+    const store = {
+      storeName: storeName.trim(),
+      marketName: marketName.trim(),
+      storeDescription: storeDescription.trim(),
+    };
+    setProfile({
+      ...profile,
+      name: store.storeName,
+      marketName: store.marketName,
+      description: store.storeDescription.slice(0, MAX_SHOP_DESCRIPTION),
+    });
+    setStoreInfo({ ...store, menus });
     void navigate('/create/capture');
   };
 
@@ -180,6 +193,23 @@ const CreateInfo = (): React.JSX.Element => {
           />
         </NameField>
 
+        <Label as="label" htmlFor="store-market">
+          어디에 있나요?
+        </Label>
+        <NameField>
+          <TextArea
+            id="store-market"
+            rows={1}
+            value={marketName}
+            maxLength={MAX_MARKET_NAME}
+            placeholder="예) 양동시장, 전남대 후문"
+            onChange={(event) => {
+              setMarketName(event.target.value);
+              detachTemplate();
+            }}
+          />
+        </NameField>
+
         <Label as="label" htmlFor="store-description">
           어떤 가게인가요?
         </Label>
@@ -187,6 +217,7 @@ const CreateInfo = (): React.JSX.Element => {
           <TextArea
             id="store-description"
             rows={2}
+            maxLength={MAX_SHOP_DESCRIPTION}
             value={storeDescription}
             placeholder="예) 20년째 같은 자리에서 떡을 만드는 떡집이에요"
             onChange={(event) => {

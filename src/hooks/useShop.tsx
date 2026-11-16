@@ -1,6 +1,19 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
-import { DEFAULT_SHOP_PROFILE, DEFAULT_TEMPLATES, type ShopProfile } from '@/constants/shop';
+import {
+  DEFAULT_SHOP_PROFILE,
+  DEFAULT_TEMPLATES,
+  SHOP_STORAGE_KEY,
+  type ShopProfile,
+} from '@/constants/shop';
 import type { StoreTemplate } from '@/constants/templates';
 
 type ShopContextValue = {
@@ -13,13 +26,39 @@ type ShopContextValue = {
 
 const ShopContext = createContext<ShopContextValue | null>(null);
 
+type StoredShop = { profile?: Partial<ShopProfile>; templates?: StoreTemplate[] };
+
+/** 저장소를 못 쓰거나 값이 깨졌으면 처음 값으로 시작한다. */
+const readStoredShop = (): StoredShop => {
+  try {
+    const raw = window.localStorage.getItem(SHOP_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as StoredShop) : {};
+  } catch {
+    return {};
+  }
+};
+
 /**
- * 가게 정보와 저장된 내용. 아직 API 가 없어 하드코딩한 값에서 시작한다.
- * 고친 값은 메모리에만 남는다. 새로고침하면 처음 값으로 돌아간다.
+ * 가게 정보와 저장된 내용. 조회 API 가 없어 이 기기에 남긴다.
+ * 계정이 곧 내 가게라, 한 번 적은 가게 정보는 다음 광고에도 채워져 있어야 한다.
  */
 export const ShopProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
-  const [profile, setProfile] = useState<ShopProfile>(DEFAULT_SHOP_PROFILE);
-  const [templates, setTemplates] = useState<StoreTemplate[]>(() => [...DEFAULT_TEMPLATES]);
+  const [stored] = useState(readStoredShop);
+  const [profile, setProfile] = useState<ShopProfile>(() => ({
+    ...DEFAULT_SHOP_PROFILE,
+    ...stored.profile,
+  }));
+  const [templates, setTemplates] = useState<StoreTemplate[]>(() =>
+    Array.isArray(stored.templates) ? stored.templates : [...DEFAULT_TEMPLATES],
+  );
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SHOP_STORAGE_KEY, JSON.stringify({ profile, templates }));
+    } catch {
+      // 저장소를 못 쓰면 이번 탭에서만 남는다.
+    }
+  }, [profile, templates]);
 
   const addTemplate = useCallback((template: StoreTemplate) => {
     setTemplates((current) => [template, ...current]);

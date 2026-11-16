@@ -116,7 +116,7 @@ const CardNewsCaptureList = (): React.JSX.Element => {
       let sessionId = session?.sessionId;
       let next: ShotRequest | null = session?.nextShot ?? null;
       if (!sessionId) {
-        const started = await startSession(draft, storeId, draft.storeName, signal);
+        const started = await startSession(draft, storeId, signal);
         sessionId = started.sessionId;
         next = started.currentRequest ?? null;
         setSession({ sessionId, nextShot: next });

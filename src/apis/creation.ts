@@ -10,7 +10,7 @@ import {
 } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
 import { shrinkPhoto } from '@/constants/media';
-import type { SuggestionThemeId } from '@/constants/themes';
+import { SUGGESTION_THEMES, type SuggestionThemeId } from '@/constants/themes';
 
 /**
  * 제작 흐름에서 화면이 부르는 묶음. 화면은 서버의 필드 이름을 몰라도 된다.
@@ -19,6 +19,8 @@ import type { SuggestionThemeId } from '@/constants/themes';
 type DraftInput = {
   format: AdFormat;
   theme: SuggestionThemeId;
+  storeName: string;
+  marketName: string;
   storeDescription: string;
   menus: { name: string; description: string }[];
 };
@@ -47,20 +49,31 @@ const toStartBody = (draft: DraftInput, storeId: string): StartSessionBody => {
       reelsConcept: draft.theme === 'minimal' ? 'simple' : 'christmas',
     };
   }
-  return { ...base, adType: 'photo', cardNewsTheme: draft.theme };
+  // 디자인 방향은 관람객에게 묻지 않고 콘셉트에 맞춰 정해 둔 문장을 보낸다.
+  const theme = SUGGESTION_THEMES.find((item) => item.id === draft.theme);
+  return {
+    ...base,
+    adType: 'photo',
+    cardNewsTheme: draft.theme,
+    ...(theme ? { cardNewsStyle: theme.cardNewsStyle } : {}),
+  };
 };
 
 /**
- * 제작 세션을 연다. 그 전에 가게 이름을 작업 공간에 다시 보낸다.
- * 같은 키로 보내면 서버의 가게 이름이 바뀐다. 보내지 않으면 서버가 "가게"를 넣어 캡션 첫 줄이 된다.
+ * 제작 세션을 연다. 그 전에 가게 이름과 시장·지역을 작업 공간에 다시 보낸다.
+ * 같은 키로 보내면 서버 값이 바뀐다. 보내지 않으면 서버가 "가게" · "전통시장"을 넣는다.
  */
 export const startSession = async (
   draft: DraftInput,
   storeId: string,
-  storeName: string,
   signal?: AbortSignal,
 ): Promise<StartedSession> => {
-  if (storeName) await openGuestSession({ storeName }, signal);
+  // 시장·지역은 카드뉴스 AI 의 지역(area)이 된다. 빈 값은 보내지 않는다(서버 값이 지워지지 않게).
+  const store = {
+    ...(draft.storeName ? { storeName: draft.storeName } : {}),
+    ...(draft.marketName ? { marketName: draft.marketName } : {}),
+  };
+  if (Object.keys(store).length > 0) await openGuestSession(store, signal);
   return startAdSession(toStartBody(draft, storeId), signal);
 };
 
