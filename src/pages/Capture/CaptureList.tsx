@@ -115,7 +115,7 @@ const ShotByShotList = (): React.JSX.Element => {
           key: 'camera',
           icon: askingVideo ? <Video /> : <Camera />,
           label: askingVideo ? '지금 녹화하기' : '지금 찍기',
-          description: askingVideo ? `${asking.clipSeconds}초만 찍으면 돼요` : '카메라가 열려요',
+          description: askingVideo ? `최대 ${asking.clipSeconds}초까지 찍혀요` : '카메라가 열려요',
           recommended: asking.recommended === 'camera',
           onSelect: () => go(asking, 'camera'),
         },

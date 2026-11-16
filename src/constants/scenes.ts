@@ -1,5 +1,14 @@
 import type { ShotRequest } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
+import foodBowlSample from '@/assets/card-ex/food-bowl.jpg';
+import foodPlateSample from '@/assets/card-ex/food-plate.jpg';
+import foodZoomSample from '@/assets/card-ex/food-zoom.jpg';
+import storeInsideSample from '@/assets/card-ex/store-inside.jpg';
+import storeOutsideSample from '@/assets/card-ex/store-outside.jpg';
+import crabVideoSample from '@/assets/꽃게.mp4';
+import insideVideoSample from '@/assets/내부.mp4';
+import cookingVideoSample from '@/assets/조리.mp4';
+import signVideoSample from '@/assets/간판.mp4';
 import { DEFAULT_CLIP_SECONDS } from '@/constants/media';
 
 /** 재료를 어디서 가져오는지. 장면마다 관람객이 직접 고른다. */
@@ -26,6 +35,8 @@ export type Scene = {
   kind: SceneKind;
   /** 영상 장면의 길이 */
   clipSeconds: number;
+  /** 이렇게 찍으면 된다는 예시. 사진 장면은 사진, 영상 장면은 영상이다. 없으면 띄우지 않는다. */
+  sample?: string;
 };
 
 /**
@@ -43,7 +54,7 @@ const withParticle = (word: string, withFinal: string, withoutFinal: string): st
 /** 갤러리로 고를 때는 구도를 안내할 게 없다. 장면과 무관하게 같은 문구를 쓴다. */
 export const GALLERY_HINT = '미리 준비된 것 중에서 고르면 돼요';
 
-type SceneCopy = Pick<Scene, 'label' | 'title' | 'pickTitle' | 'hint' | 'recommended'>;
+type SceneCopy = Pick<Scene, 'label' | 'title' | 'pickTitle' | 'hint' | 'recommended' | 'sample'>;
 
 /**
  * 알고 있는 장면의 안내. 몇 장을 어떤 순서로 찍을지는 서버가 정하고(다음 장면을 하나씩 알려 준다),
@@ -57,13 +68,15 @@ const KNOWN_SCENES: Readonly<Record<string, SceneCopy>> = {
     pickTitle: '대표 음식 사진을 골라주세요',
     hint: '그릇 전체가 화면에 들어오게',
     recommended: 'camera',
+    sample: foodBowlSample,
   },
   card_zoom: {
     label: '음식 확대',
     title: '대표 음식을 가까이에서 찍어주세요',
     pickTitle: '가까이 찍은 음식 사진을 골라주세요',
-    hint: '음식의 결이 보이도록 가까이',
+    hint: '질감이나 단면이 보이게',
     recommended: 'camera',
+    sample: foodZoomSample,
   },
   card_food1: {
     label: '음식 사진 1',
@@ -71,6 +84,7 @@ const KNOWN_SCENES: Readonly<Record<string, SceneCopy>> = {
     pickTitle: '음식 사진을 골라주세요',
     hint: '접시를 위에서 내려찍어주세요',
     recommended: 'camera',
+    sample: foodPlateSample,
   },
   card_food2: {
     label: '음식 사진 2',
@@ -85,13 +99,15 @@ const KNOWN_SCENES: Readonly<Record<string, SceneCopy>> = {
     pickTitle: '가게 밖 사진을 골라주세요',
     hint: '간판이 함께 보이면 좋아요',
     recommended: 'gallery',
+    sample: storeOutsideSample,
   },
   card_store2: {
-    label: '가게 안 · 메뉴판',
-    title: '가게 안이나 메뉴판을 찍어주세요',
-    pickTitle: '가게 안이나 메뉴판 사진을 골라주세요',
-    hint: '메뉴판 글씨가 읽히게',
+    label: '가게 안',
+    title: '가게 안을 찍어주세요',
+    pickTitle: '가게 안 사진을 골라주세요',
+    hint: '공간이나 테이블이 보이게',
     recommended: 'gallery',
+    sample: storeInsideSample,
   },
   video_storefront_sign: {
     label: '가게 간판',
@@ -184,6 +200,7 @@ export const sceneFromRequest = (request: ShotRequest, index: number, format: Ad
     recommended: known?.recommended ?? 'camera',
     kind,
     clipSeconds: DEFAULT_CLIP_SECONDS,
+    ...(known?.sample ? { sample: known.sample } : {}),
   };
 };
 
@@ -208,7 +225,7 @@ const REELS_SHOT_ORDER = [
 const reelsScene = (
   shotKey: string,
   index: number,
-  copy: Pick<Scene, 'label' | 'title' | 'pickTitle' | 'hint' | 'recommended'>,
+  copy: Pick<Scene, 'label' | 'title' | 'pickTitle' | 'hint' | 'recommended' | 'sample'>,
 ): Scene => ({ index, shotKey, kind: 'video', clipSeconds: DEFAULT_CLIP_SECONDS, ...copy });
 
 export const buildReelsScenes = (menus: readonly { name: string }[]): Scene[] => {
@@ -220,6 +237,7 @@ export const buildReelsScenes = (menus: readonly { name: string }[]): Scene[] =>
       pickTitle: '메뉴판 영상을 골라주세요',
       hint: '글씨가 읽히도록 천천히',
       recommended: 'camera',
+      sample: signVideoSample,
     }),
   ];
 
@@ -231,6 +249,7 @@ export const buildReelsScenes = (menus: readonly { name: string }[]): Scene[] =>
         pickTitle: `${menu.name} 전체가 보이는 영상을 골라주세요`,
         hint: '음식 전체가 화면에 들어오게',
         recommended: 'camera',
+        sample: crabVideoSample,
       }),
     );
     scenes.push(
@@ -240,6 +259,7 @@ export const buildReelsScenes = (menus: readonly { name: string }[]): Scene[] =>
         pickTitle: `${menu.name} 가까이 찍은 영상을 골라주세요`,
         hint: '들어올리거나 숟가락으로 떠서, 속이 보이게',
         recommended: 'camera',
+        sample: cookingVideoSample,
       }),
     );
   });
@@ -251,6 +271,7 @@ export const buildReelsScenes = (menus: readonly { name: string }[]): Scene[] =>
       pickTitle: '가게 영상을 골라주세요',
       hint: '가게 전체가 보이게 한 바퀴',
       recommended: 'camera',
+      sample: insideVideoSample,
     }),
   );
 

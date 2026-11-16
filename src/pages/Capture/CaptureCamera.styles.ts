@@ -70,21 +70,32 @@ export const Hint = styled.p`
   font-size: ${FONT_SIZE.label};
 `;
 
-/** 구도 샘플. 실제 이미지가 나오기 전까지 자리만 잡아둔다. */
-export const SampleWrap = styled.div`
+/** 구도 샘플. 장면에 예시 사진이 있으면 보여 주고, 없으면 자리만 잡아둔다. */
+export const SampleWrap = styled.button`
   position: absolute;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
   top: 118px;
   right: 12px;
-  width: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 카메라 화면 위에서 무엇을 찍는지 한눈에 알아볼 만큼 크게. 좁은 폰에서도 화면의 40%를 넘지 않게. */
+  width: min(150px, 40vw);
 `;
 
 export const SampleFrame = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   aspect-ratio: 3 / 4;
-  border: 1.5px solid rgba(255, 255, 255, 0.62);
-  border-radius: 9px;
+  overflow: hidden;
+  border: 3px solid ${COLORS.white};
+  border-radius: 14px;
+  box-shadow: 0 4px 14px ${COLORS.scrim};
   background-color: rgba(255, 255, 255, 0.14);
   color: rgba(255, 255, 255, 0.72);
 
@@ -94,11 +105,64 @@ export const SampleFrame = styled.div`
   }
 `;
 
+export const SampleImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+export const SampleVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 export const SampleLabel = styled.p`
-  margin-top: 4px;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: ${FONT_SIZE.caption};
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background-color: ${COLORS.overlay};
+  color: ${COLORS.white};
+  font-size: ${FONT_SIZE.label};
+  font-weight: ${FONT_WEIGHT.semibold};
   text-align: center;
+  white-space: nowrap;
+`;
+
+/** 예시 사진을 화면 가득 보는 막. 화면 어디를 눌러도 닫힌다. */
+export const SampleViewer = styled.button`
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 16px;
+  border: 0;
+  background-color: ${COLORS.overlay};
+  cursor: zoom-out;
+`;
+
+export const SampleViewerImage = styled.img`
+  max-width: 100%;
+  max-height: 72svh;
+  border-radius: 16px;
+  object-fit: contain;
+`;
+
+export const SampleViewerVideo = styled.video`
+  max-width: 100%;
+  max-height: 72svh;
+  border-radius: 16px;
+  object-fit: contain;
+`;
+
+export const SampleViewerHint = styled.p`
+  color: ${COLORS.white};
+  font-size: ${FONT_SIZE.body};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const BottomBar = styled.div`
