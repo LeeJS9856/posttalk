@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import AppHeader from '@/components/layout/AppHeader';
 import { MAX_MARKET_NAME, MAX_SHOP_DESCRIPTION, createTemplateId } from '@/constants/shop';
 import { MAX_MENU_COUNT, type StoreTemplate } from '@/constants/templates';
+import { MAX_CARD_NEWS_STYLE } from '@/constants/themes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useShop } from '@/hooks/useShop';
 import {
@@ -15,6 +16,7 @@ import {
   ChipRail,
   Content,
   Counter,
+  HelpText,
   Footer,
   Label,
   LabelRow,
@@ -74,6 +76,8 @@ const CreateInfo = (): React.JSX.Element => {
   const { draft, setStoreInfo } = useAdDraft();
   // 몇 장을 찍을지는 서버가 정한다. 개수 대신 무엇을 올리는지만 알린다.
   const shotUnit = draft.format === 'reels' ? '영상' : '사진';
+  // 디자인 요청은 카드뉴스에만 있다. 릴스는 서버가 콘셉트만 받는다.
+  const isCardNews = draft.format === 'card_news';
   const { profile, setProfile, templates, addTemplate } = useShop();
 
   const [templateId, setTemplateId] = useState<string | null>(null);
@@ -82,6 +86,7 @@ const CreateInfo = (): React.JSX.Element => {
   const [marketName, setMarketName] = useState(profile.marketName);
   const [storeDescription, setStoreDescription] = useState(profile.description);
   const [menus, setMenus] = useState<MenuDraft[]>([]);
+  const [cardNewsStyle, setCardNewsStyle] = useState(draft.cardNewsStyle);
   const [isSaving, setIsSaving] = useState(false);
   const [templateName, setTemplateName] = useState('');
 
@@ -136,6 +141,8 @@ const CreateInfo = (): React.JSX.Element => {
       storeName: storeName.trim(),
       marketName: marketName.trim(),
       storeDescription: storeDescription.trim(),
+      // 비워 두면 콘셉트에 맞춰 정해 둔 문장이 대신 나간다.
+      cardNewsStyle: isCardNews ? cardNewsStyle.trim() : '',
     };
     setProfile({
       ...profile,
@@ -226,6 +233,28 @@ const CreateInfo = (): React.JSX.Element => {
             }}
           />
         </StoreField>
+
+        {isCardNews && (
+          <>
+            <LabelRow>
+              <Label as="label" htmlFor="card-news-style" style={{ padding: 0 }}>
+                어떤 느낌으로 만들까요?
+              </Label>
+              <Counter>선택</Counter>
+            </LabelRow>
+            <StoreField>
+              <TextArea
+                id="card-news-style"
+                rows={2}
+                maxLength={MAX_CARD_NEWS_STYLE}
+                value={cardNewsStyle}
+                placeholder="예) 가격을 크게 넣고, 손글씨 느낌으로"
+                onChange={(event) => setCardNewsStyle(event.target.value)}
+              />
+            </StoreField>
+            <HelpText>비워 두면 고른 콘셉트에 맞춰 만들어요</HelpText>
+          </>
+        )}
 
         <LabelRow>
           <Label as="span" style={{ padding: 0 }}>

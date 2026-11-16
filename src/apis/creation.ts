@@ -10,7 +10,7 @@ import {
 } from '@/apis/posttalk';
 import type { AdFormat } from '@/constants/home';
 import { shrinkPhoto } from '@/constants/media';
-import { SUGGESTION_THEMES, type SuggestionThemeId } from '@/constants/themes';
+import { MAX_CARD_NEWS_STYLE, SUGGESTION_THEMES, type SuggestionThemeId } from '@/constants/themes';
 
 /**
  * 제작 흐름에서 화면이 부르는 묶음. 화면은 서버의 필드 이름을 몰라도 된다.
@@ -23,6 +23,8 @@ type DraftInput = {
   marketName: string;
   storeDescription: string;
   menus: { name: string; description: string }[];
+  /** 관람객이 쓴 카드뉴스 디자인 요청. 비어 있으면 콘셉트 기본 문장을 쓴다. */
+  cardNewsStyle: string;
 };
 
 /**
@@ -49,13 +51,14 @@ const toStartBody = (draft: DraftInput, storeId: string): StartSessionBody => {
       reelsConcept: draft.theme === 'minimal' ? 'simple' : 'christmas',
     };
   }
-  // 디자인 방향은 관람객에게 묻지 않고 콘셉트에 맞춰 정해 둔 문장을 보낸다.
+  // 관람객이 쓴 요청을 그대로 보내고, 비워 뒀으면 콘셉트에 맞춰 정해 둔 문장을 대신 보낸다.
   const theme = SUGGESTION_THEMES.find((item) => item.id === draft.theme);
+  const style = draft.cardNewsStyle.trim() || theme?.cardNewsStyle || '';
   return {
     ...base,
     adType: 'photo',
     cardNewsTheme: draft.theme,
-    ...(theme ? { cardNewsStyle: theme.cardNewsStyle } : {}),
+    ...(style ? { cardNewsStyle: style.slice(0, MAX_CARD_NEWS_STYLE) } : {}),
   };
 };
 

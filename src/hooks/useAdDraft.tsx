@@ -33,6 +33,8 @@ export type StoreInfo = {
   marketName: string;
   storeDescription: string;
   menus: DraftMenu[];
+  /** 카드뉴스 디자인 요청. 비우면 콘셉트에 맞춰 정해 둔 문장을 보낸다. 릴스는 쓰지 않는다. */
+  cardNewsStyle: string;
 };
 
 export type CapturedAsset = {
@@ -70,6 +72,8 @@ type AdDraft = {
   marketName: string;
   storeDescription: string;
   menus: DraftMenu[];
+  /** 카드뉴스 디자인 요청. 비우면 콘셉트 기본 문장이 나간다. 릴스는 쓰지 않는다. */
+  cardNewsStyle: string;
   /**
    * 장면 번호를 키로 둔다. 촬영물은 메모리에만 둔다.
    * 릴스는 서버가 받아 준 장면만, 카드뉴스는 찍은 장면 전부(제출 전 포함)를 담는다.
@@ -145,6 +149,7 @@ const createInitialDraft = (): AdDraft => ({
   storeName: '',
   marketName: '',
   storeDescription: '',
+  cardNewsStyle: '',
   menus: [],
   captures: {},
   session: null,

@@ -14,6 +14,9 @@ import reelsSample from '@/assets/video-ex.mp4';
  * preview 는 형식별 결과물 미리보기다. 콘셉트별 결과물 샘플이 나오기 전까지 임시 자료를 쓴다.
  * 릴스는 두 콘셉트가 같은 영상을 공유하고 정지 화면만 다르다.
  */
+/** 카드뉴스 디자인 요청 길이. 서버가 500자까지 받는다. */
+export const MAX_CARD_NEWS_STYLE = 500;
+
 export const SUGGESTION_THEMES = [
   {
     id: 'christmas',
