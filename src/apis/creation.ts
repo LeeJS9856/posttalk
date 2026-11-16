@@ -49,6 +49,9 @@ const toStartBody = (draft: DraftInput, storeId: string): StartSessionBody => {
       ...base,
       adType: 'video',
       reelsConcept: draft.theme === 'minimal' ? 'simple' : 'christmas',
+      // 메뉴를 배열로 보내야 메뉴 수만큼 장면이 늘어난다(1·2·3개 → 영상 4·6·8개).
+      // 보내지 않으면 서버가 menuIntro 를 메뉴 한 개로 치고 4개만 요구한다.
+      reelsMenus: draft.menus.map((menu) => ({ name: menu.name })),
     };
   }
   // 관람객이 쓴 요청을 그대로 보내고, 비워 뒀으면 콘셉트에 맞춰 정해 둔 문장을 대신 보낸다.

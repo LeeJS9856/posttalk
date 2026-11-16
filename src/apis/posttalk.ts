@@ -56,6 +56,11 @@ export type StartSessionBody = {
   cardNewsTheme?: 'minimal' | 'christmas';
   cardNewsStyle?: string;
   reelsConcept?: 'simple' | 'christmas';
+  /**
+   * 릴스 메뉴 1~3개. 보내지 않으면 서버가 menuIntro 를 메뉴 한 개로 치고 영상 4개만 요구한다.
+   * 메뉴 수에 따라 영상이 4·6·8개로 늘어난다.
+   */
+  reelsMenus?: { name: string }[];
 };
 
 export type StartedSession = {
