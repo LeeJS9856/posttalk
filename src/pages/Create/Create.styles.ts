@@ -39,34 +39,44 @@ export const PreviewLabel = styled.span`
   font-weight: ${FONT_WEIGHT.semibold};
 `;
 
-/* 카드뉴스: 가운데 카드와 양옆의 흐린 카드. 옆으로 넘겨 보는 결과물이라는 게 그림으로 읽힌다. */
+/*
+ * 카드뉴스: 옆으로 넘겨 보는 카드. 가운데 카드가 크고 양옆 카드가 흐리게 걸친다.
+ * 카드 폭과 좌우 여백을 같은 값으로 묶어 첫 장과 끝 장도 가운데에 멈춘다.
+ */
+// 퍼센트로 잡으면 좌우 여백을 뺀 폭의 44% 가 되어 카드가 쪼그라든다. 미리보기 폭(화면 - 좌우 16px)을 직접 쓴다.
+const CARD_WIDTH = 'min(calc((100vw - 32px) * 0.44), 172px)';
+export const CARD_GAP_PX = 10;
+
 export const CardStage = styled.div`
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  gap: ${CARD_GAP_PX}px;
+  padding: 0 calc((100% - ${CARD_WIDTH}) / 2);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
-export const CardMain = styled.img`
+export const Card = styled.img<{ $active: boolean }>`
   flex-shrink: 0;
-  width: 44%;
-  max-width: 172px;
+  width: ${CARD_WIDTH};
   aspect-ratio: 4 / 5;
   border-radius: 14px;
-  box-shadow: 0 10px 24px rgba(20, 20, 30, 0.2);
+  box-shadow: ${({ $active }) => ($active ? '0 10px 24px rgba(20, 20, 30, 0.2)' : 'none')};
   object-fit: cover;
-`;
-
-export const CardSide = styled.img`
-  flex-shrink: 0;
-  width: 31%;
-  max-width: 120px;
-  aspect-ratio: 4 / 5;
-  border-radius: 12px;
-  object-fit: cover;
-  opacity: 0.55;
+  opacity: ${({ $active }) => ($active ? 1 : 0.55)};
+  transform: scale(${({ $active }) => ($active ? 1 : 0.86)});
+  scroll-snap-align: center;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 `;
 
 export const PageDots = styled.div`
@@ -203,6 +213,23 @@ export const MoodLabel = styled.span`
   color: ${COLORS.text.main};
   font-size: ${FONT_SIZE.body};
   font-weight: ${FONT_WEIGHT.bold};
+`;
+
+export const MoodText = styled.span`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+`;
+
+/* 형식·분위기 버튼 이름 아래 한 줄 설명. 회색 바탕에서도 4.5:1 인 muted 를 쓴다. */
+export const OptionDescription = styled.span`
+  margin-top: 2px;
+  color: ${COLORS.text.muted};
+  font-size: ${FONT_SIZE.caption};
+  font-weight: ${FONT_WEIGHT.medium};
+  line-height: 1.35;
+  word-break: keep-all;
 `;
 
 export const Footer = styled.div`

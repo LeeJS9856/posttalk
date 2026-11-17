@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import AppHeader from '@/components/layout/AppHeader';
@@ -8,8 +8,8 @@ import { AD_FORMAT_LABEL, type AdFormat } from '@/constants/home';
 import { SUGGESTION_THEMES, type SuggestionThemeId } from '@/constants/themes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import {
-  CardMain,
-  CardSide,
+  Card,
+  CARD_GAP_PX,
   CardStage,
   Content,
   Footer,
@@ -17,8 +17,10 @@ import {
   FormatOption,
   MoodLabel,
   MoodOption,
+  MoodText,
   MoodThumb,
   NextButton,
+  OptionDescription,
   OptionGrid,
   Page,
   PageDot,
@@ -51,7 +53,29 @@ const Create = (): React.JSX.Element => {
 
   const theme = SUGGESTION_THEMES.find((item) => item.id === themeId) ?? SUGGESTION_THEMES[0];
   const [mainCard, leftCard, rightCard] = theme.preview.cards;
+  // 넘겨 보는 순서. 가운데(대표) 카드에서 시작해 양옆으로 넘긴다.
+  const cards = [leftCard, mainCard, rightCard];
   const combo = `${theme.label} ${AD_FORMAT_LABEL[format]}`;
+
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [cardIndex, setCardIndex] = useState(1);
+
+  // 형식이나 분위기를 바꾸면 대표 카드가 가운데 오도록 되돌린다.
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    const first = stage?.firstElementChild as HTMLElement | null;
+    if (!stage || !first) return;
+    stage.scrollLeft = first.offsetWidth + CARD_GAP_PX;
+    setCardIndex(1);
+  }, [format, themeId]);
+
+  const onCardScroll = (): void => {
+    const stage = stageRef.current;
+    const first = stage?.firstElementChild as HTMLElement | null;
+    if (!stage || !first) return;
+    const next = Math.round(stage.scrollLeft / (first.offsetWidth + CARD_GAP_PX));
+    setCardIndex(Math.min(Math.max(next, 0), cards.length - 1));
+  };
 
   const goNext = (): void => {
     setConcept({ format, theme: theme.id });
@@ -69,15 +93,15 @@ const Create = (): React.JSX.Element => {
 
           {format === 'card_news' ? (
             <>
-              <CardStage aria-hidden="true">
-                <CardSide src={leftCard} alt="" />
-                <CardMain src={mainCard} alt="" />
-                <CardSide src={rightCard} alt="" />
+              <CardStage ref={stageRef} onScroll={onCardScroll} aria-hidden="true">
+                {cards.map((src, index) => (
+                  <Card key={src} src={src} alt="" draggable={false} $active={index === cardIndex} />
+                ))}
               </CardStage>
               <PageDots aria-hidden="true">
-                <PageDot />
-                <PageDot $active />
-                <PageDot />
+                {cards.map((src, index) => (
+                  <PageDot key={src} $active={index === cardIndex} />
+                ))}
               </PageDots>
             </>
           ) : (
@@ -115,6 +139,7 @@ const Create = (): React.JSX.Element => {
               onClick={() => setFormat(option.id)}
             >
               <FormatLabel>{option.label}</FormatLabel>
+              <OptionDescription>{option.description}</OptionDescription>
             </FormatOption>
           ))}
         </OptionGrid>
@@ -131,7 +156,10 @@ const Create = (): React.JSX.Element => {
               onClick={() => setThemeId(item.id)}
             >
               <MoodThumb src={item.thumb} alt="" />
-              <MoodLabel>{item.label}</MoodLabel>
+              <MoodText>
+                <MoodLabel>{item.label}</MoodLabel>
+                <OptionDescription>{item.description}</OptionDescription>
+              </MoodText>
             </MoodOption>
           ))}
         </OptionGrid>
