@@ -4,17 +4,18 @@ import christmasRight from '@/assets/theme-ex/christmas-right.jpg';
 import minimalLeft from '@/assets/theme-ex/minimal-left.jpg';
 import minimalMain from '@/assets/theme-ex/minimal-main.jpg';
 import minimalRight from '@/assets/theme-ex/minimal-right.jpg';
-import videoExPoster from '@/assets/video-ex-poster.jpg';
-import videoExPoster2 from '@/assets/video-ex-poster-2.jpg';
-import reelsSample from '@/assets/video-ex.mp4';
+import christmasReels from '@/assets/theme-ex/christmas-reels.mp4';
+import christmasReelsPoster from '@/assets/theme-ex/christmas-reels-poster.jpg';
+import minimalReels from '@/assets/theme-ex/minimal-reels.mp4';
+import minimalReelsPoster from '@/assets/theme-ex/minimal-reels-poster.jpg';
 
 /**
  * 광고 콘셉트. 광고 탭(콘셉트 선택 화면)이 쓴다.
  * id 는 생성 요청에 그대로 실어 보낸다(릴스의 minimal 은 서버에서 simple 이다).
  * 콘셉트는 결과물의 스타일이고 앱 UI 와 무관하다.
  *
- * preview 는 형식별 결과물 미리보기다. 카드뉴스는 운영 서버에서 실제로 만든 카드다(2026-11-17, 바다곰 사시미).
- * 릴스는 아직 임시 자료라 두 콘셉트가 같은 영상을 공유하고 정지 화면만 다르다.
+ * preview 는 형식별 결과물 미리보기다. 둘 다 운영 서버에서 실제로 만든 결과물이다.
+ * 카드뉴스는 2026-11-17 바다곰 사시미, 릴스는 2026-11-18 크림라벨(릴스 예시 영상 4개로 생성, 540x960 로 줄이고 소리를 뺐다).
  */
 /** 카드뉴스 디자인 요청 길이. 서버가 500자까지 받는다. */
 export const MAX_CARD_NEWS_STYLE = 500;
@@ -32,7 +33,7 @@ export const SUGGESTION_THEMES = [
     preview: {
       /** 가운데 카드, 왼쪽, 오른쪽 순서. */
       cards: [christmasMain, christmasLeft, christmasRight],
-      reels: { video: reelsSample, poster: videoExPoster },
+      reels: { video: christmasReels, poster: christmasReelsPoster },
     },
   },
   {
@@ -44,7 +45,7 @@ export const SUGGESTION_THEMES = [
     thumb: minimalMain,
     preview: {
       cards: [minimalMain, minimalLeft, minimalRight],
-      reels: { video: reelsSample, poster: videoExPoster2 },
+      reels: { video: minimalReels, poster: minimalReelsPoster },
     },
   },
 ] as const;

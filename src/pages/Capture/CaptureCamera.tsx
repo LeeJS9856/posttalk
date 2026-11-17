@@ -5,7 +5,10 @@ import { isAbortError } from '@/apis/api';
 import { needsRetake, retakeMessage, submitScene } from '@/apis/creation';
 import {
   MIN_CLIP_SECONDS,
+  photoResolution,
   VIDEO_ASPECT_RATIO,
+  VIDEO_BITS_PER_SECOND,
+  videoResolution,
   cameraErrorMessage,
   canUseCamera,
   extensionForMimeType,
@@ -182,8 +185,6 @@ const CaptureCamera = (): React.JSX.Element => {
   const isLandscape = useIsLandscape();
   const filmsVideo = Boolean(scene) && isVideo && !isGallery;
   const needsRotate = filmsVideo && !shot && !isLandscape;
-  /** 영상일 때만 화면 방향이 바뀌면 카메라를 다시 연다. 사진은 방향과 무관하다. */
-  const videoOrientation = isVideo ? (isLandscape ? 'landscape' : 'portrait') : 'any';
 
   useEffect(() => {
     if (!filmsVideo) return;
@@ -205,10 +206,11 @@ const CaptureCamera = (): React.JSX.Element => {
         return;
       }
       try {
+        // 해상도를 적지 않으면 크롬이 640x480 으로 열어 사진·영상이 뭉개진다. 폰 방향에 맞춰 적는다.
         const stream = await navigator.mediaDevices.getUserMedia({
           video: isVideo
-            ? { facingMode: facing, aspectRatio: VIDEO_ASPECT_RATIO }
-            : { facingMode: facing },
+            ? { facingMode: facing, aspectRatio: VIDEO_ASPECT_RATIO, ...videoResolution(isLandscape) }
+            : { facingMode: facing, ...photoResolution(isLandscape) },
           // 릴스는 소리를 쓰지 않는다. 마이크를 잡으면 권한을 한 번 더 물어본다.
           audio: false,
         });
@@ -232,8 +234,8 @@ const CaptureCamera = (): React.JSX.Element => {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     };
-    // 영상은 폰을 돌리면 카메라를 다시 연다. 세로일 때 연 트랙을 그대로 쓰면 가로 비율이 어긋난다.
-  }, [sceneKey, isGallery, isVideo, shot, facing, videoOrientation]);
+    // 폰을 돌리면 카메라를 다시 연다. 해상도 요청이 방향에 따라 다르고, 영상은 세로일 때 연 트랙을 쓰면 비율이 어긋난다.
+  }, [sceneKey, isGallery, isVideo, shot, facing, isLandscape]);
 
   useEffect(() => {
     if (!isGallery || shot || autoOpened.current) return;
@@ -300,7 +302,10 @@ const CaptureCamera = (): React.JSX.Element => {
     if (!stream || needsRotate) return;
 
     const preferred = pickVideoMimeType();
-    const recorder = new MediaRecorder(stream, preferred ? { mimeType: preferred } : undefined);
+    const recorder = new MediaRecorder(stream, {
+      ...(preferred ? { mimeType: preferred } : {}),
+      videoBitsPerSecond: VIDEO_BITS_PER_SECOND,
+    });
     const chunks: Blob[] = [];
 
     recorder.ondataavailable = (event) => {
