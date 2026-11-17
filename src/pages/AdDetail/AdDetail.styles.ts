@@ -319,6 +319,72 @@ export const SkipButton = styled.button`
   font-size: ${FONT_SIZE.body};
 `;
 
+/* 올린 뒤 완료 화면. 방금 올린 광고를 작게 다시 보여 주고 홈으로 내보낸다. */
+export const DoneWrap = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  text-align: center;
+`;
+
+export const DoneThumbFrame = styled.div`
+  position: relative;
+  width: min(44vw, 180px);
+  margin-bottom: 28px;
+
+  img,
+  video {
+    display: block;
+    width: 100%;
+    border-radius: ${RADIUS.card};
+    box-shadow: 0 10px 24px rgba(20, 20, 30, 0.18);
+    object-fit: cover;
+  }
+`;
+
+export const DoneBadge = styled.span`
+  position: absolute;
+  right: -12px;
+  bottom: -12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 3px solid ${COLORS.background.main};
+  border-radius: 999px;
+  background-color: ${COLORS.brand.main};
+  color: ${COLORS.text.inverse};
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+`;
+
+export const DoneTitle = styled.h2`
+  margin-bottom: 8px;
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.title};
+  font-weight: ${FONT_WEIGHT.bold};
+`;
+
+export const DoneText = styled.p`
+  color: ${COLORS.text.grey};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.6;
+  word-break: keep-all;
+`;
+
+export const FooterStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
 export const MissingWrap = styled.div`
   display: flex;
   flex: 1;
