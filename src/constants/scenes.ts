@@ -6,10 +6,11 @@ import foodTopSample2 from '@/assets/card-ex/food-top2.jpg';
 import foodZoomSample from '@/assets/card-ex/food-zoom.jpg';
 import storeInsideSample from '@/assets/card-ex/store-inside.jpg';
 import storeOutsideSample from '@/assets/card-ex/store-outside.jpg';
-import crabVideoSample from '@/assets/꽃게.mp4';
-import insideVideoSample from '@/assets/내부.mp4';
-import cookingVideoSample from '@/assets/조리.mp4';
-import signVideoSample from '@/assets/간판.mp4';
+// 릴스 예시 영상(가로). 받은 케이크 가게 영상에서 컷이 바뀌지 않는 한 장면씩만 잘라 썼다. 실제 촬영처럼 이어진 한 컷이어야 한다.
+import closeVideoSample from '@/assets/reels-ex/close.mp4';
+import insideVideoSample from '@/assets/reels-ex/inside.mp4';
+import signVideoSample from '@/assets/reels-ex/sign.mp4';
+import wholeVideoSample from '@/assets/reels-ex/whole.mp4';
 import { DEFAULT_CLIP_SECONDS } from '@/constants/media';
 
 /** 재료를 어디서 가져오는지. 장면마다 관람객이 직접 고른다. */
@@ -235,9 +236,9 @@ export const buildReelsScenes = (menus: readonly { name: string }[]): Scene[] =>
   const used = menus.slice(0, 3);
   const scenes: Scene[] = [
     reelsScene(REELS_SHOT_ORDER[0], 0, {
-      label: '인트로 · 메뉴판',
-      title: '메뉴판을 찍어주세요',
-      pickTitle: '메뉴판 영상을 골라주세요',
+      label: '인트로 · 간판',
+      title: '간판을 찍어주세요',
+      pickTitle: '간판 영상을 골라주세요',
       hint: '글씨가 읽히도록 천천히',
       recommended: 'camera',
       sample: signVideoSample,
@@ -252,7 +253,7 @@ export const buildReelsScenes = (menus: readonly { name: string }[]): Scene[] =>
         pickTitle: `${menu.name} 전체가 보이는 영상을 골라주세요`,
         hint: '음식 전체가 화면에 들어오게',
         recommended: 'camera',
-        sample: crabVideoSample,
+        sample: wholeVideoSample,
       }),
     );
     scenes.push(
@@ -262,7 +263,7 @@ export const buildReelsScenes = (menus: readonly { name: string }[]): Scene[] =>
         pickTitle: `${menu.name} 가까이 찍은 영상을 골라주세요`,
         hint: '들어올리거나 숟가락으로 떠서, 속이 보이게',
         recommended: 'camera',
-        sample: cookingVideoSample,
+        sample: closeVideoSample,
       }),
     );
   });

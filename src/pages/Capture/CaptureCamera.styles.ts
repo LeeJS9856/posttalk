@@ -3,10 +3,11 @@ import styled, { keyframes } from 'styled-components';
 import { COLORS } from '@/constants/colors';
 import { FONT_SIZE, FONT_WEIGHT } from '@/constants/typography';
 
+/* 앱 폭 제한(MAX_APP_WIDTH)에서 벗어나 화면 전체를 쓴다. 릴스는 가로로 돌려 찍어 폭이 480px 를 넘는다. */
 export const Stage = styled.div`
-  position: relative;
+  position: fixed;
+  inset: 0;
   overflow: hidden;
-  height: 100svh;
   background-color: #111113;
 `;
 
@@ -70,28 +71,32 @@ export const Hint = styled.p`
   font-size: ${FONT_SIZE.label};
 `;
 
-/** 구도 샘플. 장면에 예시 사진이 있으면 보여 주고, 없으면 자리만 잡아둔다. */
-export const SampleWrap = styled.button`
+/**
+ * 구도 샘플. 장면에 예시 사진이 있으면 보여 준다.
+ * 릴스($wide)는 가로 화면에서 가로 영상 예시를 띄운다. 높이가 낮으니 위로 붙이고 폭을 넓힌다.
+ */
+export const SampleWrap = styled.button<{ $wide?: boolean }>`
   position: absolute;
   padding: 0;
   border: 0;
   background: none;
   cursor: zoom-in;
-  top: 118px;
-  right: 12px;
+  /* 가로 화면에서는 위 줄(닫기·순서) 바로 아래에 둔다. 더 올리면 순서 표시를 가린다. */
+  top: ${({ $wide }) => ($wide ? 'calc(52px + env(safe-area-inset-top))' : '118px')};
+  right: ${({ $wide }) => ($wide ? 'calc(14px + env(safe-area-inset-right))' : '12px')};
   display: flex;
   flex-direction: column;
   align-items: center;
   /* 카메라 화면 위에서 무엇을 찍는지 한눈에 알아볼 만큼 크게. 좁은 폰에서도 화면의 40%를 넘지 않게. */
-  width: min(150px, 40vw);
+  width: ${({ $wide }) => ($wide ? 'min(220px, 30vw)' : 'min(150px, 40vw)')};
 `;
 
-export const SampleFrame = styled.div`
+export const SampleFrame = styled.div<{ $wide?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: ${({ $wide }) => ($wide ? '16 / 9' : '3 / 4')};
   overflow: hidden;
   border: 3px solid ${COLORS.white};
   border-radius: 14px;
@@ -261,6 +266,8 @@ const fillRing = keyframes`
 export const Ring = styled.svg<{ $seconds: number }>`
   position: absolute;
   inset: 0;
+  /* 멈춤 버튼 위에 겹쳐 있다. 터치를 가로채면 녹화를 멈추지 못하고 시간이 다 돼야 끝난다. */
+  pointer-events: none;
   transform: rotate(-90deg);
 
   circle {
@@ -414,6 +421,50 @@ export const PickText = styled.span`
 export const PickHint = styled.span`
   color: rgba(255, 255, 255, 0.6);
   font-size: ${FONT_SIZE.label};
+`;
+
+/** 릴스를 세로로 들고 있을 때 카메라 화면을 덮는 안내. 가로로 돌리면 사라진다. */
+export const RotateNotice = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 32px;
+  background-color: rgba(17, 17, 19, 0.88);
+  color: ${COLORS.white};
+  text-align: center;
+
+  svg {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 8px;
+  }
+`;
+
+export const RotateTitle = styled.p`
+  font-size: ${FONT_SIZE.titleLarge};
+  font-weight: ${FONT_WEIGHT.bold};
+`;
+
+export const RotateHint = styled.p`
+  color: rgba(255, 255, 255, 0.72);
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.6;
+  word-break: keep-all;
+`;
+
+export const RotateButton = styled.button`
+  min-height: 48px;
+  margin-top: 14px;
+  padding: 0 22px;
+  border-radius: 13px;
+  background-color: ${COLORS.white};
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.bodyLarge};
+  font-weight: ${FONT_WEIGHT.semibold};
 `;
 
 export const HiddenInput = styled.input`
