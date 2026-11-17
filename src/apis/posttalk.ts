@@ -1,4 +1,4 @@
-import { UPLOAD_TIMEOUT_MS, request } from '@/apis/api';
+import { ApiError, UPLOAD_TIMEOUT_MS, request } from '@/apis/api';
 
 /**
  * POSTALK 백엔드 엔드포인트. 응답 모양은 docs/백엔드_API.md 의 예시를 따른다.
@@ -194,18 +194,78 @@ export const getArchive = (
   signal?: AbortSignal,
 ): Promise<ArchiveData> => request('/api/archive', { query, signal });
 
-/**
- * 인스타그램 게시.
- *
- * 주소와 본문 모양이 아직 명세에 없다(2026-11-16). 백엔드가 알려 주면 이 함수만 고친다.
- * 게시는 외부 서비스를 거쳐 오래 걸릴 수 있어 업로드와 같은 시간 제한을 쓴다.
- */
-export const publishAd = (
-  submissionId: string,
-  signal?: AbortSignal,
-): Promise<{ status?: ApiSubmissionStatus; instagramPermalink?: string }> =>
+/* ---------- 인스타그램 게시 ---------- */
+
+export type PublishResult = {
+  /** published 만 실제 게시 완료다. processing 은 인스타가 아직 처리 중이다. */
+  status?: 'processing' | 'published' | 'failed';
+  permalink?: string | null;
+  lastError?: string | null;
+};
+
+/** 인스타가 처리 중이라 같은 주소를 다시 불러 확인하라는 409 코드 */
+const PUBLISH_PROCESSING_CODE = 'INSTAGRAM_PROCESSING';
+/** 게시 여부를 인스타에서 직접 확인해야 하는 409 코드. 다시 부르지 않는다. */
+export const PUBLISH_VERIFICATION_CODE = 'INSTAGRAM_VERIFICATION_REQUIRED';
+
+/** 처리 중일 때 다시 확인하는 간격과, 그만 기다리는 시점 */
+const PUBLISH_POLL_MS = 4_000;
+const PUBLISH_DEADLINE_MS = 180_000;
+
+/** 게시 한 번. 인스타를 거쳐 오래 걸릴 수 있어 업로드와 같은 시간 제한을 쓴다. */
+export const publishAd = (submissionId: string, signal?: AbortSignal): Promise<PublishResult> =>
   request(`/api/submissions/${submissionId}/publish`, {
     method: 'POST',
     signal,
     timeoutMs: UPLOAD_TIMEOUT_MS,
   });
+
+const wait = (ms: number, signal?: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const timer = window.setTimeout(resolve, ms);
+    signal?.addEventListener(
+      'abort',
+      () => {
+        window.clearTimeout(timer);
+        reject(signal.reason);
+      },
+      { once: true },
+    );
+  });
+
+/**
+ * 게시하고 실제로 올라갈 때까지 기다린다.
+ *
+ * 서버 명세(/api/openapi): 인스타가 처리 중이면 200 processing 이나 409 INSTAGRAM_PROCESSING 을 주고,
+ * 같은 주소를 다시 불러 확인하라고 한다. 이미 올라간 광고는 다시 불러도 중복 게시하지 않는다.
+ * 그래서 "처리 중"일 때만 다시 부른다. 실패·시간 초과·확인 필요(409 VERIFICATION)는 다시 부르지 않고 그대로 던진다.
+ */
+export const publishUntilDone = async (
+  submissionId: string,
+  signal?: AbortSignal,
+): Promise<PublishResult> => {
+  const deadline = Date.now() + PUBLISH_DEADLINE_MS;
+
+  for (;;) {
+    let result: PublishResult | null = null;
+    try {
+      result = await publishAd(submissionId, signal);
+    } catch (cause) {
+      const processing = cause instanceof ApiError && cause.code === PUBLISH_PROCESSING_CODE;
+      if (!processing) throw cause;
+    }
+
+    if (result?.status === 'published') return result;
+    if (result?.status === 'failed') {
+      throw new ApiError(result.lastError || '인스타그램에 올리지 못했어요.', 502, 'publish_failed');
+    }
+    if (Date.now() + PUBLISH_POLL_MS > deadline) {
+      throw new ApiError(
+        '인스타그램이 아직 처리 중이에요. 잠시 뒤 보관함에서 확인해 주세요.',
+        0,
+        'publish_pending',
+      );
+    }
+    await wait(PUBLISH_POLL_MS, signal);
+  }
+};

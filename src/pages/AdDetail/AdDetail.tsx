@@ -2,8 +2,14 @@ import { Check, Copy, ExternalLink, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { isAbortError } from '@/apis/api';
-import { getAdSession, getArchive, publishAd, type ApiAdType } from '@/apis/posttalk';
+import { ApiError, isAbortError } from '@/apis/api';
+import {
+  PUBLISH_VERIFICATION_CODE,
+  getAdSession,
+  getArchive,
+  publishUntilDone,
+  type ApiAdType,
+} from '@/apis/posttalk';
 import AppHeader from '@/components/layout/AppHeader';
 import {
   AD_STATUS_LABEL,
@@ -108,8 +114,13 @@ const AdDetail = (): React.JSX.Element => {
   const [copied, setCopied] = useState(false);
   /** 게시 진행. 제작 직후에만 쓴다. */
   const [publishState, setPublishState] = useState<
-    { step: 'idle' } | { step: 'sending' } | { step: 'failed'; message: string }
+    | { step: 'idle' }
+    | { step: 'sending' }
+    /** canRetry 가 거짓이면 다시 올리기를 막는다(인스타에서 직접 확인해야 하는 경우). */
+    | { step: 'failed'; message: string; canRetry: boolean }
   >({ step: 'idle' });
+  const publishRef = useRef<AbortController | null>(null);
+  useEffect(() => () => publishRef.current?.abort(), []);
   const videoRef = useRef<HTMLVideoElement>(null);
   const copiedTimerRef = useRef<number | undefined>(undefined);
 
@@ -181,14 +192,24 @@ const AdDetail = (): React.JSX.Element => {
   const publish = async (): Promise<void> => {
     if (state.status !== 'ready') return;
 
+    const controller = new AbortController();
+    publishRef.current = controller;
     setPublishState({ step: 'sending' });
     try {
-      await publishAd(state.ad.id);
+      // 인스타가 처리 중이면 실제로 올라갈 때까지 기다린다.
+      await publishUntilDone(state.ad.id, controller.signal);
       finish();
     } catch (cause) {
+      if (isAbortError(cause)) return;
+      const needsCheck = cause instanceof ApiError && cause.code === PUBLISH_VERIFICATION_CODE;
       setPublishState({
         step: 'failed',
-        message: cause instanceof Error ? cause.message : '올리지 못했어요.',
+        message: needsCheck
+          ? '올라갔는지 인스타그램에서 확인이 필요해요. 운영자에게 알려 주세요.'
+          : cause instanceof Error
+            ? cause.message
+            : '올리지 못했어요.',
+        canRetry: !needsCheck,
       });
     }
   };
@@ -341,17 +362,19 @@ const AdDetail = (): React.JSX.Element => {
               {publishState.step === 'failed' && (
                 <FooterNotice role="alert">{publishState.message}</FooterNotice>
               )}
-              <PrimaryButton
-                type="button"
-                disabled={publishState.step === 'sending'}
-                onClick={() => void publish()}
-              >
-                {publishState.step === 'sending'
-                  ? '올리는 중이에요'
-                  : publishState.step === 'failed'
-                    ? '다시 올리기'
-                    : '인스타그램에 올리기'}
-              </PrimaryButton>
+              {!(publishState.step === 'failed' && !publishState.canRetry) && (
+                <PrimaryButton
+                  type="button"
+                  disabled={publishState.step === 'sending'}
+                  onClick={() => void publish()}
+                >
+                  {publishState.step === 'sending'
+                    ? '인스타그램에 올리고 있어요'
+                    : publishState.step === 'failed'
+                      ? '다시 올리기'
+                      : '인스타그램에 올리기'}
+                </PrimaryButton>
+              )}
               {/* 올리지 못해 갇히는 것을 막는다. 실패했을 때만 연다. */}
               {publishState.step === 'failed' && (
                 <SkipButton type="button" onClick={finish}>
