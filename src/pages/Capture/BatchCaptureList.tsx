@@ -7,6 +7,7 @@ import { needsRetake, retakeMessage, startSession } from '@/apis/creation';
 import { getAdSession, submitShot, type ShotRequest } from '@/apis/posttalk';
 import ActionSheet, { type ActionSheetItem } from '@/components/common/ActionSheet';
 import AppHeader from '@/components/layout/AppHeader';
+import { posterSrc } from '@/constants/media';
 import { scenesFor, type CaptureSource, type Scene } from '@/constants/scenes';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useWorkspace } from '@/hooks/useWorkspace';
@@ -24,6 +25,7 @@ import {
   SlotButton,
   SlotFrame,
   SlotImage,
+  SlotVideo,
   SlotLabel,
   SlotStatus,
   Track,
@@ -247,7 +249,11 @@ const BatchCaptureList = (): React.JSX.Element => {
                   <SlotFrame $next={!asset} $filled={Boolean(asset)}>
                     {asset ? (
                       <>
-                        <SlotImage src={asset.previewUrl} alt="" />
+                        {asset.kind === 'video' ? (
+                          <SlotVideo src={posterSrc(asset.previewUrl)} muted playsInline preload="metadata" />
+                        ) : (
+                          <SlotImage src={asset.previewUrl} alt="" />
+                        )}
                         {asset.upload?.status === 'done' && !asset.rejection && (
                           <SlotBadge aria-hidden="true">
                             <Check strokeWidth={3} />

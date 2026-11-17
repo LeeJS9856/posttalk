@@ -312,7 +312,14 @@ export const AdDraftProvider = ({ children }: { children: ReactNode }): React.JS
           ...current,
           captures: {
             ...current.captures,
-            [sceneIndex]: { file, previewUrl, kind: 'photo', ...scene, upload: { status: 'uploading' } },
+            // 릴스도 이 길로 영상을 올린다. 사진으로 박아 두면 목록·생성 대기의 썸네일이 깨진다.
+            [sceneIndex]: {
+              file,
+              previewUrl,
+              kind: file.type.startsWith('video/') ? 'video' : 'photo',
+              ...scene,
+              upload: { status: 'uploading' },
+            },
           },
         };
       });
