@@ -14,6 +14,7 @@ import {
   extensionForMimeType,
   isLandscapeVideo,
   lockLandscape,
+  openCamera,
   pickVideoMimeType,
   readVideoSize,
   unlockOrientation,
@@ -206,14 +207,15 @@ const CaptureCamera = (): React.JSX.Element => {
         return;
       }
       try {
-        // 해상도를 적지 않으면 크롬이 640x480 으로 열어 사진·영상이 뭉개진다. 폰 방향에 맞춰 적는다.
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: isVideo
-            ? { facingMode: facing, aspectRatio: VIDEO_ASPECT_RATIO, ...videoResolution(isLandscape) }
-            : { facingMode: facing, ...photoResolution(isLandscape) },
-          // 릴스는 소리를 쓰지 않는다. 마이크를 잡으면 권한을 한 번 더 물어본다.
-          audio: false,
-        });
+        // 해상도를 적지 않으면 크롬이 640x480 으로 열어 사진·영상이 뭉개진다. 폰 방향에 맞춰 올린다.
+        // 릴스는 소리를 쓰지 않는다(openCamera 가 마이크를 잡지 않는다).
+        const stream = await openCamera(
+          { facingMode: facing },
+          isVideo
+            ? { aspectRatio: VIDEO_ASPECT_RATIO, ...videoResolution(isLandscape) }
+            : photoResolution(isLandscape),
+          () => run.alive,
+        );
         if (!run.alive) {
           stream.getTracks().forEach((track) => track.stop());
           return;

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { isAbortError } from '@/apis/api';
-import { needsRetake, retakeMessage, startSession } from '@/apis/creation';
+import { needsRetake, readVideoDuration, retakeMessage, startSession } from '@/apis/creation';
 import { getAdSession, submitShot, type ShotRequest } from '@/apis/posttalk';
 import ActionSheet, { type ActionSheetItem } from '@/components/common/ActionSheet';
 import AppHeader from '@/components/layout/AppHeader';
@@ -132,7 +132,15 @@ const BatchCaptureList = (): React.JSX.Element => {
         if (upload?.status !== 'done') throw new Error('아직 올라가지 않은 게 있어요.');
         if (next && next.shotKey !== scene.shotKey) throw new Error(ORDER_MISMATCH_MESSAGE);
 
-        const result = await submitShot(sessionId, isReels ? 'video' : 'photo', upload.uploaded, signal);
+        // 릴스는 영상 길이를 함께 보낸다(명세의 durationSeconds). 서버가 장면 길이를 나눌 때 쓴다.
+        const file = draft.captures[index]?.file;
+        const duration = isReels && file ? await readVideoDuration(file) : undefined;
+        const result = await submitShot(
+          sessionId,
+          isReels ? 'video' : 'photo',
+          { ...upload.uploaded, ...(duration !== undefined ? { durationSeconds: duration } : {}) },
+          signal,
+        );
 
         if (needsRetake(result)) {
           rejectCapture(index, retakeMessage(result));
