@@ -27,6 +27,37 @@ const sized = (long: number, short: number, landscape: boolean) =>
 export const videoResolution = (landscape: boolean) => sized(LONG_EDGE, 1080, landscape);
 export const photoResolution = (landscape: boolean) => sized(LONG_EDGE, 1440, landscape);
 
+const wait = (ms: number): Promise<void> => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+/**
+ * 카메라를 연다.
+ * - 해상도는 처음부터 요청하지 않는다. 해상도를 걸면 크롬이 그 값에 더 맞는 다른 뒷면 카메라(망원 등)를 골라
+ *   확대돼 찍힌다. 기본 카메라를 먼저 잡고, 같은 카메라에서 해상도만 올린다.
+ * - 직전에 닫은 카메라가 아직 풀리지 않으면 NotReadableError 가 난다(화면을 돌려 다시 열 때 흔하다).
+ *   잠깐 기다렸다 몇 번 더 시도한다.
+ */
+export const openCamera = async (
+  base: MediaTrackConstraints,
+  quality: MediaTrackConstraints,
+  isAlive: () => boolean,
+): Promise<MediaStream> => {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: base, audio: false });
+      const [track] = stream.getVideoTracks();
+      // 올리지 못해도 기본 해상도로 쓴다. 촬영을 막지 않는다.
+      await track?.applyConstraints({ ...base, ...quality }).catch(() => undefined);
+      return stream;
+    } catch (cause) {
+      const busy =
+        cause instanceof DOMException &&
+        (cause.name === 'NotReadableError' || cause.name === 'AbortError');
+      if (!busy || attempt >= 3 || !isAlive()) throw cause;
+      await wait(400 * (attempt + 1));
+    }
+  }
+};
+
 /**
  * 녹화 비트레이트. 1080p 에서 기본값은 블록이 보일 만큼 낮게 잡히는 브라우저가 있다.
  * 10초면 약 7.5MB. 운영 업로드는 15.7MB 까지 받는 것을 확인했고(2026-11-18), 전시장 와이파이를 생각해 더 올리지 않는다.

@@ -11,16 +11,20 @@ export const Stage = styled.div`
   background-color: #111113;
 `;
 
+/*
+ * 카메라 화면과 찍은 결과는 잘라 보이지 않는다(contain). cover 로 꽉 채우면 실제로 찍히는 범위보다
+ * 확대돼 보여, 화면에 보인 대로 찍히지 않는다. 남는 곳은 검은 여백이다.
+ */
 export const Preview = styled.video`
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 `;
 
 export const Shot = styled.img`
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 `;
 
 export const TopBar = styled.div`
@@ -317,7 +321,7 @@ export const RecChip = styled.span`
 export const ReviewVideo = styled.video`
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 `;
 
 export const ConfirmRow = styled.div`
