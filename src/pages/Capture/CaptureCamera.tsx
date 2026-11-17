@@ -5,10 +5,10 @@ import { isAbortError } from '@/apis/api';
 import { needsRetake, retakeMessage, submitScene } from '@/apis/creation';
 import {
   MIN_CLIP_SECONDS,
-  photoResolution,
+  PHOTO_RESOLUTION,
   VIDEO_ASPECT_RATIO,
   VIDEO_BITS_PER_SECOND,
-  videoResolution,
+  VIDEO_RESOLUTION,
   cameraErrorMessage,
   canUseCamera,
   extensionForMimeType,
@@ -138,6 +138,8 @@ const CaptureCamera = (): React.JSX.Element => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  /** 진행 중인 카메라 열기. 다음 열기는 이게 끝난 뒤에 시작한다. */
+  const openingRef = useRef<Promise<void>>(Promise.resolve());
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** 갤러리 선택은 한 번만 자동으로 띄운다. 취소한 뒤 다시 열리면 빠져나갈 수 없다. */
   const autoOpened = useRef(false);
@@ -202,18 +204,17 @@ const CaptureCamera = (): React.JSX.Element => {
     const run = { alive: true };
 
     const open = async (): Promise<void> => {
+      if (!run.alive) return;
       if (!canUseCamera()) {
         setError(cameraErrorMessage(null));
         return;
       }
       try {
-        // 해상도를 적지 않으면 크롬이 640x480 으로 열어 사진·영상이 뭉개진다. 폰 방향에 맞춰 올린다.
+        // 해상도를 적지 않으면 크롬이 640x480 으로 열어 사진·영상이 뭉개진다(값은 media.ts 참고).
         // 릴스는 소리를 쓰지 않는다(openCamera 가 마이크를 잡지 않는다).
         const stream = await openCamera(
           { facingMode: facing },
-          isVideo
-            ? { aspectRatio: VIDEO_ASPECT_RATIO, ...videoResolution(isLandscape) }
-            : photoResolution(isLandscape),
+          isVideo ? { aspectRatio: VIDEO_ASPECT_RATIO, ...VIDEO_RESOLUTION } : PHOTO_RESOLUTION,
           () => run.alive,
         );
         if (!run.alive) {
@@ -229,14 +230,17 @@ const CaptureCamera = (): React.JSX.Element => {
       }
     };
 
-    void open();
+    // 앞의 열기가 끝나 정리될 때까지 기다렸다 연다. 겹쳐 열면 같은 카메라를 두 번 잡아
+    // "사용 중" 오류가 나거나 해상도가 기본값(640x480)으로 떨어진다. 화면을 돌릴 때 흔하다.
+    const opening = openingRef.current.then(open);
+    openingRef.current = opening.catch(() => undefined);
 
     return () => {
       run.alive = false;
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     };
-    // 폰을 돌리면 카메라를 다시 연다. 해상도 요청이 방향에 따라 다르고, 영상은 세로일 때 연 트랙을 쓰면 비율이 어긋난다.
+    // 폰을 돌리면 카메라를 다시 연다. 영상은 세로일 때 연 트랙을 그대로 쓰면 비율이 어긋난다.
   }, [sceneKey, isGallery, isVideo, shot, facing, isLandscape]);
 
   useEffect(() => {

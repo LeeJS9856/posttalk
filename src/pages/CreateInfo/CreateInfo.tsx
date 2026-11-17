@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import AppHeader from '@/components/layout/AppHeader';
-import { MAX_MARKET_NAME, MAX_SHOP_DESCRIPTION, createTemplateId } from '@/constants/shop';
+import { MAX_MARKET_NAME, MAX_SHOP_DESCRIPTION } from '@/constants/shop';
 import { MAX_MENU_COUNT, type StoreTemplate } from '@/constants/templates';
 import { MAX_CARD_NEWS_STYLE } from '@/constants/themes';
 import { useAdDraft } from '@/hooks/useAdDraft';
@@ -12,7 +12,6 @@ import {
   CheckBox,
   Chip,
   ChipAvatar,
-  ChipCount,
   ChipRail,
   Content,
   Counter,
@@ -78,42 +77,44 @@ const CreateInfo = (): React.JSX.Element => {
   const shotUnit = draft.format === 'reels' ? '영상' : '사진';
   // 디자인 요청은 카드뉴스에만 있다. 릴스는 서버가 콘셉트만 받는다.
   const isCardNews = draft.format === 'card_news';
-  const { profile, setProfile, templates, addTemplate } = useShop();
+  const { profile, templates, saveMenus } = useShop();
 
-  const [templateId, setTemplateId] = useState<string | null>(null);
-  // 계정이 곧 내 가게다. 가게 정보는 마이에 저장된 값으로 채우고, 여기서 고치면 마이에도 남긴다.
+  // 가게 정보의 기준은 내 프로필이다. 여기서는 프로필 값을 기본으로 채우고, 고쳐도 이번 광고에만 쓴다.
+  // 이 화면에서 프로필을 바꾸지 않는다. 프로필은 마이 > 수정에서만 고친다.
   const [storeName, setStoreName] = useState(profile.name);
   const [marketName, setMarketName] = useState(profile.marketName);
   const [storeDescription, setStoreDescription] = useState(profile.description);
   const [menus, setMenus] = useState<MenuDraft[]>([]);
   const [cardNewsStyle, setCardNewsStyle] = useState(draft.cardNewsStyle);
   const [isSaving, setIsSaving] = useState(false);
-  const [templateName, setTemplateName] = useState('');
 
-  /** 불러온 내용을 고치면 템플릿 선택을 푼다. 화면과 내용이 어긋나지 않게 한다. */
-  const detachTemplate = (): void => setTemplateId(null);
+  /** 저장된 메뉴가 지금 목록에 들어 있는지. 이름으로 본다. */
+  const isPicked = (template: StoreTemplate): boolean =>
+    menus.some((menu) => menu.name.trim() === template.name);
 
-  const applyTemplate = (template: StoreTemplate): void => {
-    setTemplateId(template.templateId);
-    setStoreName(template.name);
-    setMarketName(template.marketName ?? '');
-    setStoreDescription(template.storeDescription);
-    setMenus(template.menus.map((menu) => createMenu(menu.name, menu.description)));
+  /** 저장된 메뉴를 누르면 목록에 넣고, 이미 들어 있으면 뺀다. 빈 줄이 있으면 그 자리에 넣는다. */
+  const toggleTemplate = (template: StoreTemplate): void => {
+    setMenus((current) => {
+      if (current.some((menu) => menu.name.trim() === template.name)) {
+        return current.filter((menu) => menu.name.trim() !== template.name);
+      }
+      const picked = createMenu(template.name, template.description);
+      const empty = current.findIndex((menu) => !menu.name.trim() && !menu.description.trim());
+      if (empty >= 0) return current.map((menu, index) => (index === empty ? picked : menu));
+      return current.length < MAX_MENU_COUNT ? [...current, picked] : current;
+    });
   };
 
   const updateMenu = (key: number, patch: Partial<MenuDraft>): void => {
     setMenus((current) => current.map((menu) => (menu.key === key ? { ...menu, ...patch } : menu)));
-    detachTemplate();
   };
 
   const removeMenu = (key: number): void => {
     setMenus((current) => current.filter((menu) => menu.key !== key));
-    detachTemplate();
   };
 
   const addMenu = (): void => {
     setMenus((current) => [...current, createMenu()]);
-    detachTemplate();
   };
 
   const filledMenus = menus.filter((menu) => menu.name.trim().length > 0);
@@ -126,16 +127,8 @@ const CreateInfo = (): React.JSX.Element => {
       description: description.trim(),
     }));
 
-    // 저장해두면 다음 관람객이 정보 입력에서 바로 고를 수 있다.
-    if (isSaving) {
-      addTemplate({
-        templateId: createTemplateId(),
-        name: templateName.trim() || storeName.trim(),
-        marketName: marketName.trim(),
-        storeDescription: storeDescription.trim(),
-        menus,
-      });
-    }
+    // 메뉴마다 하나씩 저장한다. 이름이 곧 템플릿 이름이고, 같은 이름은 설명만 새로 바뀐다.
+    if (isSaving) saveMenus(menus);
 
     const store = {
       storeName: storeName.trim(),
@@ -144,12 +137,6 @@ const CreateInfo = (): React.JSX.Element => {
       // 비워 두면 콘셉트에 맞춰 정해 둔 문장이 대신 나간다.
       cardNewsStyle: isCardNews ? cardNewsStyle.trim() : '',
     };
-    setProfile({
-      ...profile,
-      name: store.storeName,
-      marketName: store.marketName,
-      description: store.storeDescription.slice(0, MAX_SHOP_DESCRIPTION),
-    });
     setStoreInfo({ ...store, menus });
     void navigate('/create/capture');
   };
@@ -159,31 +146,6 @@ const CreateInfo = (): React.JSX.Element => {
       <AppHeader title="무엇을 알릴까요?" onBack={() => navigate(-1)} />
 
       <Content>
-        {templates.length > 0 && <Label>저장된 내용</Label>}
-        {templates.length > 0 && (
-          <ChipRail>
-            {templates.map((template) => {
-              const selected = templateId === template.templateId;
-
-              return (
-                <Chip
-                  key={template.templateId}
-                  type="button"
-                  aria-pressed={selected}
-                  $selected={selected}
-                  onClick={() => applyTemplate(template)}
-                >
-                  <ChipAvatar aria-hidden="true" $selected={selected}>
-                    {template.name.slice(0, 1)}
-                  </ChipAvatar>
-                  {template.name}
-                  <ChipCount $selected={selected}>{template.menus.length}</ChipCount>
-                </Chip>
-              );
-            })}
-          </ChipRail>
-        )}
-
         <Label as="label" htmlFor="store-name">
           가게 이름
         </Label>
@@ -195,7 +157,6 @@ const CreateInfo = (): React.JSX.Element => {
             placeholder="예) 영창식당"
             onChange={(event) => {
               setStoreName(event.target.value);
-              detachTemplate();
             }}
           />
         </NameField>
@@ -212,7 +173,6 @@ const CreateInfo = (): React.JSX.Element => {
             placeholder="예) 양동시장, 전남대 후문"
             onChange={(event) => {
               setMarketName(event.target.value);
-              detachTemplate();
             }}
           />
         </NameField>
@@ -229,7 +189,6 @@ const CreateInfo = (): React.JSX.Element => {
             placeholder="예) 20년째 같은 자리에서 떡을 만드는 떡집이에요"
             onChange={(event) => {
               setStoreDescription(event.target.value);
-              detachTemplate();
             }}
           />
         </StoreField>
@@ -265,6 +224,32 @@ const CreateInfo = (): React.JSX.Element => {
           </Counter>
         </LabelRow>
 
+        {/* 저장해 둔 메뉴. 누르면 아래 목록에 들어가고, 다시 누르면 빠진다. */}
+        {templates.length > 0 && (
+          <ChipRail>
+            {templates.map((template) => {
+              const selected = isPicked(template);
+              const full = !selected && filledMenus.length >= MAX_MENU_COUNT;
+
+              return (
+                <Chip
+                  key={template.templateId}
+                  type="button"
+                  aria-pressed={selected}
+                  disabled={full}
+                  $selected={selected}
+                  onClick={() => toggleTemplate(template)}
+                >
+                  <ChipAvatar aria-hidden="true" $selected={selected}>
+                    {template.name.slice(0, 1)}
+                  </ChipAvatar>
+                  {template.name}
+                </Chip>
+              );
+            })}
+          </ChipRail>
+        )}
+
         {menus.map((menu) => (
           <MenuRow key={menu.key}>
             <MenuFields>
@@ -296,25 +281,9 @@ const CreateInfo = (): React.JSX.Element => {
 
         <SaveRow type="button" aria-pressed={isSaving} onClick={() => setIsSaving((on) => !on)}>
           <CheckBox $checked={isSaving}>{isSaving && <CheckIcon />}</CheckBox>
-          <SaveLabel $checked={isSaving}>이 내용을 저장해두기</SaveLabel>
+          <SaveLabel $checked={isSaving}>이 메뉴들을 저장해두기</SaveLabel>
         </SaveRow>
-
-        {isSaving && (
-          <>
-            <Label as="label" htmlFor="template-name">
-              저장할 이름
-            </Label>
-            <NameField>
-              <TextArea
-                id="template-name"
-                rows={1}
-                value={templateName}
-                placeholder="예) 겨울 대표 메뉴"
-                onChange={(event) => setTemplateName(event.target.value)}
-              />
-            </NameField>
-          </>
-        )}
+        {isSaving && <HelpText>메뉴마다 따로 저장돼요. 다음에 저장된 메뉴에서 골라 쓸 수 있어요</HelpText>}
       </Content>
 
       <Footer>

@@ -15,17 +15,14 @@ export const VIDEO_ASPECT_RATIO = 16 / 9;
 
 /**
  * 카메라 해상도. 적지 않으면 크롬이 640x480 으로 열어 화질이 크게 떨어진다.
- * 크롬은 요청한 크기로 잘라서라도 맞추므로, 폰 방향에 맞는 가로·세로를 정확히 적는다(같은 값을 적으면 정사각형으로 잘린다).
+ * 안드로이드 크롬은 이 값을 폰 방향과 무관하게 센서(가로) 기준으로 읽고, 세로로 들면 결과를 돌려서 준다.
+ * 그래서 늘 가로 기준으로 적는다. 세로 값(1440x1920)을 적으면 가로 센서에서 세로로 잘라낸 뒤 다시 돌려
+ * 미리보기가 가로로 길게, 확대돼 나온다(2026-11-18 실기기). 같은 값을 적으면 정사각형으로 잘린다.
  * 영상은 1080p 16:9(전시 기기가 보급형이 아니라 녹화와 함께 돌려도 된다고 판단, 2026-11-18).
  * 사진은 미리보기 프레임을 그대로 떠서 저장하므로 미리보기 해상도가 곧 사진 해상도다. 폰 카메라 기본 비율 4:3.
  */
-const LONG_EDGE = 1920;
-const sized = (long: number, short: number, landscape: boolean) =>
-  landscape
-    ? { width: { ideal: long }, height: { ideal: short } }
-    : { width: { ideal: short }, height: { ideal: long } };
-export const videoResolution = (landscape: boolean) => sized(LONG_EDGE, 1080, landscape);
-export const photoResolution = (landscape: boolean) => sized(LONG_EDGE, 1440, landscape);
+export const VIDEO_RESOLUTION = { width: { ideal: 1920 }, height: { ideal: 1080 } } as const;
+export const PHOTO_RESOLUTION = { width: { ideal: 1920 }, height: { ideal: 1440 } } as const;
 
 const wait = (ms: number): Promise<void> => new Promise((resolve) => window.setTimeout(resolve, ms));
 

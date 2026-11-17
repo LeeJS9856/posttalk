@@ -57,18 +57,18 @@ const Templates = (): React.JSX.Element => {
     : [];
 
   return (
-    <Page aria-label="저장된 내용 관리">
-      <AppHeader title="저장된 내용" onBack={() => navigate(-1)} />
+    <Page aria-label="저장된 메뉴 관리">
+      <AppHeader title="저장된 메뉴" onBack={() => navigate(-1)} />
 
       <Content>
-        <Guide>정보 입력 화면에서 고를 수 있는 가게들이에요</Guide>
+        <Guide>정보 입력 화면에서 골라 쓸 수 있는 메뉴들이에요</Guide>
 
         {templates.length === 0 ? (
           <EmptyWrap>
             <EmptyText>
-              저장해둔 가게가 없어요
+              저장해둔 메뉴가 없어요
               <br />
-              정보를 입력할 때 저장해두면 여기 쌓여요
+              메뉴를 입력할 때 저장해두면 여기 쌓여요
             </EmptyText>
           </EmptyWrap>
         ) : (
@@ -77,7 +77,7 @@ const Templates = (): React.JSX.Element => {
               <Item key={template.templateId}>
                 <div>
                   <TemplateName>{template.name}</TemplateName>
-                  <TemplateMenus>메뉴 {template.menus.length}개</TemplateMenus>
+                  <TemplateMenus>{template.description || '설명 없음'}</TemplateMenus>
                 </div>
                 <RemoveButton
                   type="button"
