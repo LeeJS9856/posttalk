@@ -7,8 +7,59 @@ export const DEFAULT_CLIP_SECONDS = 10;
 /** 이보다 짧으면 쓰지 않는다. 생성 단계에서 실패하느니 그 자리에서 다시 찍는 게 싸다. */
 export const MIN_CLIP_SECONDS = 1;
 
-/** 릴스는 세로 9:16. 트랙 자체를 세로로 받아두면 따로 크롭하지 않아도 된다. */
-export const VIDEO_ASPECT_RATIO = 9 / 16;
+/**
+ * 릴스 재료는 가로 16:9 로 찍어 넘긴다(2026-11-18 릴스 AI 팀과 합의). 세로 릴스로 만드는 일은 서버가 한다.
+ * 관람객이 폰을 가로로 돌려 찍고, 트랙도 가로로 받아 따로 크롭하지 않는다.
+ */
+export const VIDEO_ASPECT_RATIO = 16 / 9;
+
+/** 가로로 찍은 영상인지. 갤러리에서 고른 영상도 이걸로 거른다. */
+export const isLandscapeVideo = (width: number, height: number): boolean => width > height;
+
+type LockableOrientation = ScreenOrientation & {
+  lock?: (orientation: 'landscape') => Promise<void>;
+  unlock?: () => void;
+};
+
+/**
+ * 화면을 가로로 고정한다. 안드로이드 크롬은 전체 화면이어야 고정을 받아 준다.
+ * 아이폰 사파리는 고정을 지원하지 않아 false 가 돌아온다. 그때는 돌려 달라는 안내로 대신한다.
+ * 전체 화면 요청은 사용자의 탭 직후에만 통한다.
+ */
+export const lockLandscape = async (): Promise<boolean> => {
+  const orientation = screen.orientation as LockableOrientation | undefined;
+  if (!orientation?.lock) return false;
+  try {
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    }
+    await orientation.lock('landscape');
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** 가로 고정과 전체 화면을 푼다. 촬영 화면을 나갈 때 부른다. */
+export const unlockOrientation = (): void => {
+  try {
+    (screen.orientation as LockableOrientation | undefined)?.unlock?.();
+  } catch {
+    // 고정한 적이 없으면 던지는 브라우저가 있다.
+  }
+  if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+};
+
+/** 영상 파일의 가로·세로 크기를 읽는다. 읽지 못하면 null. */
+export const readVideoSize = (url: string): Promise<{ width: number; height: number } | null> =>
+  new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.muted = true;
+    video.onloadedmetadata = () => resolve({ width: video.videoWidth, height: video.videoHeight });
+    video.onerror = () => resolve(null);
+    video.src = url;
+  });
 
 /**
  * 기기가 받아주는 첫 형식을 쓴다.

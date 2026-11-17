@@ -9,7 +9,11 @@ import {
   cameraErrorMessage,
   canUseCamera,
   extensionForMimeType,
+  isLandscapeVideo,
+  lockLandscape,
   pickVideoMimeType,
+  readVideoSize,
+  unlockOrientation,
 } from '@/constants/media';
 import { goBackTo } from '@/constants/navigation';
 import {
@@ -41,6 +45,10 @@ import {
   RetakeButton,
   ReviewVideo,
   Ring,
+  RotateButton,
+  RotateHint,
+  RotateNotice,
+  RotateTitle,
   SampleFrame,
   SampleImage,
   SampleLabel,
@@ -94,6 +102,27 @@ const FlipIcon = (): React.JSX.Element => (
     />
   </svg>
 );
+
+const RotateIcon = (): React.JSX.Element => (
+  <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <rect x="16" y="6" width="16" height="28" rx="3" stroke="currentColor" strokeWidth="2.2" />
+    <rect x="10" y="30" width="28" height="14" rx="3" stroke="currentColor" strokeWidth="2.2" strokeDasharray="3 3" />
+    <path d="M38 14a10 10 0 0 1 2 10m0 0l3-3m-3 3l-3-3" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+/** 지금 화면이 가로인지. 폰을 돌리면 바로 바뀐다. */
+const useIsLandscape = (): boolean => {
+  const query = '(orientation: landscape)';
+  const [isLandscape, setIsLandscape] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const onChange = (): void => setIsLandscape(media.matches);
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, []);
+  return isLandscape;
+};
 
 const CaptureCamera = (): React.JSX.Element => {
   const navigate = useNavigate();
@@ -149,6 +178,19 @@ const CaptureCamera = (): React.JSX.Element => {
   // 녹화가 시작하자마자 끊긴다. 바뀌었는지는 장면 이름으로만 본다.
   const sceneKey = scene?.shotKey;
 
+  // 릴스는 가로로 찍는다. 녹화 화면에 들어오면 가로로 고정하고, 고정이 안 되는 기기는 돌려 달라고 한다.
+  const isLandscape = useIsLandscape();
+  const filmsVideo = Boolean(scene) && isVideo && !isGallery;
+  const needsRotate = filmsVideo && !shot && !isLandscape;
+  /** 영상일 때만 화면 방향이 바뀌면 카메라를 다시 연다. 사진은 방향과 무관하다. */
+  const videoOrientation = isVideo ? (isLandscape ? 'landscape' : 'portrait') : 'any';
+
+  useEffect(() => {
+    if (!filmsVideo) return;
+    void lockLandscape();
+    return unlockOrientation;
+  }, [filmsVideo]);
+
   const openPicker = (): void => fileInputRef.current?.click();
 
   // 촬영물은 기기에 저장하지 않는다. getUserMedia 로 앱 안에서 직접 찍는다.
@@ -190,7 +232,8 @@ const CaptureCamera = (): React.JSX.Element => {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     };
-  }, [sceneKey, isGallery, isVideo, shot, facing]);
+    // 영상은 폰을 돌리면 카메라를 다시 연다. 세로일 때 연 트랙을 그대로 쓰면 가로 비율이 어긋난다.
+  }, [sceneKey, isGallery, isVideo, shot, facing, videoOrientation]);
 
   useEffect(() => {
     if (!isGallery || shot || autoOpened.current) return;
@@ -254,7 +297,7 @@ const CaptureCamera = (): React.JSX.Element => {
 
   const startRecording = (): void => {
     const stream = streamRef.current;
-    if (!stream) return;
+    if (!stream || needsRotate) return;
 
     const preferred = pickVideoMimeType();
     const recorder = new MediaRecorder(stream, preferred ? { mimeType: preferred } : undefined);
@@ -369,7 +412,9 @@ const CaptureCamera = (): React.JSX.Element => {
         <PickArea type="button" onClick={openPicker}>
           <PhotoIcon />
           <PickText>탭해서 {isVideo ? '영상' : '사진'} 고르기</PickText>
-          <PickHint>{isVideo ? `${scene.clipSeconds}초 이내면 좋아요` : 'jpg 또는 png'}</PickHint>
+          <PickHint>
+            {isVideo ? `가로로 찍은 영상, ${scene.clipSeconds}초 이내면 좋아요` : 'jpg 또는 png'}
+          </PickHint>
         </PickArea>
       ) : (
         <Preview ref={videoRef} autoPlay playsInline muted />
@@ -420,14 +465,27 @@ const CaptureCamera = (): React.JSX.Element => {
         )}
       </TopBar>
 
+      {/* 세로로 들고 있으면 녹화를 막고 돌려 달라고 한다. 닫기는 위에 그대로 남는다. */}
+      {needsRotate && (
+        <RotateNotice role="alert">
+          <RotateIcon />
+          <RotateTitle>폰을 가로로 돌려 주세요</RotateTitle>
+          <RotateHint>영상은 가로로 찍어야 광고에 쓸 수 있어요</RotateHint>
+          <RotateButton type="button" onClick={() => void lockLandscape()}>
+            가로 화면으로 바꾸기
+          </RotateButton>
+        </RotateNotice>
+      )}
+
       {/* 예시 사진이 있는 장면만 띄운다. 빈 칸을 크게 두면 카메라 화면만 가린다. */}
-      {!shot && !isGallery && !isRecording && scene.sample && (
+      {!shot && !isGallery && !isRecording && !needsRotate && scene.sample && (
         <SampleWrap
           type="button"
+          $wide={isVideo}
           aria-label="예시 크게 보기"
           onClick={() => setIsSampleOpen(true)}
         >
-          <SampleFrame>
+          <SampleFrame $wide={isVideo}>
             {isVideo ? (
               <SampleVideo src={scene.sample} autoPlay muted loop playsInline />
             ) : (
@@ -500,6 +558,7 @@ const CaptureCamera = (): React.JSX.Element => {
               <RecordButton
                 type="button"
                 aria-label={`녹화하기, 최대 ${scene.clipSeconds}초`}
+                disabled={needsRotate}
                 onClick={startRecording}
               />
             ) : (
@@ -524,15 +583,25 @@ const CaptureCamera = (): React.JSX.Element => {
         accept={isVideo ? 'video/*' : 'image/*'}
         onChange={(event) => {
           const [file] = Array.from(event.target.files ?? []);
-          if (file) {
-            setShot({
-              file,
-              url: URL.createObjectURL(file),
-              kind: file.type.startsWith('video/') ? 'video' : 'photo',
-            });
-          }
           // 같은 것을 다시 고를 수 있게 값을 비운다.
           event.target.value = '';
+          if (!file) return;
+          const url = URL.createObjectURL(file);
+          const kind = file.type.startsWith('video/') ? 'video' : 'photo';
+          if (kind === 'photo') {
+            setShot({ file, url, kind });
+            return;
+          }
+          // 영상은 가로로 찍은 것만 받는다. 세로 영상은 생성 단계에서 쓰지 못한다.
+          void readVideoSize(url).then((size) => {
+            if (size && !isLandscapeVideo(size.width, size.height)) {
+              URL.revokeObjectURL(url);
+              setError('가로로 찍은 영상을 골라 주세요.');
+              return;
+            }
+            setError(null);
+            setShot({ file, url, kind });
+          });
         }}
       />
     </Stage>
