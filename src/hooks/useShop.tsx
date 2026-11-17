@@ -14,20 +14,21 @@ import {
   SHOP_STORAGE_KEY,
   type ShopProfile,
 } from '@/constants/shop';
-import type { StoreTemplate } from '@/constants/templates';
+import { normalizeTemplates, type StoreTemplate } from '@/constants/templates';
 import { useAuth } from '@/hooks/useAuth';
 
 type ShopContextValue = {
   profile: ShopProfile;
   templates: StoreTemplate[];
   setProfile: (profile: ShopProfile) => void;
-  addTemplate: (template: StoreTemplate) => void;
+  /** 메뉴들을 저장한다. 같은 이름이 있으면 설명을 새로 바꾸고 맨 앞으로 올린다. */
+  saveMenus: (menus: { name: string; description: string }[]) => void;
   removeTemplate: (templateId: string) => void;
 };
 
 const ShopContext = createContext<ShopContextValue | null>(null);
 
-type StoredShop = { profile?: Partial<ShopProfile>; templates?: StoreTemplate[] };
+type StoredShop = { profile?: Partial<ShopProfile>; templates?: unknown };
 
 /** 계정마다 따로 남긴다. 한 기기에서 계정을 갈아타도 가게가 섞이지 않는다. */
 const storageKeyFor = (username: string | undefined): string =>
@@ -58,7 +59,8 @@ export const ShopProvider = ({ children }: { children: ReactNode }): React.JSX.E
   });
   const initialTemplates = (): StoreTemplate[] => {
     const stored = readStoredShop(username).templates;
-    return Array.isArray(stored) ? stored : [...DEFAULT_TEMPLATES];
+    // 예전 묶음 형식(가게 + 메뉴 여러 개)으로 저장된 것도 메뉴 하나씩으로 풀어 읽는다.
+    return Array.isArray(stored) ? normalizeTemplates(stored) : [...DEFAULT_TEMPLATES];
   };
 
   const [loaded, setLoaded] = useState(() => username ?? '');
@@ -87,8 +89,12 @@ export const ShopProvider = ({ children }: { children: ReactNode }): React.JSX.E
     }
   }, [username, profile, templates]);
 
-  const addTemplate = useCallback((template: StoreTemplate) => {
-    setTemplates((current) => [template, ...current]);
+  const saveMenus = useCallback((menus: { name: string; description: string }[]) => {
+    setTemplates((current) => {
+      const saved = normalizeTemplates(menus);
+      const names = new Set(saved.map((item) => item.name));
+      return [...saved, ...current.filter((item) => !names.has(item.name))];
+    });
   }, []);
 
   const removeTemplate = useCallback((templateId: string) => {
@@ -96,8 +102,8 @@ export const ShopProvider = ({ children }: { children: ReactNode }): React.JSX.E
   }, []);
 
   const value = useMemo<ShopContextValue>(
-    () => ({ profile, templates, setProfile, addTemplate, removeTemplate }),
-    [profile, templates, addTemplate, removeTemplate],
+    () => ({ profile, templates, setProfile, saveMenus, removeTemplate }),
+    [profile, templates, saveMenus, removeTemplate],
   );
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;

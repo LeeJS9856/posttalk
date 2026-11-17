@@ -84,9 +84,9 @@ const My = (): React.JSX.Element => {
         </ShopCard>
 
         {/* 인스타그램 연결 정보는 백엔드가 아직 주지 않는다. 게시 기능을 켤 때 다시 둔다. */}
-        <SectionTitle>저장된 내용 {templates.length}개</SectionTitle>
+        <SectionTitle>저장된 메뉴 {templates.length}개</SectionTitle>
         {templates.length === 0 ? (
-          <EmptyRow>정보를 입력할 때 저장해두면 여기 쌓여요</EmptyRow>
+          <EmptyRow>메뉴를 입력할 때 저장해두면 여기 쌓여요</EmptyRow>
         ) : (
           templates.map((template) => (
             <Row key={template.templateId}>
@@ -95,7 +95,7 @@ const My = (): React.JSX.Element => {
               </RowIcon>
               <RowBody>
                 <RowTitle>{template.name}</RowTitle>
-                <RowNote>메뉴 {template.menus.length}개</RowNote>
+                <RowNote>{template.description || '설명 없음'}</RowNote>
               </RowBody>
             </Row>
           ))

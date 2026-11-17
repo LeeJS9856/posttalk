@@ -81,6 +81,11 @@ export const Chip = styled.button<{ $selected: boolean }>`
     background-color 0.18s ease,
     border-color 0.18s ease,
     color 0.18s ease;
+
+  /* 메뉴가 꽉 찼을 때 더 넣을 수 없는 칩. */
+  &:disabled {
+    opacity: 0.4;
+  }
 `;
 
 export const ChipAvatar = styled.span<{ $selected: boolean }>`

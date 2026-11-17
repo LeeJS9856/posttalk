@@ -80,7 +80,7 @@ const SettingsButton = (): React.JSX.Element => {
     {
       key: 'templates',
       icon: <FolderIcon />,
-      label: '저장된 가게 정보',
+      label: '저장된 메뉴',
       onSelect: () => go('/my/templates'),
     },
     {
