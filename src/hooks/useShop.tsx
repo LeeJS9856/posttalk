@@ -28,17 +28,21 @@ type ShopContextValue = {
 
 const ShopContext = createContext<ShopContextValue | null>(null);
 
-type StoredShop = { profile?: Partial<ShopProfile>; templates?: unknown };
+type StoredShop = { profile?: Partial<ShopProfile>; templates?: unknown; seed?: string };
 
 /** 계정마다 따로 남긴다. 한 기기에서 계정을 갈아타도 가게가 섞이지 않는다. */
 const storageKeyFor = (username: string | undefined): string =>
   username ? `${SHOP_STORAGE_KEY}:${username}` : SHOP_STORAGE_KEY;
 
-/** 저장소를 못 쓰거나 값이 깨졌으면 처음 값으로 시작한다. */
-const readStoredShop = (username: string | undefined): StoredShop => {
+/**
+ * 저장소를 못 쓰거나 값이 깨졌으면 처음 값으로 시작한다.
+ * 계정의 seed 가 저장된 것과 다르면 남은 값을 버리고 계정 기본값으로 다시 채운다(전시 계정을 새로 꾸밀 때).
+ */
+const readStoredShop = (username: string | undefined, seed: string | undefined): StoredShop => {
   try {
     const raw = window.localStorage.getItem(storageKeyFor(username));
-    return raw ? (JSON.parse(raw) as StoredShop) : {};
+    const stored = raw ? (JSON.parse(raw) as StoredShop) : {};
+    return seed && stored.seed !== seed ? {} : stored;
   } catch {
     return {};
   }
@@ -51,16 +55,19 @@ const readStoredShop = (username: string | undefined): StoredShop => {
 export const ShopProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
   const { account } = useAuth();
   const username = account?.username;
+  const seed = account?.seed;
 
   const initialProfile = (): ShopProfile => ({
     ...DEFAULT_SHOP_PROFILE,
     ...account?.shop,
-    ...readStoredShop(username).profile,
+    ...readStoredShop(username, seed).profile,
   });
   const initialTemplates = (): StoreTemplate[] => {
-    const stored = readStoredShop(username).templates;
+    const stored = readStoredShop(username, seed).templates;
     // 예전 묶음 형식(가게 + 메뉴 여러 개)으로 저장된 것도 메뉴 하나씩으로 풀어 읽는다.
-    return Array.isArray(stored) ? normalizeTemplates(stored) : [...DEFAULT_TEMPLATES];
+    if (Array.isArray(stored)) return normalizeTemplates(stored);
+    // 처음이면 계정에 정해 둔 메뉴로 채운다.
+    return account?.menus ? normalizeTemplates(account.menus) : [...DEFAULT_TEMPLATES];
   };
 
   const [loaded, setLoaded] = useState(() => username ?? '');
@@ -82,12 +89,12 @@ export const ShopProvider = ({ children }: { children: ReactNode }): React.JSX.E
     try {
       window.localStorage.setItem(
         storageKeyFor(username),
-        JSON.stringify({ profile, templates }),
+        JSON.stringify({ profile, templates, seed }),
       );
     } catch {
       // 저장소를 못 쓰면 이번 탭에서만 남는다.
     }
-  }, [username, profile, templates]);
+  }, [username, seed, profile, templates]);
 
   const saveMenus = useCallback((menus: { name: string; description: string }[]) => {
     setTemplates((current) => {

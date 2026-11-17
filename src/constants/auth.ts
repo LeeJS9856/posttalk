@@ -7,6 +7,8 @@
  *
  * 키는 바꾸면 안 된다. 바꾸는 순간 그 계정으로 만든 광고를 다시 찾을 수 없다.
  * shop 은 처음 로그인했을 때 채워 두는 값이고, 마이에서 고치면 그 기기에 남는다.
+ * menus 는 정보 입력의 "저장된 메뉴" 기본값이다.
+ * seed 를 바꾸면 그 계정으로 이 기기에 남겨 둔 가게 정보·저장된 메뉴를 버리고 shop · menus 로 다시 채운다.
  */
 export type ExhibitionAccount = {
   username: string;
@@ -14,6 +16,8 @@ export type ExhibitionAccount = {
   /** 서버가 작업 공간을 가르는 64자리 키 */
   guestKey: string;
   shop: { name: string; marketName: string; description: string };
+  menus?: readonly { name: string; description: string }[];
+  seed?: string;
 };
 
 export const ACCOUNTS: readonly ExhibitionAccount[] = [
@@ -32,11 +36,19 @@ export const ACCOUNTS: readonly ExhibitionAccount[] = [
     username: '2222',
     password: '2222',
     guestKey: '4f7939135784336a42b6abb7e491a0ac0d4c73eb41aa3fdf6039709c49a33f3e',
+    // 전시회 계정(2026 CO-SHOW). 떡 · 빵 · 쿠키를 함께 파는 동네 가게로 꾸몄다.
     shop: {
-      name: '창억떡집',
-      marketName: '경동시장',
-      description: '새벽에 쪄서 그날 다 파는 떡집이에요. 팥은 국산만 씁니다.',
+      name: '포스트톡베이커리',
+      marketName: '광주 북구 용봉로 77',
+      description:
+        '아침마다 방앗간에서 직접 빻은 쌀가루로 떡을 찌고, 같은 쌀가루로 빵과 쿠키도 굽는 작은 가게예요. 국산 찹쌀과 팥만 쓰고 그날 만든 건 그날 다 팝니다. 선물용 상자 포장도 해 드려요.',
     },
+    menus: [
+      { name: '떡', description: '국산 찹쌀로 아침마다 쪄 내는 쑥 인절미, 콩고물을 듬뿍 묻혀 쫀득해요' },
+      { name: '빵', description: '쌀가루로 반죽해 굽는 소금빵, 겉은 바삭하고 속은 촉촉해요' },
+      { name: '쿠키', description: '버터와 쌀가루로 구운 쿠키, 바삭하고 고소해서 선물용으로 인기예요' },
+    ],
+    seed: '2026-11-18-2',
   },
   {
     username: '3333',
