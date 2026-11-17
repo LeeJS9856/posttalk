@@ -23,6 +23,8 @@ export const SUGGESTION_THEMES = [
   {
     id: 'christmas',
     label: '크리스마스',
+    /** 분위기 버튼 아래 한 줄 설명. */
+    description: '빨강·초록, 따뜻한 연말',
     /** 카드뉴스 디자인 방향(cardNewsStyle, 500자 이하). 서버가 카드뉴스 AI 의 direction 으로 넘긴다. */
     cardNewsStyle:
       '따뜻한 겨울 분위기, 빨강과 초록 포인트, 손글씨처럼 정겨운 문구. 음식이 먹음직스럽게 보이도록 사진을 크게 쓰고, 가게 이름과 대표 메뉴가 잘 보이게.',
@@ -36,6 +38,7 @@ export const SUGGESTION_THEMES = [
   {
     id: 'minimal',
     label: '미니멀',
+    description: '여백 많고 차분한 톤',
     cardNewsStyle:
       '여백이 넉넉한 깔끔한 레이아웃, 차분한 무채색 톤, 짧고 담백한 문구. 음식 사진이 주인공이 되도록 장식을 줄이고, 가게 이름과 대표 메뉴가 잘 보이게.',
     thumb: minimalMain,

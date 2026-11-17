@@ -31,9 +31,15 @@ import {
   CardVideo,
   Content,
   Counter,
+  DoneBadge,
+  DoneText,
+  DoneThumbFrame,
+  DoneTitle,
+  DoneWrap,
   EditButton,
   Footer,
   FooterNotice,
+  FooterStack,
   Meta,
   MetaLabel,
   MetaLine,
@@ -96,7 +102,7 @@ const AdDetail = (): React.JSX.Element => {
   const [params] = useSearchParams();
   const { resetDraft } = useAdDraft();
   const { invalidate } = useAds();
-  const { storeId } = useWorkspace();
+  const { storeId, status: workspaceStatus, error: workspaceError } = useWorkspace();
 
   const fromCreate = params.get('from') === 'create';
   const sessionId = params.get('session');
@@ -108,7 +114,13 @@ const AdDetail = (): React.JSX.Element => {
    */
   const [loaded, setLoaded] = useState<{ key: string; state: LoadState } | null>(null);
   const requestKey = adId ? `${adId}:${sessionId ?? ''}:${storeId ?? ''}` : '';
-  const state: LoadState = loaded?.key === requestKey ? loaded.state : { status: 'loading' };
+  // 보관함에서 찾으려면 작업 공간이 열려야 한다. 못 열었으면 로딩에 갇히지 않게 오류로 보여 준다.
+  const state: LoadState =
+    loaded?.key === requestKey
+      ? loaded.state
+      : !sessionId && workspaceStatus === 'error'
+        ? { status: 'error', message: workspaceError ?? '가게 정보를 불러오지 못했어요.' }
+        : { status: 'loading' };
   const [cardIndex, setCardIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -116,6 +128,8 @@ const AdDetail = (): React.JSX.Element => {
   const [publishState, setPublishState] = useState<
     | { step: 'idle' }
     | { step: 'sending' }
+    /** 올라갔다. 완료 화면을 보여 주고 홈으로 버튼으로 내보낸다. */
+    | { step: 'done'; permalink?: string }
     /** canRetry 가 거짓이면 다시 올리기를 막는다(인스타에서 직접 확인해야 하는 경우). */
     | { step: 'failed'; message: string; canRetry: boolean }
   >({ step: 'idle' });
@@ -186,8 +200,8 @@ const AdDetail = (): React.JSX.Element => {
   };
 
   /**
-   * 올리고 나서 홈으로 보낸다. 제작 직후에는 이 버튼이 유일한 출구다.
-   * 올리지 않고 빠져나가면 만든 광고가 올라가지 않은 채 다음 관람객 차례가 된다.
+   * 올라가면 완료 화면을 보여 준다. 홈으로는 거기서 직접 누르게 한다.
+   * 올리지 않고 나가면 광고는 보관함에만 남는다.
    */
   const publish = async (): Promise<void> => {
     if (state.status !== 'ready') return;
@@ -197,8 +211,8 @@ const AdDetail = (): React.JSX.Element => {
     setPublishState({ step: 'sending' });
     try {
       // 인스타가 처리 중이면 실제로 올라갈 때까지 기다린다.
-      await publishUntilDone(state.ad.id, controller.signal);
-      finish();
+      const result = await publishUntilDone(state.ad.id, controller.signal);
+      setPublishState({ step: 'done', permalink: result.permalink ?? undefined });
     } catch (cause) {
       if (isAbortError(cause)) return;
       const needsCheck = cause instanceof ApiError && cause.code === PUBLISH_VERIFICATION_CODE;
@@ -215,7 +229,7 @@ const AdDetail = (): React.JSX.Element => {
   };
 
   const header = fromCreate ? (
-    // 닫기를 두지 않는다. 올리기 버튼이 유일한 출구다.
+    // 닫기를 두지 않는다. 출구는 아래의 올리기와 '올리지 않고 홈으로' 두 버튼이다.
     <AppHeader title="다 만들었어요" />
   ) : (
     // 홈과 보관함에서 이름으로 부르던 광고다. 열었다고 '광고'가 되면 안 된다.
@@ -246,6 +260,45 @@ const AdDetail = (): React.JSX.Element => {
   const { ad } = state;
   const isReels = ad.format === 'reels';
   const caption = fullCaption(ad);
+
+  if (publishState.step === 'done') {
+    return (
+      <Page aria-label="인스타그램에 올렸어요">
+        <AppHeader title="다 올렸어요" />
+        <DoneWrap>
+          <DoneThumbFrame aria-hidden="true">
+            {isReels ? (
+              <video src={ad.videoUrl ? posterSrc(ad.videoUrl) : undefined} muted playsInline preload="metadata" />
+            ) : (
+              <img src={ad.cards[0]} alt="" />
+            )}
+            <DoneBadge>
+              <Check strokeWidth={3} />
+            </DoneBadge>
+          </DoneThumbFrame>
+          <DoneTitle>인스타그램에 올렸어요</DoneTitle>
+          <DoneText>
+            방금 만든 {AD_FORMAT_LABEL[ad.format]}가 게시됐어요.
+            <br />
+            보관함에서 언제든 다시 볼 수 있어요.
+          </DoneText>
+        </DoneWrap>
+        <Footer>
+          <FooterStack>
+            <PrimaryButton type="button" onClick={finish}>
+              홈으로
+            </PrimaryButton>
+            {publishState.permalink && (
+              <SecondaryButton href={publishState.permalink} target="_blank" rel="noreferrer">
+                <ExternalLink aria-hidden="true" />
+                인스타그램에서 보기
+              </SecondaryButton>
+            )}
+          </FooterStack>
+        </Footer>
+      </Page>
+    );
+  }
 
   const copyCaption = async (): Promise<void> => {
     try {
@@ -375,10 +428,10 @@ const AdDetail = (): React.JSX.Element => {
                       : '인스타그램에 올리기'}
                 </PrimaryButton>
               )}
-              {/* 올리지 못해 갇히는 것을 막는다. 실패했을 때만 연다. */}
-              {publishState.step === 'failed' && (
+              {/* 올리지 않고 끝낼 수도 있게 한다. 올리는 중에는 감춰 게시가 중간에 끊기지 않게 한다. */}
+              {publishState.step !== 'sending' && (
                 <SkipButton type="button" onClick={finish}>
-                  나중에 올릴게요
+                  {publishState.step === 'failed' ? '나중에 올릴게요' : '올리지 않고 홈으로'}
                 </SkipButton>
               )}
             </>
