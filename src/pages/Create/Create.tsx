@@ -116,7 +116,7 @@ const Create = (): React.JSX.Element => {
                   playsInline
                   autoPlay
                 />
-                <PhoneTime>0:13</PhoneTime>
+                <PhoneTime>0:16</PhoneTime>
               </Phone>
               <ReelsTags>
                 {REELS_EXTRAS.map((extra) => (

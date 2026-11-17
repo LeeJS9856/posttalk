@@ -13,6 +13,26 @@ export const MIN_CLIP_SECONDS = 1;
  */
 export const VIDEO_ASPECT_RATIO = 16 / 9;
 
+/**
+ * 카메라 해상도. 적지 않으면 크롬이 640x480 으로 열어 화질이 크게 떨어진다.
+ * 크롬은 요청한 크기로 잘라서라도 맞추므로, 폰 방향에 맞는 가로·세로를 정확히 적는다(같은 값을 적으면 정사각형으로 잘린다).
+ * 영상은 1080p 16:9(전시 기기가 보급형이 아니라 녹화와 함께 돌려도 된다고 판단, 2026-11-18).
+ * 사진은 미리보기 프레임을 그대로 떠서 저장하므로 미리보기 해상도가 곧 사진 해상도다. 폰 카메라 기본 비율 4:3.
+ */
+const LONG_EDGE = 1920;
+const sized = (long: number, short: number, landscape: boolean) =>
+  landscape
+    ? { width: { ideal: long }, height: { ideal: short } }
+    : { width: { ideal: short }, height: { ideal: long } };
+export const videoResolution = (landscape: boolean) => sized(LONG_EDGE, 1080, landscape);
+export const photoResolution = (landscape: boolean) => sized(LONG_EDGE, 1440, landscape);
+
+/**
+ * 녹화 비트레이트. 1080p 에서 기본값은 블록이 보일 만큼 낮게 잡히는 브라우저가 있다.
+ * 10초면 약 7.5MB. 운영 업로드는 15.7MB 까지 받는 것을 확인했고(2026-11-18), 전시장 와이파이를 생각해 더 올리지 않는다.
+ */
+export const VIDEO_BITS_PER_SECOND = 6_000_000;
+
 /** 가로로 찍은 영상인지. 갤러리에서 고른 영상도 이걸로 거른다. */
 export const isLandscapeVideo = (width: number, height: number): boolean => width > height;
 
