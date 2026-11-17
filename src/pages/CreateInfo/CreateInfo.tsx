@@ -11,7 +11,6 @@ import {
   AddMenuButton,
   CheckBox,
   Chip,
-  ChipAvatar,
   ChipRail,
   Content,
   Counter,
@@ -240,9 +239,6 @@ const CreateInfo = (): React.JSX.Element => {
                   $selected={selected}
                   onClick={() => toggleTemplate(template)}
                 >
-                  <ChipAvatar aria-hidden="true" $selected={selected}>
-                    {template.name.slice(0, 1)}
-                  </ChipAvatar>
                   {template.name}
                 </Chip>
               );

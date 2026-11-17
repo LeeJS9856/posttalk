@@ -70,7 +70,7 @@ export const Chip = styled.button<{ $selected: boolean }>`
   align-items: center;
   gap: 6px;
   min-height: 36px;
-  padding: 0 12px 0 7px;
+  padding: 0 14px;
   border: 1px solid ${({ $selected }) => ($selected ? COLORS.brand.main : COLORS.border.main)};
   border-radius: 18px;
   background-color: ${({ $selected }) => ($selected ? COLORS.brand.main : 'transparent')};
