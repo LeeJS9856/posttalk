@@ -1,4 +1,4 @@
-import { Camera, Check, Image } from 'lucide-react';
+import { Camera, Check, ChevronRight, Image } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,20 +14,28 @@ import { useWorkspace } from '@/hooks/useWorkspace';
 import {
   Bar,
   Content,
+  DoneCaption,
+  DoneLabel,
+  DoneNote,
   ErrorText,
   Footer,
   Grid,
   NextButton,
   Page,
   Progress,
-  SlotAction,
+  SheetSample,
+  SheetSampleChip,
   SlotBadge,
   SlotButton,
   SlotFrame,
   SlotImage,
   SlotVideo,
-  SlotLabel,
   SlotStatus,
+  TodoAction,
+  TodoHint,
+  TodoLabel,
+  TodoOrder,
+  TodoSlot,
   Track,
 } from '@/pages/Capture/CaptureList.styles';
 
@@ -97,7 +105,12 @@ const BatchCaptureList = (): React.JSX.Element => {
           key: 'gallery',
           icon: <Image />,
           label: '갤러리에서 고르기',
-          description: isReels ? '기기에 있는 영상 중에서' : '기기에 있는 사진 중에서',
+          // 갤러리로 가는 관람객이 예시를 안 보고 아무거나 고른다. 위 예시와 맞춰 고르라고 한 번 더 말한다.
+          description: asking.sample
+            ? `위 예시와 비슷한 ${isReels ? '영상' : '사진'}을 골라주세요`
+            : isReels
+              ? '기기에 있는 영상 중에서'
+              : '기기에 있는 사진 중에서',
           recommended: asking.recommended === 'gallery',
           onSelect: () => go(asking, 'gallery'),
         },
@@ -254,7 +267,8 @@ const BatchCaptureList = (): React.JSX.Element => {
                     setIsAsking(true);
                   }}
                 >
-                  <SlotFrame $next={!asset} $filled={Boolean(asset)}>
+                  {/* 빈 칸의 테두리와 바탕은 TodoSlot 이 그린다. */}
+                  <SlotFrame $next={false} $filled={Boolean(asset)}>
                     {asset ? (
                       <>
                         {asset.kind === 'video' ? (
@@ -267,20 +281,28 @@ const BatchCaptureList = (): React.JSX.Element => {
                             <Check strokeWidth={3} />
                           </SlotBadge>
                         )}
-                        {status && <SlotStatus $tone={status.tone}>{status.text}</SlotStatus>}
+                        {status ? (
+                          <SlotStatus $tone={status.tone}>{status.text}</SlotStatus>
+                        ) : (
+                          <DoneCaption>
+                            <DoneNote>올렸어요</DoneNote>
+                            <DoneLabel>{scene.label}</DoneLabel>
+                          </DoneCaption>
+                        )}
                       </>
                     ) : (
-                      <>
-                        {scene.recommended === 'gallery' ? (
-                          <Image aria-hidden="true" />
-                        ) : (
-                          <Camera aria-hidden="true" />
-                        )}
-                        <SlotAction>올리기</SlotAction>
-                      </>
+                      // 빈 칸 안에 무엇을 찍을지 크게 쓴다. 예시 사진은 칸을 누르면 뜨는 시트에서 보여 준다.
+                      <TodoSlot>
+                        <TodoOrder>{scene.index + 1}번째</TodoOrder>
+                        <TodoLabel>{scene.label}</TodoLabel>
+                        {scene.hint && <TodoHint>{scene.hint}</TodoHint>}
+                        <TodoAction>
+                          탭해서 올리기
+                          <ChevronRight aria-hidden="true" strokeWidth={2.4} />
+                        </TodoAction>
+                      </TodoSlot>
                     )}
                   </SlotFrame>
-                  <SlotLabel $done={Boolean(asset)}>{scene.label}</SlotLabel>
                 </SlotButton>
               </li>
             );
@@ -302,10 +324,30 @@ const BatchCaptureList = (): React.JSX.Element => {
       <ActionSheet
         open={isAsking}
         title={asking?.label ?? ''}
-        description="어떻게 올릴까요?"
+        description={asking?.hint || '어떻게 올릴까요?'}
         items={items}
         onClose={() => setIsAsking(false)}
-      />
+      >
+        {/* 어느 길로 올리든 고르기 전에 예시를 한 번은 크게 보게 한다. */}
+        {asking?.sample && (
+          <SheetSample>
+            {asking.kind === 'video' ? (
+              <video
+                key={asking.shotKey}
+                src={asking.sample}
+                aria-label={`${asking.label} 예시`}
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <img src={asking.sample} alt={`${asking.label} 예시`} />
+            )}
+            <SheetSampleChip>이렇게 찍어요</SheetSampleChip>
+          </SheetSample>
+        )}
+      </ActionSheet>
     </Page>
   );
 };
