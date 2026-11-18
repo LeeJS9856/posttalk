@@ -16,6 +16,8 @@ export const COLORS = {
     main: '#6f63a0',
     pressed: '#5c5188',
     soft: '#f0edf8',
+    /** soft 면 위의 점선 테두리. 아직 채우지 않은 촬영 칸에 쓴다. */
+    line: '#b9b1d8',
   },
   /**
    * 글씨 색. 밝은 가게와 부스에서도 읽히도록 WCAG 4.5:1 을 지킨다.

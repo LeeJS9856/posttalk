@@ -165,6 +165,115 @@ export const ErrorText = styled.p`
   text-align: center;
 `;
 
+/*
+ * 카드뉴스 · 릴스 일괄 촬영 목록의 칸(BatchCaptureList).
+ * 관람객이 칸 이름을 잘 안 읽어 아무 사진이나 넣었다. 빈 칸 안에 무엇을 찍을지를 크게 쓴다.
+ * 예시 사진은 칸에 깔지 않는다(올렸는지 헷갈린다). 예시는 칸을 누르면 뜨는 시트에서 보여 준다.
+ */
+export const TodoSlot = styled.span`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 14px 14px;
+  border: 1.5px dashed ${COLORS.brand.line};
+  border-radius: 12px;
+  background-color: ${COLORS.brand.soft};
+`;
+
+export const TodoOrder = styled.span`
+  color: ${COLORS.brand.main};
+  font-size: ${FONT_SIZE.label};
+  font-weight: ${FONT_WEIGHT.bold};
+`;
+
+export const TodoLabel = styled.span`
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.titleSmall};
+  font-weight: ${FONT_WEIGHT.bold};
+  line-height: 1.3;
+  word-break: keep-all;
+`;
+
+export const TodoHint = styled.span`
+  color: ${COLORS.text.grey};
+  font-size: ${FONT_SIZE.body};
+  line-height: 1.45;
+  word-break: keep-all;
+`;
+
+export const TodoAction = styled.span`
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: ${COLORS.brand.main};
+  font-size: ${FONT_SIZE.label};
+  font-weight: ${FONT_WEIGHT.bold};
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
+/** 채운 칸 아래쪽의 이름표. 어느 칸에 무엇을 넣었는지 사진 위에서 바로 읽힌다. */
+export const DoneCaption = styled.span`
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 22px 12px 10px;
+  background: linear-gradient(to bottom, rgba(21, 22, 26, 0), rgba(21, 22, 26, 0.78));
+  color: ${COLORS.text.inverse};
+`;
+
+export const DoneNote = styled.span`
+  color: ${COLORS.onInverse.sub};
+  font-size: ${FONT_SIZE.caption};
+  font-weight: ${FONT_WEIGHT.semibold};
+`;
+
+export const DoneLabel = styled.span`
+  font-size: ${FONT_SIZE.bodyLarge};
+  font-weight: ${FONT_WEIGHT.bold};
+`;
+
+/** 칸을 누르면 뜨는 시트 속 예시. 갤러리로 가든 카메라로 가든 한 번은 크게 보게 한다. */
+export const SheetSample = styled.div`
+  position: relative;
+  height: min(240px, 30svh);
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: ${RADIUS.panel};
+  background-color: ${COLORS.background.inverse};
+
+  img,
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+export const SheetSampleChip = styled.span`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.92);
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.caption};
+  font-weight: ${FONT_WEIGHT.bold};
+`;
+
 /** 칸 아래쪽에 붙는 상태 띠. 올리는 중이거나, 다시 올려야 할 때 보인다. */
 export const SlotStatus = styled.span<{ $tone: 'muted' | 'danger' }>`
   position: absolute;
