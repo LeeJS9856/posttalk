@@ -127,6 +127,13 @@ export const pickVideoMimeType = (): string | undefined => {
   return PREFERRED_MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type));
 };
 
+/**
+ * 코덱 꼬리표를 뗀 형식. 녹화기는 "video/webm;codecs=vp9" 처럼 코덱을 붙여 알려 주는데,
+ * 서버는 video/mp4 · video/quicktime · video/webm 과 글자 그대로 같아야 받는다.
+ * 꼬리표가 붙은 채 올리면 415(Unsupported media type)로 막힌다(2026-11-18 운영 서버에서 확인).
+ */
+export const baseMimeType = (mimeType: string): string => mimeType.split(';')[0].trim().toLowerCase();
+
 /** blob 의 형식에서 파일 확장자를 고른다. 확장자가 틀리면 업로드 쪽에서 거른다. */
 export const extensionForMimeType = (mimeType: string): string =>
   mimeType.includes('mp4') ? 'mp4' : 'webm';

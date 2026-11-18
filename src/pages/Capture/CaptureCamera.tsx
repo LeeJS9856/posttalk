@@ -12,6 +12,7 @@ import {
   cameraErrorMessage,
   canUseCamera,
   extensionForMimeType,
+  baseMimeType,
   isLandscapeVideo,
   lockLandscape,
   openCamera,
@@ -321,7 +322,8 @@ const CaptureCamera = (): React.JSX.Element => {
     recorder.onstop = () => {
       setIsRecording(false);
       const seconds = (Date.now() - startedAtRef.current) / 1000;
-      const type = recorder.mimeType || preferred || 'video/webm';
+      // 파일 형식에는 코덱을 붙이지 않는다. 붙은 채 올리면 서버가 415 로 막는다.
+      const type = baseMimeType(recorder.mimeType || preferred || 'video/webm');
 
       // 너무 짧은 영상은 생성 단계에서 실패한다. 그 자리에서 다시 찍게 한다.
       if (seconds < MIN_CLIP_SECONDS || chunks.length === 0) {
