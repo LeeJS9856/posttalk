@@ -157,7 +157,20 @@ const AdDetail = (): React.JSX.Element => {
     const load = async (): Promise<AdItem | null> => {
       if (sessionId) {
         const session = await getAdSession(sessionId, controller.signal);
-        return fromAdSession(session);
+        const ad = fromAdSession(session);
+        // 세션 응답에는 릴스 썸네일이 없다. 보관함에서 받아 포스터로 쓴다(재생 전 검은 화면을 막는다).
+        if (ad?.format === 'reels' && !ad.thumbnail && storeId) {
+          const archived = await getArchive(
+            { storeId, mediaType: 'video', submissionId: ad.id, limit: 1 },
+            controller.signal,
+          ).catch((cause: unknown) => {
+            if (isAbortError(cause)) throw cause;
+            return null;
+          });
+          const item = archived?.items?.find((entry) => entry.submissionId === ad.id);
+          if (item) return { ...ad, thumbnail: fromArchiveItem(item).thumbnail };
+        }
+        return ad;
       }
       for (const mediaType of MEDIA_TYPES) {
         const result = await getArchive(
@@ -268,7 +281,13 @@ const AdDetail = (): React.JSX.Element => {
         <DoneWrap>
           <DoneThumbFrame aria-hidden="true">
             {isReels ? (
-              <video src={ad.videoUrl ? posterSrc(ad.videoUrl) : undefined} muted playsInline preload="metadata" />
+              <video
+                src={ad.videoUrl ? posterSrc(ad.videoUrl) : undefined}
+                poster={ad.thumbnail}
+                muted
+                playsInline
+                preload="metadata"
+              />
             ) : (
               <img src={ad.cards[0]} alt="" />
             )}
@@ -323,6 +342,8 @@ const AdDetail = (): React.JSX.Element => {
                 ref={videoRef}
                 // 크롬은 preload=metadata 만으로는 첫 장면을 그리지 않아 검은 상자로 남는다.
                 src={ad.videoUrl ? posterSrc(ad.videoUrl) : undefined}
+                // 영상 첫 장면을 받기 전까지 검은 화면 대신 서버가 만든 썸네일을 보여 준다.
+                poster={ad.thumbnail}
                 controls={isPlaying}
                 playsInline
                 preload="metadata"
