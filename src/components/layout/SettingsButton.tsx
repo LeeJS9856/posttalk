@@ -1,4 +1,4 @@
-import { Settings } from 'lucide-react';
+import { Settings, Share, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -8,6 +8,7 @@ import { COLORS } from '@/constants/colors';
 import { FONT_SIZE, FONT_WEIGHT, RADIUS } from '@/constants/typography';
 import { useAdDraft } from '@/hooks/useAdDraft';
 import { useAuth } from '@/hooks/useAuth';
+import { isIosSafari, promptInstall, useInstallState } from '@/hooks/useInstallPrompt';
 
 const PersonIcon = (): React.JSX.Element => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -44,7 +45,7 @@ const LogoutIcon = (): React.JSX.Element => (
   </svg>
 );
 
-type SheetState = 'closed' | 'menu' | 'confirmSignOut';
+type SheetState = 'closed' | 'menu' | 'confirmSignOut' | 'installGuide';
 
 /**
  * 설정. 홈과 마이의 머리에 같은 모양으로 둔다.
@@ -54,6 +55,7 @@ const SettingsButton = (): React.JSX.Element => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { resetDraft } = useAdDraft();
+  const installState = useInstallState();
 
   const [sheet, setSheet] = useState<SheetState>('closed');
 
@@ -70,6 +72,16 @@ const SettingsButton = (): React.JSX.Element => {
     navigate('/login', { replace: true });
   };
 
+  /** 설치 창을 열 수 있으면 바로 열고, 못 열면 브라우저 메뉴 위치를 알려 준다. */
+  const handleInstall = (): void => {
+    if (installState === 'ready') {
+      setSheet('closed');
+      void promptInstall();
+      return;
+    }
+    setSheet('installGuide');
+  };
+
   const items: ActionSheetItem[] = [
     {
       key: 'profile',
@@ -83,6 +95,18 @@ const SettingsButton = (): React.JSX.Element => {
       label: '저장된 메뉴',
       onSelect: () => go('/my/templates'),
     },
+    // 이미 홈 화면에서 연 앱이면 숨긴다. 전시 기기에서는 관람객이 볼 일이 없다.
+    ...(installState === 'installed'
+      ? []
+      : [
+          {
+            key: 'install',
+            icon: <Smartphone />,
+            label: '앱으로 설치',
+            description: '홈 화면에서 주소창 없이 바로 열려요',
+            onSelect: handleInstall,
+          },
+        ]),
     {
       key: 'signOut',
       icon: <LogoutIcon />,
@@ -120,6 +144,48 @@ const SettingsButton = (): React.JSX.Element => {
           </DangerButton>
           <CancelButton type="button" onClick={close}>
             취소
+          </CancelButton>
+        </ConfirmActions>
+      </ActionSheet>
+
+      {/* 사파리는 설치 창을 열어 주지 않는다. 안드로이드도 조건이 덜 차면 안 열린다. 이때는 길만 알려 준다. */}
+      <ActionSheet
+        open={sheet === 'installGuide'}
+        title="앱으로 설치"
+        description="브라우저 메뉴에서 홈 화면에 더하면 돼요"
+        onClose={close}
+      >
+        <Steps>
+          {isIosSafari() ? (
+            <>
+              <Step>
+                <StepMark aria-hidden="true">
+                  <Share />
+                </StepMark>
+                화면 아래 공유 버튼을 누르세요
+              </Step>
+              <Step>
+                <StepMark aria-hidden="true">2</StepMark>
+                목록에서 ‘홈 화면에 추가’를 고르세요
+              </Step>
+            </>
+          ) : (
+            <>
+              <Step>
+                <StepMark aria-hidden="true">⋮</StepMark>
+                주소창 옆 메뉴를 누르세요
+              </Step>
+              <Step>
+                <StepMark aria-hidden="true">2</StepMark>
+                ‘앱 설치’ 또는 ‘홈 화면에 추가’를 고르세요
+              </Step>
+            </>
+          )}
+        </Steps>
+
+        <ConfirmActions>
+          <CancelButton type="button" onClick={close}>
+            닫기
           </CancelButton>
         </ConfirmActions>
       </ActionSheet>
@@ -171,4 +237,45 @@ const CancelButton = styled.button`
   color: ${COLORS.text.grey};
   font-size: ${FONT_SIZE.bodyLarge};
   font-weight: ${FONT_WEIGHT.medium};
+`;
+
+const Steps = styled.ol`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  list-style: none;
+`;
+
+const Step = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 14px;
+  border-radius: ${RADIUS.card};
+  background-color: ${COLORS.background.subtle};
+  color: ${COLORS.text.main};
+  font-size: ${FONT_SIZE.bodyLarge};
+  font-weight: ${FONT_WEIGHT.medium};
+  text-align: left;
+`;
+
+const StepMark = styled.span`
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: ${COLORS.white};
+  color: ${COLORS.brand.main};
+  font-size: ${FONT_SIZE.body};
+  font-weight: ${FONT_WEIGHT.semibold};
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 `;
